@@ -1,4 +1,4 @@
-from models.utils.db import db
+from sqlalchemy_manager.db import db
 
 class Delete():
 

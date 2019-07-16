@@ -1,17 +1,25 @@
+import os
 from datetime import datetime
 from functools import wraps
 from flask import Flask
 import pytest
 
-import sqlalchemy_manager as sam
 from sqlalchemy_manager import db
+from tests.utils.install_models import install_models
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def app(request):
-    app = Flask(request.module.__name__)
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = '@##&6cweafhv3426445'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URL')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['TESTING'] = True
     db.init_app(app)
-    app.testing = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
+    app.app_context().push()
+    print('OUI')
+    install_models()
+
     return app
 
 def clean_database(f):

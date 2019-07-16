@@ -6,13 +6,14 @@ from sqlalchemy import DateTime, \
                        Integer, \
                        Numeric, \
                        String
-from models.manager.as_dict import AsDict
-from models.manager.delete import Delete
-from models.manager.soft_delete import SoftDelete
-from models.utils.api_errors import DateTimeCastError, \
-                              DecimalCastError
-from utils.date import deserialize_datetime
-from utils.human_ids import dehumanize
+
+from sqlalchemy_manager.api_errors import DateTimeCastError, \
+                                          DecimalCastError
+from sqlalchemy_manager.as_dict import AsDict
+from sqlalchemy_manager.date import deserialize_datetime
+from sqlalchemy_manager.delete import Delete
+from sqlalchemy_manager.human_ids import dehumanize
+from sqlalchemy_manager.soft_delete import SoftDelete
 
 
 class Populate(

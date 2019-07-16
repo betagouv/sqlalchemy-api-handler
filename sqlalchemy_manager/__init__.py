@@ -2,9 +2,10 @@ from pprint import pprint
 from sqlalchemy import BigInteger,\
                        Column
 
-from find_or_create import FindOrCreate
-from human_ids import humanize
-from save import Save
+from sqlalchemy_manager.db import db, Model
+from sqlalchemy_manager.find_or_create import FindOrCreate
+from sqlalchemy_manager.human_ids import humanize
+from sqlalchemy_manager.save import Save
 
 
 class Manager(Save, FindOrCreate):

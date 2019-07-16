@@ -1,13 +1,10 @@
 import pytest
-from sqlalchemy import Column, Text
 
 from sqlalchemy_manager import Manager, Model
+from tests.utils.user import User
 
-class User(Manager, Model):
-    name = Column(Text)
-
-class SaveTest:
-    def test_save_user(self):
+class SaveTest():
+    def test_save_user(self, app):
         # Given
         user = User(name="Marx Foo")
 
