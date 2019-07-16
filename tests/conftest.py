@@ -12,6 +12,9 @@ def app(request):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = '@##&6cweafhv3426445'
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URL')
+
+    print('URL', app.config['SQLALCHEMY_DATABASE_URI'])
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TESTING'] = True
     db.init_app(app)

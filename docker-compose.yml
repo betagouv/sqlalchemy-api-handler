@@ -1,13 +1,13 @@
 version: "3.7"
 
 services:
-  flask-test:
+  flask:
     build:
       context: ./
       dockerfile: ./dockerfiles/flask/Dockerfile
     command: >
       bash -c "set -x;
-               cd /opt/services/flaskapp/api;
+               cd /opt/services/flaskapp;
                pip install -r ./requirements.txt;
                sleep infinity;"
     container_name: ${COMMAND_NAME}-flask
@@ -18,11 +18,11 @@ services:
       - db_nw
       - web_nw
     depends_on:
-      - postgres-test
+      - postgres
     volumes:
       - ./:/opt/services/flaskapp
 
-  postgres-test:
+  postgres:
     image: postgres:10.1
     container_name: ${COMMAND_NAME}-postgres
     environment:
@@ -32,10 +32,8 @@ services:
     command: postgres -c logging_collector=on -c log_destination=stderr -c log_min_duration_statement=0 -c log_statement=all -c log_duration=on
     networks:
       - db_nw
-    ports:
-      - 5433:5432
     volumes:
-      - postgres_data_test:/var/lib/postgresql-test/data
+      - ./docker_data/postgres:/var/lib/postgresql/data
 
 networks:
   db_nw:
@@ -44,4 +42,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data_test:
+  postgres_data:

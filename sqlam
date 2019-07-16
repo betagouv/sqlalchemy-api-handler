@@ -44,9 +44,24 @@ shift
 if [[ "$CMD" == "build" ]]; then
   RUN='docker-compose build $*'
 
+# Connect to Postgresql database in command line using psql
+elif [[ "$CMD" == "psql" ]]; then
+	COLUMNS=${COLUMNS:-''};
+	if [[ "$ENV" == "development" ]]; then
+		RUN='docker exec -it $COMMAND_NAME-postgres bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$DB_NAME'_user '$DB_NAME' $*"'
+	else
+		scalingo -a "$SCALINGO_APP" pgsql-console
+		exit
+	fi
+
 # Force docker-compose to build the docker images
 elif [[ "$CMD" == "rebuild" ]]; then
   RUN='docker-compose build --no-cache $*'
+
+# Restart API after removing the database and files
+elif [[ "$CMD" == "restart" ]]; then
+  RUN='docker-compose down --volumes;
+       docker-compose up --force-recreate'
 
 # Start with database
 elif [[ "$CMD" == "start" ]]; then
