@@ -6,12 +6,12 @@ jobs: # a collection of steps
     docker:
       - image: circleci/python:3.6.6 # ...with this image as the primary container; this is where all `steps` will run        environment:
         environment:
-          POSTGRES_URL: postgresql://${DB_NAME}_user:${DB_NAME}_password@postgres/${DB_NAME}
+          POSTGRES_URL: postgresql://$DB_NAME_user:$DB_NAME_password@localhost:5432/$DB_NAME
       - image: circleci/postgres:9.6.2
         environment:
-          POSTGRES_DB: ${DB_NAME}
-          POSTGRES_USER: ${DB_NAME}_user
-          POSTGRES_PASSWORD: ${DB_NAME}_password
+          POSTGRES_DB: $DB_NAME
+          POSTGRES_USER: $DB_NAME_user
+          POSTGRES_PASSWORD: $DB_NAME_password
 
     steps:
       - checkout # special step to check out source code to the working directory
