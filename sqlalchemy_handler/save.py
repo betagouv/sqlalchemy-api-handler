@@ -1,9 +1,9 @@
 from sqlalchemy.exc import DataError, IntegrityError
 
-from sqlalchemy_hanlder.api_errors import ApiErrors
-from sqlalchemy_hanlder.db import db
-from sqlalchemy_hanlder.errors import Errors
-from sqlalchemy_hanlder.populate import Populate
+from sqlalchemy_handler.api_errors import ApiErrors
+from sqlalchemy_handler.db import db
+from sqlalchemy_handler.errors import Errors
+from sqlalchemy_handler.populate import Populate
 
 class Save(Populate, Errors):
     @staticmethod
