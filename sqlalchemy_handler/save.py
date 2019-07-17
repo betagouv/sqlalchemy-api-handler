@@ -1,11 +1,11 @@
 from sqlalchemy.exc import DataError, IntegrityError
 
 from sqlalchemy_handler.api_errors import ApiErrors
-from sqlalchemy_handler.db import db
 from sqlalchemy_handler.errors import Errors
 from sqlalchemy_handler.populate import Populate
 
 class Save(Populate, Errors):
+
     @staticmethod
     def save(*objects):
         if not objects:
@@ -19,7 +19,7 @@ class Save(Populate, Errors):
             if obj_api_errors.errors.keys():
                 api_errors.errors.update(obj_api_errors.errors)
             else:
-                db.session.add(obj)
+                Save.get_db().session.add(obj)
 
         # CHECK BEFORE COMMIT
         if api_errors.errors.keys():
@@ -27,7 +27,7 @@ class Save(Populate, Errors):
 
         # COMMIT
         try:
-            db.session.commit()
+            Save.get_db().session.commit()
         except DataError as de:
             api_errors.addError(*Errors.restize_data_error(de))
             raise api_errors
