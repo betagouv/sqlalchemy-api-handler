@@ -3,6 +3,7 @@ sqlalchemy-manager
 
 SQLAlchemy-Manager is
 
+[![CircleCI](https://circleci.com/gh/betagouv/sqlalchemy-manager/tree/master.svg?style=svg)](https://circleci.com/gh/betagouv/sqlalchemy-manager/tree/master)
 
 Installing
 ----------
