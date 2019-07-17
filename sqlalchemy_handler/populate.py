@@ -7,13 +7,13 @@ from sqlalchemy import DateTime, \
                        Numeric, \
                        String
 
-from sqlalchemy_manager.api_errors import DateTimeCastError, \
+from sqlalchemy_handler.api_errors import DateTimeCastError, \
                                           DecimalCastError
-from sqlalchemy_manager.as_dict import AsDict
-from sqlalchemy_manager.date import deserialize_datetime
-from sqlalchemy_manager.delete import Delete
-from sqlalchemy_manager.human_ids import dehumanize
-from sqlalchemy_manager.soft_delete import SoftDelete
+from sqlalchemy_handler.as_dict import AsDict
+from sqlalchemy_handler.date import deserialize_datetime
+from sqlalchemy_handler.delete import Delete
+from sqlalchemy_handler.human_ids import dehumanize
+from sqlalchemy_handler.soft_delete import SoftDelete
 
 
 class Populate(

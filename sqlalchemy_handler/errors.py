@@ -8,7 +8,7 @@ from sqlalchemy import CHAR, \
                        Integer,\
                        String
 
-from sqlalchemy_manager.api_errors import ApiErrors
+from sqlalchemy_handler.api_errors import ApiErrors
 
 DUPLICATE_KEY_ERROR_CODE = '23505'
 NOT_FOUND_KEY_ERROR_CODE = '23503'

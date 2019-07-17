@@ -1,6 +1,6 @@
 import pytest
 
-from sqlalchemy_manager import Manager, Model
+from sqlalchemy_handler import Handler, Model
 from tests.utils.user import User
 
 class SaveTest():
@@ -9,4 +9,4 @@ class SaveTest():
         user = User(name="Marx Foo")
 
         # When
-        Manager.save(user)
+        Handler.save(user)

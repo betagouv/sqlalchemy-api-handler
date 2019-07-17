@@ -3,7 +3,7 @@ import enum
 from psycopg2.extras import DateTimeRange
 import sqlalchemy
 
-from sqlalchemy_manager.date import DateTimes
+from sqlalchemy_handler.date import DateTimes
 
 
 def format_into_ISO_8601(value):

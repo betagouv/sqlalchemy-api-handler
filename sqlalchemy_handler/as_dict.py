@@ -1,8 +1,8 @@
 from collections import OrderedDict
 from sqlalchemy.orm.collections import InstrumentedList
 
-from sqlalchemy_manager.serialize import serialize
-from sqlalchemy_manager.human_ids import dehumanize, humanize
+from sqlalchemy_handler.serialize import serialize
+from sqlalchemy_handler.human_ids import dehumanize, humanize
 
 class AsDict():
 

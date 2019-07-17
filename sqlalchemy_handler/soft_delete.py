@@ -1,6 +1,6 @@
 import inspect
 
-from sqlalchemy_manager.db import db
+from sqlalchemy_handler.db import db
 
 class NotSoftDeletableMixinException(Exception):
     pass

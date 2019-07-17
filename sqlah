@@ -6,11 +6,11 @@ set -o nounset
 #  Global config of the application
 # =============================================
 
-export COMMAND_NAME="sqlam"
-export DB_NAME="sqlalchemy_manager"
-export GITHUB_NAME="betagouv/sqlalchemy-manager"
-export MODULE_NAME="sqlalchemy_manager"
-export PIP_NAME="SQLAlchemy-Manager"
+export COMMAND_NAME="sqlah"
+export DB_NAME="sqlalchemy_handler"
+export GITHUB_NAME="betagouv/sqlalchemy-handler"
+export MODULE_NAME="sqlalchemy_handler"
+export PIP_NAME="SQLAlchemy-Handler"
 
 # =============================================
 #  Helper that describes all functionalities
@@ -56,9 +56,17 @@ elif [[ "$CMD" == "psql" ]]; then
 		exit
 	fi
 
-# Publish package to pyPi
+# Publish package to test PyPi
+elif [[ "$CMD" == "prepublish" ]]; then
+  RUN='docker exec -it $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp &&
+    PYTHONPATH=. python setup.py sdist bdist_wheel &&
+    twine check dist/* &&
+    twine upload --repository-url https://test.pypi.org/legacy/ dist/*"'
+
+# Publish package to PyPi
 elif [[ "$CMD" == "publish" ]]; then
-  RUN='docker exec $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp && PYTHONPATH=. python setup.py sdist bdist_wheel"'
+  RUN='docker exec -it $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp &&
+    PYTHONPATH=. twine upload dist/*"'
 
 # Force docker-compose to build the docker images
 elif [[ "$CMD" == "rebuild" ]]; then
