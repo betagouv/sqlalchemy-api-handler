@@ -1,7 +1,2 @@
-include CHANGES.rst
-graft artwork
-graft docs
-prune docs/_build
-graft examples
 graft tests
 global-exclude *.pyc
