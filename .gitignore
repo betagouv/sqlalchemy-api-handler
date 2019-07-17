@@ -6,7 +6,6 @@ dist/
 docker_data/
 build/
 docs/_build/
-.tox/
 .idea/
 .pytest_cache/
 htmlcov/
