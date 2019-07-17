@@ -7,6 +7,7 @@ from sqlalchemy_manager.find_or_create import FindOrCreate
 from sqlalchemy_manager.human_ids import humanize
 from sqlalchemy_manager.save import Save
 
+__version__ = "0.0.1"
 
 class Manager(Save, FindOrCreate):
     id = Column(BigInteger,

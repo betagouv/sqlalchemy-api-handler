@@ -7,8 +7,10 @@ set -o nounset
 # =============================================
 
 export COMMAND_NAME="sqlam"
-export MODULE_NAME="sqlalchemy_manager"
 export DB_NAME="sqlalchemy_manager"
+export GITHUB_NAME="betagouv/sqlalchemy-manager"
+export MODULE_NAME="sqlalchemy_manager"
+export PIP_NAME="SQLAlchemy-Manager"
 
 # =============================================
 #  Helper that describes all functionalities
@@ -53,6 +55,10 @@ elif [[ "$CMD" == "psql" ]]; then
 		scalingo -a "$SCALINGO_APP" pgsql-console
 		exit
 	fi
+
+# Publish package to pyPi
+elif [[ "$CMD" == "publish" ]]; then
+  RUN='docker exec $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp && PYTHONPATH=. python setup.py sdist bdist_wheel"'
 
 # Force docker-compose to build the docker images
 elif [[ "$CMD" == "rebuild" ]]; then

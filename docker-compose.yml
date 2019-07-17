@@ -12,7 +12,10 @@ services:
                sleep infinity;"
     container_name: ${COMMAND_NAME}-flask
     environment:
+      - GITHUB_NAME=${GITHUB_NAME}
+      - MODULE_NAME=${MODULE_NAME}
       - ENV=${ENV:-development}
+      - PIP_NAME=${PIP_NAME}
       - POSTGRES_URL=postgresql://${DB_NAME}_user:${DB_NAME}_password@postgres/${DB_NAME}
     networks:
       - db_nw

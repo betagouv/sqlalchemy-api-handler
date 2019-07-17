@@ -1,28 +1,28 @@
 import io
+import os
 import re
 
 from setuptools import setup
 
-with io.open("README.rst", "rt", encoding="utf8") as f:
+with io.open("README.md", "rt", encoding="utf8") as f:
     readme = f.read()
 
-with io.open("flask_sqlalchemy/__init__.py", "rt", encoding="utf8") as f:
+with io.open("{}/__init__.py".format(os.environ.get('MODULE_NAME')), "rt", encoding="utf8") as f:
     version = re.search(r'__version__ = "(.*?)"', f.read(), re.M).group(1)
 
 setup(
-    name="SQLAlchemy-Manager",
+    name=os.environ.get('PIP_NAME'),
     version=version,
-    url="https://github.com/betagouv/sqlalchemy-manager",
+    url="https://github.com/{}".format(os.environ.get('GITHUB_NAME')),
     project_urls={
-        "Documentation": "https://sqlalchemy-manager.betagouv.fr/",
-        "Code": "https://github.com/betagouv/sqlalchemy-manager",
-        "Issue tracker": "https://github.com/betagouv/sqlalchemy-manager/issues",
+        "Code": "https://github.com/{}".format(os.environ.get('GITHUB_NAME')),
+        "Issue tracker": "https://github.com/{}/issues".format(os.environ.get('GITHUB_NAME')),
     },
-    license="BSD-3-Clause",
-    author="Arnaud Betremieux",
-    author_email="arnaud.betremieux@btmx.fr",
-    maintainer="arnoo",
-    maintainer_email="arnaud.betremieux@btmx.fr",
+    license="MPL-2.0",
+    author="Erwan Ledoux",
+    author_email="lawanledoux@gmail.com",
+    maintainer="Ledoux",
+    maintainer_email="lawanledoux@gmail.com",
     description="Adds SQLAlchemy support to your Flask application.",
     long_description=readme,
     packages=["sqlalchemy_manager"],
@@ -33,7 +33,7 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: BSD License",
+        "License :: OSI Approved :: MPL-2.0 License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
