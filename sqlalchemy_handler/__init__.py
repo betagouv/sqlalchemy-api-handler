@@ -7,7 +7,7 @@ from sqlalchemy_handler.find_or_create import FindOrCreate
 from sqlalchemy_handler.human_ids import humanize
 from sqlalchemy_handler.save import Save
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 class Handler(Save, FindOrCreate):
     id = Column(BigInteger,
