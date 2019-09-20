@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Text
 
-from sqlalchemy_handler import Handler, Model
+from tests.utils.db import Model
+from sqlalchemy_handler import Handler
 
 class User(Handler, Model):
     name = Column(Text)

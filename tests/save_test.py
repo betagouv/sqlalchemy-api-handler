@@ -1,6 +1,7 @@
 import pytest
 
-from sqlalchemy_handler import Handler, Model
+from sqlalchemy_handler import Handler
+from tests.utils.db import Model
 from tests.utils.user import User
 
 class SaveTest():

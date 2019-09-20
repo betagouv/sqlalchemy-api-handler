@@ -1,9 +1,9 @@
-from sqlalchemy_handler.db import db
+from sqlalchemy_handler.accessor import Accessor
 
-class Delete():
+class Delete(Accessor):
 
     def delete(self):
-        db.session.delete(self)
+        Accessor.get_db().session.delete(self)
         return self
 
     @staticmethod
