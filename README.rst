@@ -10,12 +10,11 @@ humanized ids once it is jsonified, throws api errors for some casting of value 
 Installing
 ----------
 
-Install and update using `pip`_:
+Install and update using `pip`:
 
 .. code-block:: text
 
   $ pip install -U SQLAlchemy-Handler
-
 
 A Simple Example
 ----------------
@@ -37,7 +36,6 @@ A Simple Example
     user = User(username="Flask", email="example@example.com")
     Handler.save(user)
 
-
 Links
 -----
 
@@ -48,6 +46,32 @@ Links
 -   Test status: https://travis-ci.org/betagouv/sqlalchemy-handler
 -   Test coverage: https://codecov.io/gh/betagouv/sqlalchemy-handler
 
-.. _Flask: https://betagouvprojects.com/p/flask/
-.. _SQLAlchemy: https://www.sqlalchemy.org
-.. _pip: https://pip.pypa.io/en/stable/quickstart/
+- Flask: https://betagouvprojects.com/p/flask/
+- SQLAlchemy: https://www.sqlalchemy.org
+- pip: https://pip.pypa.io/en/stable/quickstart/
+
+Deploy
+----------
+
+First, make sure that the deploy environment is started:
+
+.. code-block:: text
+
+  ./sqlah start
+
+
+In a second tab, then:
+
+2. Change the __version__ into sqlalchemy_handler/__init__.py
+
+3. Pre publish:
+
+.. code-block:: text
+
+  ./sqlah prepublish
+
+4. Publish:
+
+.. code-block:: text
+
+  ./sqlah publish
