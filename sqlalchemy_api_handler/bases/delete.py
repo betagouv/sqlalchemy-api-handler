@@ -1,4 +1,4 @@
-from sqlalchemy_handler.accessor import Accessor
+from sqlalchemy_api_handler.bases.accessor import Accessor
 
 class Delete(Accessor):
 

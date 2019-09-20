@@ -3,8 +3,8 @@ from functools import singledispatch
 from typing import Iterable, Set, List
 from sqlalchemy.orm.collections import InstrumentedList
 
-from sqlalchemy_handler.api_handler import ApiHandler
-from sqlalchemy_handler.serialization.serializer import serialize
+from sqlalchemy_api_handler.api_handler import ApiHandler
+from sqlalchemy_api_handler.serialization.serialize import serialize
 
 @singledispatch
 def as_dict(value, column=None, includes: Iterable = ()):

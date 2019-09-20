@@ -1,13 +1,12 @@
 import enum
 from datetime import datetime
 from functools import singledispatch
-
 import sqlalchemy
 from psycopg2._range import DateTimeRange
 from sqlalchemy import Integer
 
-from utils.date import DateTimes, format_into_ISO_8601
-from utils.human_ids import humanize
+from sqlalchemy_api_handler.utils.date import DateTimes, format_into_ISO_8601
+from sqlalchemy_api_handler.utils.human_ids import humanize
 
 
 @singledispatch

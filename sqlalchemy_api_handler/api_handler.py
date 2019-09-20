@@ -2,9 +2,9 @@ from pprint import pprint
 from sqlalchemy import BigInteger,\
                        Column
 
-from sqlalchemy_handler.find_or_create import FindOrCreate
-from sqlalchemy_handler.human_ids import humanize
-from sqlalchemy_handler.save import Save
+from sqlalchemy_api_handler.bases.find_or_create import FindOrCreate
+from sqlalchemy_api_handler.bases.save import Save
+from sqlalchemy_api_handler.utils.human_ids import humanize
 
 class ApiHandler(Save, FindOrCreate):
 

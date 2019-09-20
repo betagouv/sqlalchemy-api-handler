@@ -1,7 +1,7 @@
 from sqlalchemy.exc import ProgrammingError
 from postgresql_audit.flask import versioning_manager
 
-from tests.utils.db import db
+from tests.test_utils.db import db
 
 
 def create_versionning_tables():

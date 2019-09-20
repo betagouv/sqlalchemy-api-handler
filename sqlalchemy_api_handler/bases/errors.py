@@ -8,7 +8,7 @@ from sqlalchemy import CHAR, \
                        Integer,\
                        String
 
-from sqlalchemy_handler.api_errors import ApiErrors
+from sqlalchemy_api_handler.api_errors import ApiErrors
 
 DUPLICATE_KEY_ERROR_CODE = '23505'
 NOT_FOUND_KEY_ERROR_CODE = '23503'
@@ -45,6 +45,10 @@ class Errors():
             return Errors.restize_global_error(e)
 
     @staticmethod
+    def restize_internal_error(e):
+        return Errors.restize_global_error(e)
+
+    @staticmethod
     def restize_type_error(e):
         if e.args and len(e.args)>1 and e.args[1] == 'geography':
             return [e.args[2], 'doit etre une liste de nombre décimaux comme par exemple : [2.22, 3.22]']
@@ -75,26 +79,26 @@ class Errors():
                and not col.primary_key\
                and col.default is None\
                and val is None:
-                api_errors.addError(key, 'Cette information est obligatoire')
+                api_errors.add_error(key, 'Cette information est obligatoire')
             if val is None:
                 continue
             if isinstance(col.type, (CHAR, String))\
                and not isinstance(col.type, Enum)\
                and not isinstance(val, str):
-                api_errors.addError(key, 'doit être une chaîne de caractères')
+                api_errors.add_error(key, 'doit être une chaîne de caractères')
             if isinstance(col.type, (CHAR, String))\
                and isinstance(val, str)\
                and col.type.length\
                and len(val)>col.type.length:
-                api_errors.addError(key,
+                api_errors.add_error(key,
                                 'Vous devez saisir moins de '
                                       + str(col.type.length)
                                       + ' caractères')
             if isinstance(col.type, Integer)\
                and not isinstance(val, int):
-                api_errors.addError(key, 'doit être un entier')
+                api_errors.add_error(key, 'doit être un entier')
             if isinstance(col.type, Float)\
                and not isinstance(val, float)\
                and not isinstance(val, int):
-                api_errors.addError(key, 'doit être un nombre')
+                api_errors.add_error(key, 'doit être un nombre')
         return api_errors

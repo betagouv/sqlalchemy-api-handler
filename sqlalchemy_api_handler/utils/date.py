@@ -18,6 +18,9 @@ def deserialize_datetime(key, value):
 
     return datetime_value
 
+def format_into_ISO_8601(value):
+    return value.isoformat() + "Z"
+
 class DateTimes:
     def __init__(self, *datetimes):
         self.datetimes = list(datetimes)
