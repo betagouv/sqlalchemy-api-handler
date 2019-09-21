@@ -6,11 +6,11 @@ set -o nounset
 #  Global config of the application
 # =============================================
 
-export COMMAND_NAME="sqlah"
-export DB_NAME="sqlalchemy_handler"
-export GITHUB_NAME="betagouv/sqlalchemy-handler"
-export MODULE_NAME="sqlalchemy_handler"
-export PIP_NAME="SQLAlchemy-Handler"
+export COMMAND_NAME="sqlaah"
+export DB_NAME="sqlalchemy_api_handler"
+export GITHUB_NAME="betagouv/sqlalchemy-api-handler"
+export MODULE_NAME="sqlalchemy_api_handler"
+export PIP_NAME="SQLAlchemy-Api-Handler"
 
 # =============================================
 #  Helper that describes all functionalities
@@ -76,7 +76,8 @@ elif [[ "$CMD" == "rebuild" ]]; then
 
 # Restart API after removing the database and files
 elif [[ "$CMD" == "restart" ]]; then
-  RUN='docker-compose down --volumes;
+  RUN='rm -rf docker_data;
+       docker-compose down --volumes;
        docker-compose up --force-recreate'
 
 # Start with database
