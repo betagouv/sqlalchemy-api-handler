@@ -60,7 +60,6 @@ elif [[ "$CMD" == "psql" ]]; then
 elif [[ "$CMD" == "prepublish" ]]; then
   RUN='docker exec -it $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp &&
     rm -rf build &&
-    rm -rf dist &&
     PYTHONPATH=. python setup.py sdist bdist_wheel &&
     twine check dist/* &&
     twine upload --repository-url https://test.pypi.org/legacy/ dist/*"'
