@@ -12,18 +12,17 @@ def as_dict(value, column=None, includes: Iterable = ()):
 
 
 @as_dict.register(InstrumentedList)
-def _(models, column=None, includes: Iterable = ()):
+def as_dict_for_intrumented_list(models, column=None, includes: Iterable = ()):
     not_deleted_objects = filter(lambda x: not x.is_soft_deleted(), models)
     return [as_dict(o, includes=includes) for o in not_deleted_objects]
 
-
 @as_dict.register(ApiHandler)
-def _(model, column=None, includes: Iterable = ()):
+def as_dict_for_api_handler(model, column=None, includes: Iterable = ()):
     result = OrderedDict()
 
     for key in _keys_to_serialize(model, includes):
         value = getattr(model, key)
-        columns = model.__class__.__table__.columns._data
+        columns = model.__table__.columns._data
         column = columns.get(key)
         result[key] = as_dict(value, column=column)
 
