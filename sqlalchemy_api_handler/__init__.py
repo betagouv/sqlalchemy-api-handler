@@ -1,3 +1,3 @@
 from sqlalchemy_api_handler.api_handler import ApiHandler
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
