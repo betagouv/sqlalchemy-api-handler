@@ -1,5 +1,5 @@
 sqlalchemy-api-handler
-==================
+======================
 
 SQLAlchemy-Api-Handler is an extension that adds support for handling apis with sqlalchemy. It helps to handle models with
 humanized ids once it is jsonified, throws api errors for some casting of value during the save time, and dictifies model objects into jsonified ones.
@@ -49,7 +49,7 @@ and so will fetch an object at humanized id = humanize(32), ie
   {"id": "EA", "email": "marx.foo@plop.fr", name: "Marx Foo"}
 
 Playing with nesting data
-------------------------
+-------------------------
 
 Suppose a request GET /offers
 
@@ -113,7 +113,7 @@ Suppose a request GET /offers
 The success will return
 
 .. code-block:: text
-  
+
   [
     {
       "id": "AE",
@@ -145,7 +145,7 @@ Links
 - pip: https://pip.pypa.io/en/stable/quickstart/
 
 Deploy
-----------
+------
 
 First, make sure that the deploy environment is started:
 
