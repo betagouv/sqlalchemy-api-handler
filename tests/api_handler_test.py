@@ -7,7 +7,7 @@ from tests.test_utils.models.user import User
 class SaveTest():
     @clean_database
     def test_save_user(self, app):
-        # Given
+        # given
         user = User(
             firstName="Marx",
             email="marx.foo@plop.fr",
@@ -15,6 +15,9 @@ class SaveTest():
             publicName="Marx Foo"
         )
 
-
-        # When
+        # when
         ApiHandler.save(user)
+
+        # then
+        saved_user = User.query.first()
+        assert saved_user.firstName == "Marx"

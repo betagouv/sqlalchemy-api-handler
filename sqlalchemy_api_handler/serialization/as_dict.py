@@ -33,7 +33,6 @@ def _(model, column=None, includes: Iterable = ()):
         value = getattr(model, key)
         result[key] = as_dict(value, includes=sub_includes)
 
-    result['modelName'] = model.__class__.__name__
     return result
 
 

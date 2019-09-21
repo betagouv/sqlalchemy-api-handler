@@ -1,4 +1,6 @@
 from enum import Enum
+from sqlalchemy_api_handler.serialization.as_dict import as_dict
+from typing import Iterable
 
 class SearchableType(Enum):
     @classmethod
@@ -13,15 +15,6 @@ class SearchableType(Enum):
         return matching_types
 
 class ThingType(SearchableType):
-    def as_dict(self):
-        dict_value = {
-            'type': 'Thing',
-            'value': str(self),
-        }
-        dict_value.update(self.value)
-
-        return dict_value
-
     ACTIVATION = {
         'proLabel': 'Pass Culture : activation en ligne',
         'appLabel': 'Pass Culture : activation en ligne',
@@ -182,3 +175,12 @@ class ThingType(SearchableType):
         'conditionalFields': ["showType"],
         'isActive': True
     }
+
+@as_dict.register(ThingType)
+def _(thing_type, column=None, includes: Iterable = ()):
+    dict_value = {
+        'type': 'Thing',
+        'value': str(thing_type),
+    }
+    dict_value.update(thing_type.value)
+    return dict_value
