@@ -25,6 +25,7 @@ setup(
     maintainer_email="lawanledoux@gmail.com",
     description="Adds SQLAlchemy support to your Flask application for handle apis.",
     long_description=readme,
+    long_description_content_type="text/x-rst",
     packages=[
         "sqlalchemy_api_handler",
         "sqlalchemy_api_handler.bases",
