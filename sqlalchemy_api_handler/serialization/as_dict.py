@@ -5,16 +5,11 @@ from sqlalchemy.orm.collections import InstrumentedList
 
 from sqlalchemy_api_handler.api_handler import ApiHandler
 from sqlalchemy_api_handler.serialization.serialize import serialize
-from sqlalchemy_api_handler.utils.date import DateTimes, format_into_ISO_8601
 
 @singledispatch
 def as_dict(value, column=None, includes: Iterable = ()):
     return serialize(value, column=column)
 
-@serialize.register(DateTimes)
-def _(value, column=None):
-    return [format_into_ISO_8601(v) for v in value.datetimes]
-    
 @as_dict.register(InstrumentedList)
 def as_dict_for_intrumented_list(models, column=None, includes: Iterable = ()):
     not_deleted_objects = filter(lambda x: not x.is_soft_deleted(), models)
