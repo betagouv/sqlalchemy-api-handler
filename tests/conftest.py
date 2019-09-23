@@ -28,8 +28,8 @@ def clean_database(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         db.session.rollback()
-        Offer.query.delete()
         Stock.query.delete()
+        Offer.query.delete()
         User.query.delete()
         db.session.commit()
         return f(*args, **kwargs)
