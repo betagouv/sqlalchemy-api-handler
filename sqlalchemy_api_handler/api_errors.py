@@ -2,8 +2,8 @@ import json
 import re
 
 class ApiErrors(Exception):
-    def __init__(self):
-        self.errors = {}
+    def __init__(self, errors: dict = None):
+        self.errors = errors if errors else {}
 
     def add_error(self, field, error):
         if field in self.errors:
@@ -20,7 +20,7 @@ class ApiErrors(Exception):
     def check_email(self, field, value):
         if not "@" in value:
             self.add_error(field, 'L\'e-mail doit contenir un @.')
-            
+
     def check_float(self, field, value):
         if isinstance(value, float) or \
            (isinstance(value, (str, unicode)) and re.search('^\d+(\.\d*|)$', value)):
