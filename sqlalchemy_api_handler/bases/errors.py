@@ -9,6 +9,7 @@ from sqlalchemy import CHAR, \
                        String
 
 from sqlalchemy_api_handler.api_errors import ApiErrors
+from sqlalchemy_api_handler.utils.logger import logger
 
 DUPLICATE_KEY_ERROR_CODE = '23505'
 NOT_FOUND_KEY_ERROR_CODE = '23503'
@@ -18,7 +19,7 @@ class Errors():
 
     @staticmethod
     def restize_global_error(e):
-        self.logger.error("UNHANDLED ERROR : ")
+        logger.error("UNHANDLED ERROR : ")
         traceback.print_exc()
         return ["global", "Une erreur technique s'est produite. Elle a été notée, et nous allons investiguer au plus vite."]
 
