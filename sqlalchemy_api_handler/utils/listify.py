@@ -88,7 +88,7 @@ def listify(
         query = modelClass.query
 
     if issubclass(modelClass, SoftDeletableMixin):
-        query = query.filter_by(isSoftDeleted=False)
+        query = query.filter(modelClass.isSoftDeleted == False)
 
     if refine:
         query = refine(query)
