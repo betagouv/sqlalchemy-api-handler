@@ -79,10 +79,11 @@ def listify(
         refine=None,
         order_by=None,
         includes=(),
-        print_elements=None,
         paginate=None,
         page=None,
-        populate=None
+        populate=None,
+        should_distinct=None,
+        with_total_data_count=None
 ):
     if query is None:
         query = modelClass.query
@@ -102,6 +103,13 @@ def listify(
             elements = elements_by_with_computed_ranking(query, order_by)
             is_already_queried = True
 
+    total_data_count = None
+    if with_total_data_count:
+        if is_already_queried:
+            total_data_count = query.count()
+        else:
+            total_data_count = len(elements)
+
     if paginate:
         if page is not None:
             page = int(page)
@@ -118,7 +126,4 @@ def listify(
     if populate:
         objects = list(map(populate, objects))
 
-    if print_elements:
-        print(elements)
-
-    return elements
+    return elements, total_data_count

@@ -4,7 +4,7 @@ flask_sqlalchemy==2.3.2
 flask_script==2.0.6
 pip-licenses==1.10.0
 PostgreSQL-Audit==0.10.0
-psycopg2-binary==2.7.6.1
+psycopg2-binary==2.8.3
 pytest==4.0.0
 pytest-cov==2.6.1
 pytest-flask==0.14.0
