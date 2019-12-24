@@ -106,9 +106,9 @@ def listify(
     total_data_count = None
     if with_total_data_count:
         if is_already_queried:
-            total_data_count = query.count()
-        else:
             total_data_count = len(elements)
+        else:
+            total_data_count = query.count()
 
     if paginate:
         if page is not None:
