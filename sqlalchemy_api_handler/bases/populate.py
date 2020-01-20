@@ -108,4 +108,4 @@ def _deserialize_datetime(key, value):
 
 def _is_human_id_column(column: Column) -> bool:
     if column is not None:
-        return (column.key == 'id' or column.key.endswith('Id')) and isinstance(column.type, (BigInteger, Integer))
+        return (column.key == 'id' or column.key.endswith('Id')) and isinstance(column.type, (String))
