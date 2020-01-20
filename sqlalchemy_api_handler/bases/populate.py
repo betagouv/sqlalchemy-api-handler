@@ -31,8 +31,9 @@ class Populate(
     def populate_from_dict(self, datum: dict, skipped_keys: List[str] = []):
         self.check_not_soft_deleted()
         columns = self.__class__.__table__.columns._data
-        keys_to_populate = self._get_keys_to_populate(columns, datum, skipped_keys)
-        for key in keys_to_populate:
+        columns_keys_to_populate = self._get_column_keys_to_populate(
+            set(columns.keys()), datum, skipped_keys)
+        for key in columns_keys_to_populate:
             column = columns[key]
             value = _dehumanize_if_needed(column, datum.get(key))
             if isinstance(value, str):
@@ -51,12 +52,16 @@ class Populate(
             else:
                 setattr(self, key, value)
 
+        for key in self.__mapper__.relationships.keys():
+            if key in datum:
+                setattr(self, key, datum[key])
+
     @staticmethod
-    def _get_keys_to_populate(columns: Iterable[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
+    def _get_column_keys_to_populate(column_keys: Set[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
         requested_columns_to_update = set(data.keys())
         forbidden_columns = set(['id', 'deleted'] + skipped_keys)
         allowed_columns_to_update = requested_columns_to_update - forbidden_columns
-        keys_to_populate = set(columns).intersection(allowed_columns_to_update)
+        keys_to_populate = column_keys.intersection(allowed_columns_to_update)
         return keys_to_populate
 
     def _try_to_set_attribute_with_deserialized_datetime(self, col, key, value):
@@ -108,4 +113,4 @@ def _deserialize_datetime(key, value):
 
 def _is_human_id_column(column: Column) -> bool:
     if column is not None:
-        return (column.key == 'id' or column.key.endswith('Id')) and isinstance(column.type, (String))
+        return (column.key == 'id' or column.key.endswith('Id')) and isinstance(column.type, (BigInteger, Integer))

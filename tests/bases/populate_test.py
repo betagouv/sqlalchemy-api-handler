@@ -5,8 +5,8 @@ import pytest
 from sqlalchemy import BigInteger, Column, DateTime, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.api_errors import DecimalCastError, \
-                                              DateTimeCastError, \
+from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
+                                              DecimalCastError, \
                                               UuidCastError
 from sqlalchemy_api_handler.utils.human_ids import dehumanize, NonDehumanizableId
 
@@ -14,7 +14,8 @@ from tests.test_utils.db import Model
 from tests.test_utils.models.user import User
 from tests.test_utils.models.time_interval import TimeInterval
 
-class TestObject(ApiHandler, Model):
+
+class PopulateFoo(ApiHandler, Model):
     date_attribute = Column(DateTime, nullable=True)
     entityId = Column(BigInteger, nullable=True)
     float_attribute = Column(Float, nullable=True)
@@ -51,7 +52,7 @@ class PopulateTest:
 
     def test_for_sql_integer_value_with_string_raises_decimal_cast_error(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'integer_attribute': 'yolo'}
 
         # When
@@ -63,7 +64,7 @@ class PopulateTest:
 
     def test_for_sql_integer_value_with_str_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'integer_attribute': '12.9'}
 
         # When
@@ -74,7 +75,7 @@ class PopulateTest:
 
     def test_for_sql_float_value_with_str_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'float_attribute': '12.9'}
 
         # When
@@ -85,7 +86,7 @@ class PopulateTest:
 
     def test_for_sql_integer_value_with_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'integer_attribute': 12}
 
         # When
@@ -96,7 +97,7 @@ class PopulateTest:
 
     def test_for_sql_float_value_with_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'float_attribute': 12.9}
 
         # When
@@ -107,7 +108,7 @@ class PopulateTest:
 
     def test_for_valid_sql_uuid_value(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         uuid_attribute = str(uuid.uuid4())
         data = {'uuid_attribute': uuid_attribute}
 
@@ -119,7 +120,7 @@ class PopulateTest:
 
     def test_for_valid_sql_uuid_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         uuid_id = str(uuid.uuid4())
         data = {'uuidId': uuid_id}
 
@@ -131,7 +132,7 @@ class PopulateTest:
 
     def test_for_valid_sql_humanize_id_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         humanized_entity_id = "AE"
         data = {'entityId': humanized_entity_id}
 
@@ -141,9 +142,10 @@ class PopulateTest:
         # Then
         assert test_object.entityId == dehumanize(humanized_entity_id)
 
+
     def test_for_sql_float_value_with_string_raises_decimal_cast_error(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'float_attribute': 'yolo'}
 
         # When
@@ -155,7 +157,7 @@ class PopulateTest:
 
     def test_for_sql_datetime_value_in_wrong_format_returns_400_and_affected_key_in_error(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'date_attribute': {'date_attribute': None}}
 
         # When
@@ -212,7 +214,7 @@ class PopulateTest:
 
     def test_raises_type_error_if_raw_uuid_is_invalid(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'uuidId': 'foo'}
 
         # When
@@ -225,7 +227,7 @@ class PopulateTest:
 
     def test_raises_type_error_if_raw_humanized_id_is_invalid(self):
         # Given
-        test_object = TestObject()
+        test_object = PopulateFoo()
         data = {'entityId': '12R-..2foo'}
 
         # When

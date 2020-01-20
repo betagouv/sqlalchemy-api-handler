@@ -126,4 +126,8 @@ def listify(
     if populate:
         objects = list(map(populate, objects))
 
-    return elements, total_data_count
+    result = { "elements": elements }
+    if with_total_data_count:
+        result['total_data_count'] = total_data_count
+
+    return result

@@ -23,7 +23,8 @@ class ListifyTest:
         ApiHandler.save(stock1, stock2, stock3, stock4)
 
         # When
-        elements = listify(Stock)
+        result = listify(Stock)
+        elements = result['elements']
 
         # Then
         assert elements[0]['id'] == humanize(stock2.id)
