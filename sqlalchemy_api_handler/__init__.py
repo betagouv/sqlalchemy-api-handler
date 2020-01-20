@@ -6,4 +6,4 @@ from sqlalchemy_api_handler.utils.listify import listify
 from sqlalchemy_api_handler.utils.load_or_404 import load_or_404
 from sqlalchemy_api_handler.utils.logger import logger
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
