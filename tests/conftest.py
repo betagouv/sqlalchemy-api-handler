@@ -6,8 +6,10 @@ import pytest
 from sqlalchemy_api_handler import ApiHandler
 from tests.test_utils.db import db
 from tests.test_utils.models.offer import Offer
+from tests.test_utils.models.offerer import Offerer
 from tests.test_utils.models.stock import Stock
 from tests.test_utils.models.user import User
+from tests.test_utils.models.user_offerer import UserOfferer
 from tests.test_utils.install_models import install_models
 
 @pytest.fixture(scope='session')
@@ -30,6 +32,8 @@ def clean_database(f):
         db.session.rollback()
         Stock.query.delete()
         Offer.query.delete()
+        UserOfferer.query.delete()
+        Offerer.query.delete()
         User.query.delete()
         db.session.commit()
         return f(*args, **kwargs)

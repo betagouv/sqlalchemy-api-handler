@@ -1,11 +1,11 @@
 import pytest
-from sqlalchemy_api_handler import ApiErrors, ApiHandler, humanize, listify
+from sqlalchemy_api_handler import ApiErrors, ApiHandler, humanize, get_result
 
 from tests.conftest import clean_database
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.stock import Stock
 
-class ListifyTest:
+class GetResultTest:
     @clean_database
     def test_return_only_not_soft_deleted_stocks(self, app):
         # Given
@@ -23,19 +23,19 @@ class ListifyTest:
         ApiHandler.save(stock1, stock2, stock3, stock4)
 
         # When
-        result = listify(Stock)
-        elements = result['elements']
+        result = get_result(Stock)
+        data = result['data']
 
         # Then
-        assert elements[0]['id'] == humanize(stock2.id)
-        assert elements[1]['id'] == humanize(stock3.id)
-        assert elements[2]['id'] == humanize(stock4.id)
+        assert data[0]['id'] == humanize(stock2.id)
+        assert data[1]['id'] == humanize(stock3.id)
+        assert data[2]['id'] == humanize(stock4.id)
 
     @clean_database
     def test_check_order_by(self, app):
         # When
         with pytest.raises(ApiErrors) as e:
-            listify(Stock, order_by='(SELECT * FROM "user")')
+            get_result(Stock, order_by='(SELECT * FROM "user")')
 
         # Then
         assert 'order_by' in e.value.errors

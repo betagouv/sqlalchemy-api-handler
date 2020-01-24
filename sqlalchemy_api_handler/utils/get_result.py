@@ -73,17 +73,17 @@ def check_order_by(order_by):
         for part in order_by.split(','):
             check_single_order_by_string(part)
 
-def listify(
-        modelClass,
-        query=None,
-        refine=None,
-        order_by=None,
-        includes=(),
-        paginate=None,
-        page=None,
-        populate=None,
-        should_distinct=None,
-        with_total_data_count=None
+def get_result(
+    modelClass,
+    includes=(),
+    order_by=None,
+    paginate=None,
+    page=None,
+    populate=None,
+    query=None,
+    refine=None,
+    should_distinct=None,
+    with_total_data_count=None
 ):
     if query is None:
         query = modelClass.query
@@ -121,12 +121,12 @@ def listify(
 
         query = pagination.items
 
-    elements = [as_dict(o, includes=includes) for o in query]
+    data = [as_dict(o, includes=includes) for o in query]
 
     if populate:
         objects = list(map(populate, objects))
 
-    result = { "elements": elements }
+    result = { "data": data }
     if with_total_data_count:
         result['total_data_count'] = total_data_count
 
