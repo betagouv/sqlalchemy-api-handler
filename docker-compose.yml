@@ -2,9 +2,7 @@ version: "3.7"
 
 services:
   flask:
-    build:
-      context: ./
-      dockerfile: ./dockerfiles/flask/Dockerfile
+    build: .
     command: >
       bash -c "set -x;
                cd /opt/services/flaskapp;

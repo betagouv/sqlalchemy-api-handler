@@ -1,6 +1,6 @@
 coveralls==1.6.0
 Flask==1.0.2
-flask_sqlalchemy==2.3.2
+flask_sqlalchemy==2.4.1
 flask_script==2.0.6
 pip-licenses==1.10.0
 PostgreSQL-Audit==0.10.0
