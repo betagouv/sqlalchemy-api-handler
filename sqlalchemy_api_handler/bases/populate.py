@@ -56,6 +56,10 @@ class Populate(
             if key in datum:
                 setattr(self, key, datum[key])
 
+        for key in self.__mapper__.synonyms.keys():
+            if key in datum:
+                setattr(self, key, datum[key])
+
     @staticmethod
     def _get_column_keys_to_populate(column_keys: Set[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
         requested_columns_to_update = set(data.keys())

@@ -27,13 +27,6 @@ fi
 # Get script parameters
 # =============================================
 
-if [[ $# -gt 2 ]] && [[ "$1" == "-e" ]]; then
-  ENV=$2
-  shift 2
-else
-  ENV=${ENV:-'development'}
-fi
-
 CMD="$1"
 shift
 
@@ -41,15 +34,12 @@ shift
 if [[ "$CMD" == "build" ]]; then
   RUN='docker-compose build $*'
 
+
 # Connect to Postgresql database in command line using psql
 elif [[ "$CMD" == "psql" ]]; then
 	COLUMNS=${COLUMNS:-''};
-	if [[ "$ENV" == "development" ]]; then
-		RUN='docker exec -it $COMMAND_NAME-postgres bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$DB_NAME'_user '$DB_NAME' $*"'
-	else
-		scalingo -a "$SCALINGO_APP" pgsql-console
-		exit
-	fi
+	RUN='docker exec -it $COMMAND_NAME-postgres bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$DB_NAME'_user '$DB_NAME' $*"'
+
 
 # Publish package to test PyPi
 elif [[ "$CMD" == "prepublish" ]]; then
@@ -62,14 +52,17 @@ elif [[ "$CMD" == "prepublish" ]]; then
     twine check dist/$PIP_NAME-$VERSION.tar.gz &&
     twine upload --repository-url https://test.pypi.org/legacy/ dist/*"'
 
+
 # Publish package to PyPi
 elif [[ "$CMD" == "publish" ]]; then
   RUN='docker exec -it $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp &&
     PYTHONPATH=. twine upload dist/*"'
 
+
 # Force docker-compose to build the docker images
 elif [[ "$CMD" == "rebuild" ]]; then
   RUN='docker-compose build --no-cache $*'
+
 
 # Restart API after removing the database and files
 elif [[ "$CMD" == "restart" ]]; then
@@ -77,12 +70,18 @@ elif [[ "$CMD" == "restart" ]]; then
        docker-compose down --volumes;
        docker-compose up --force-recreate'
 
+
 # Start with database
 elif [[ "$CMD" == "start" ]]; then
   RUN='docker-compose up $*'
 
-# Run tests for API
-# Need start-backend to be successful and delete all data
+
+# Create symlink to use COMMAND_NAME command (admin rights may be needed)
+elif [[ "$CMD" == "symlink" ]]; then
+  RUN='cd /usr/local/bin && ln -sf '"$(pwd)"'/$COMMAND_NAME $COMMAND_NAME && chmod +x $COMMAND_NAME && chmod +x '"$(pwd)"'/$COMMAND_NAME'
+
+
+# Run tests for API (Need start-backend to be successful and delete all data)
 elif [[ "$CMD" == "test" ]]; then
   if [[ $# == 0 ]]; then
     PYTEST_ARGS="tests"
@@ -90,6 +89,7 @@ elif [[ "$CMD" == "test" ]]; then
     PYTEST_ARGS=$*
   fi
   RUN='docker exec $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"'
+
 
 # Get the last version of the library
 elif [[ "$CMD" == "version" ]]; then
