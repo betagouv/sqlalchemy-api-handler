@@ -38,3 +38,20 @@ class SaveTest:
         # Then
         assert user_offerer.offererId == offerer.id
         assert user_offerer.userId == user.id
+
+    @clean_database
+    def test_for_valid_synonym(self):
+        # Given
+        job = "foo"
+        user = User(
+            email="bar@gmare.com",
+            job=job,
+            publicName="bar"
+        )
+
+        # When
+        ApiHandler.save(user)
+
+        # Then
+        assert user.metier == job
+        assert user.job == job

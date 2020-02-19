@@ -8,8 +8,8 @@ class AsDictTest:
     def test_simple_dictify(self, app):
         # given
         user_fields_dict = {
-            "firstName" : "Marx",
             "email": "marx.foo@plop.fr",
+            "firstName" : "Marx",
             "lastName": "Foo",
             "publicName": "Marx Foo"
         }
@@ -24,8 +24,8 @@ class AsDictTest:
     def test_dictify_with_removing_includes(self, app):
         # given
         user_fields_dict = {
-            "firstName" : "Marx",
             "email": "marx.foo@plop.fr",
+            "firstName" : "Marx",
             "lastName": "Foo",
             "publicName": "Marx Foo"
         }
@@ -54,3 +54,21 @@ class AsDictTest:
         assert 'stocks' in offer_dict
         assert len(offer_dict['stocks']) == 1
         assert offer_dict['stocks'][0]['id'] == stock_dict['id']
+
+    def test_dictify_with_default_class_includes(self, app):
+        # given
+        user_fields_dict = {
+            "email": "marx.foo@plop.fr",
+            "firstName" : "Marx",
+            "lastName": "Foo",
+            "metier": "philosophe",
+            "publicName": "Marx Foo"
+        }
+        user = User(**user_fields_dict)
+
+        # when
+        user_dict = as_dict(user)
+
+        # then
+        assert 'metier' not in user_dict
+        assert user_dict['job'] == user_fields_dict['metier']

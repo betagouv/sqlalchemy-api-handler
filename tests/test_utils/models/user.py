@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Text, String
+from sqlalchemy.orm import synonym
 from sqlalchemy_api_handler import ApiHandler
 
 from tests.test_utils.db import Model
@@ -10,6 +11,15 @@ class User(ApiHandler, Model):
 
     lastName = Column(String(128), nullable=True)
 
+    metier = Column(String(128))
+
     postalCode = Column(String(5), nullable=True)
 
     publicName = Column(String(255), nullable=False)
+
+    job = synonym('metier')
+
+    __as_dict_includes__ = [
+        "-metier",
+        "job"
+    ]
