@@ -75,7 +75,7 @@ def check_order_by(order_by):
 
 def get_result(
     modelClass,
-    includes=(),
+    includes=None,
     order_by=None,
     paginate=None,
     page=None,
@@ -121,7 +121,7 @@ def get_result(
 
         query = pagination.items
 
-    data = [as_dict(o, includes=includes) for o in query]
+    data = [as_dict(obj, includes=includes) for obj in query]
 
     if populate:
         objects = list(map(populate, objects))
