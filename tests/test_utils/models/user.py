@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, String
+from sqlalchemy import BigInteger, Column, Text, String
 from sqlalchemy.orm import synonym
 from sqlalchemy_api_handler import ApiHandler
 
@@ -19,7 +19,13 @@ class User(ApiHandler, Model):
 
     job = synonym('metier')
 
+    user_id = Column(BigInteger(), autoincrement=True, primary_key=True)
+
+    id = synonym('user_id')
+
     __as_dict_includes__ = [
         "-metier",
+        "-user_id",
+        "id",
         "job"
     ]

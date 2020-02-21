@@ -18,7 +18,11 @@ def as_dict_for_intrumented_list(objs, column=None, includes: Iterable = None):
 
 
 @as_dict.register(ApiHandler)
-def as_dict_for_api_handler(obj, column=None, includes: Iterable = None):
+def as_dict_for_api_handler(
+    obj,
+    column=None,
+    includes: Iterable = None
+):
     result = OrderedDict()
 
     if includes is None and hasattr(obj, '__as_dict_includes__'):
@@ -26,8 +30,12 @@ def as_dict_for_api_handler(obj, column=None, includes: Iterable = None):
 
     for key in _keys_to_serialize(obj, includes):
         value = getattr(obj, key)
-        columns = obj.__table__.columns._data
+        columns = obj.__mapper__.columns
         column = columns.get(key)
+        if column is None:
+            synonym = obj.__mapper__.synonyms.get(key)
+            if synonym:
+                column = synonym._proxied_property.columns[0]
         result[key] = as_dict(value, column=column)
 
     for join in _joins_to_serialize(includes):
@@ -41,27 +49,30 @@ def as_dict_for_api_handler(obj, column=None, includes: Iterable = None):
 def _joins_to_serialize(includes: Iterable = None) -> List[dict]:
     if includes is None:
         includes = ()
-    dict_joins = filter(lambda a: isinstance(a, dict), includes)
+    dict_joins = filter(lambda include: isinstance(include, dict), includes)
     return list(dict_joins)
 
 
-def _keys_to_serialize(obj, includes: Iterable) -> Set[str]:
-    obj_attributes = obj.__mapper__.c.keys()
-    return set(obj_attributes).union(_included_properties(includes)) - _excluded_keys(includes)
+def _keys_to_serialize(
+    obj,
+    includes: Iterable=None
+) -> Set[str]:
+    all_keys = obj.__mapper__.columns.keys()
+    return set(all_keys).union(_included_keys(includes)) - _excluded_keys(includes)
 
 
-def _included_properties(includes: Iterable = None) -> Set[str]:
+def _included_keys(includes: Iterable = None) -> Set[str]:
     if includes is None:
         includes = ()
-    string_keys = filter(lambda a: isinstance(a, str), includes)
-    included_keys = filter(lambda a: not a.startswith('-'), string_keys)
+    string_includes = filter(lambda include: isinstance(include, str), includes)
+    included_keys = filter(lambda string_include: not string_include.startswith('-'), string_includes)
     return set(included_keys)
 
 
 def _excluded_keys(includes: Iterable = None):
     if includes is None:
         includes = ()
-    string_keys = filter(lambda a: isinstance(a, str), includes)
-    excluded_keys = filter(lambda a: a.startswith('-'), string_keys)
-    cleaned_keys = map(lambda a: a[1:], excluded_keys)
-    return set(cleaned_keys)
+    string_includes = filter(lambda include: isinstance(include, str), includes)
+    excluded_keys = filter(lambda string_include: string_include.startswith('-'), string_includes)
+    cleaned_excluded_keys = map(lambda excluded_key: excluded_key[1:], excluded_keys)
+    return set(cleaned_excluded_keys)

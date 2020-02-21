@@ -16,7 +16,7 @@ class RightsType(enum.Enum):
 class UserOfferer(ApiHandler, Model):
 
     userId = Column(BigInteger,
-                    ForeignKey('user.id'),
+                    ForeignKey('user.user_id'),
                     primary_key=True)
 
     user = relationship('User',
