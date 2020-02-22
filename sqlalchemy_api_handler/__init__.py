@@ -6,4 +6,4 @@ from sqlalchemy_api_handler.utils.human_ids import humanize, dehumanize
 from sqlalchemy_api_handler.utils.load_or_404 import load_or_404
 from sqlalchemy_api_handler.utils.logger import logger
 
-__version__ = "0.2.6"
+__version__ = "0.2.7"
