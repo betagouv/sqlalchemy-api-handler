@@ -75,8 +75,15 @@ class Populate(
     def _get_model_instance(value, model):
         if not isinstance(value, model):
             if hasattr(value, 'items'):
-                if 'id' in value:
-                    model_instance = model.query.filter_by(id=dehumanize(value['id'])).one()
+                primary_key_columns = model.__mapper__.primary_key
+                primary_keys = [column.key for column in primary_key_columns]
+                primary_keys_values = list(map(lambda primary_key: value.get(primary_key), primary_keys))
+                if all(primary_keys_values):
+                    pks = [
+                        _dehumanize_if_needed(column, primary_keys_values[index])
+                        for (index, column) in enumerate(primary_key_columns)
+                    ]
+                    model_instance = model.query.get(pks)
                     model_instance.populate_from_dict(value)
                     return model_instance
                 return model(**value)
