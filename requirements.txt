@@ -1,4 +1,4 @@
-coveralls==1.6.0
+coveralls==1.11.1
 Flask==1.0.2
 flask_sqlalchemy==2.4.1
 flask_script==2.0.6
