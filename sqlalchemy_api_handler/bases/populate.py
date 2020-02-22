@@ -76,7 +76,7 @@ class Populate(
         if not isinstance(value, model):
             if hasattr(value, 'items'):
                 if 'id' in value:
-                    model_instance = model.query.get(dehumanize(value['id']))
+                    model_instance = model.query.filter_by(id=dehumanize(value['id'])).one()
                     model_instance.populate_from_dict(value)
                     return model_instance
                 return model(**value)

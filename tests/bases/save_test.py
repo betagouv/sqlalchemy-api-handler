@@ -120,10 +120,10 @@ class SaveTest:
 
         # Then
         assert offer.name == offer_dict['name']
-        assert offer.stocks[0].id == stock1.id
-        assert offer.stocks[0].price == stock1.price
-        assert offer.stocks[1].id == stock2.id
-        assert offer.stocks[1].price == stock2.price
+        offer_stock1 = [s for s in offer.stocks if s.id == stock1.id][0]
+        offer_stock2 = [s for s in offer.stocks if s.id == stock2.id][0]
+        assert offer_stock1.price == stock1.price
+        assert offer_stock2.price == stock2.price
 
     @clean_database
     def test_for_valid_relationship_dict_with_nested_creation(self, app):
@@ -191,8 +191,7 @@ class SaveTest:
 
         # Then
         assert offer.name == offer_dict['name']
-        assert offer.stocks[0].price == stock_dict1['price']
-        assert offer.stocks[1].price == stock_dict2['price']
+        assert set([s.price for s in offer.stocks]) == set([stock_dict1['price'], stock_dict2['price']])
 
     @clean_database
     def test_for_valid_relationship_dicts_with_nested_modifications(self, app):
@@ -226,7 +225,9 @@ class SaveTest:
 
         # Then
         assert offer.name == offer_dict['name']
-        assert offer.stocks[0].id == stock1.id
-        assert offer.stocks[0].price == stock_dict1['price']
-        assert offer.stocks[1].id == stock2.id
-        assert offer.stocks[1].price == stock_dict2['price']
+        offer_stock1 = [s for s in offer.stocks if s.id == stock1.id][0]
+        offer_stock2 = [s for s in offer.stocks if s.id == stock2.id][0]
+        assert offer_stock1.id == stock1.id
+        assert offer_stock1.price == stock_dict1['price']
+        assert offer_stock2.id == stock2.id
+        assert offer_stock2.price == stock_dict2['price']
