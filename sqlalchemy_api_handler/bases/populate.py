@@ -30,7 +30,7 @@ class Populate(
 
     def populate_from_dict(self, datum: dict, skipped_keys: List[str] = []):
         self.check_not_soft_deleted()
-        columns = self.__class__.__table__.columns._data
+        columns = self.__mapper__.columns
         columns_keys_to_populate = self._get_column_keys_to_populate(
             set(columns.keys()), datum, skipped_keys)
         for key in columns_keys_to_populate:
@@ -52,9 +52,21 @@ class Populate(
             else:
                 setattr(self, key, value)
 
-        for key in self.__mapper__.relationships.keys():
+        for (key, relationship) in self.__mapper__.relationships.items():
+            model = relationship.mapper.class_
             if key in datum:
-                setattr(self, key, datum[key])
+                value = datum[key]
+                if not isinstance(value, model):
+                    if hasattr(value, 'items'):
+                        value = model(**value)
+                    elif hasattr(value, '__iter__'):
+                        value = [
+                            model(**obj) if not isinstance(obj, model) else obj
+                            for obj in value
+                        ]
+                    else:
+                        continue
+                setattr(self, key, value)
 
         for key in self.__mapper__.synonyms.keys():
             if key in datum:

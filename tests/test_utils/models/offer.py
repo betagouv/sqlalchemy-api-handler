@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import BigInteger, Column, DateTime, desc, ForeignKey, String
 from sqlalchemy import and_, ARRAY, Boolean, CheckConstraint, false, Integer, Text, TEXT
-from sqlalchemy.orm import column_property, relationship
+from sqlalchemy.orm import column_property
 from sqlalchemy.sql import select, func
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.utils.date import DateTimes

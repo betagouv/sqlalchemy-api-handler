@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 from sqlalchemy import BigInteger, Column, DateTime, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
                                               DecimalCastError, \
@@ -11,6 +12,8 @@ from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
 from sqlalchemy_api_handler.utils.human_ids import dehumanize, NonDehumanizableId
 
 from tests.test_utils.db import Model
+from tests.test_utils.models.offer import Offer
+from tests.test_utils.models.stock import Stock
 from tests.test_utils.models.user import User
 from tests.test_utils.models.time_interval import TimeInterval
 
@@ -141,6 +144,50 @@ class PopulateTest:
 
         # Then
         assert test_object.entityId == dehumanize(humanized_entity_id)
+
+
+    def test_for_valid_relationship_dict(self):
+        # Given
+        test_object = Stock()
+        offer_dict = {
+            "name": "foo",
+            "type": "bar"
+        }
+        stock_dict = {
+            "offer": offer_dict,
+            "price": 1
+        }
+
+        # When
+        test_object.populate_from_dict(stock_dict)
+
+        # Then
+        assert test_object.price == stock_dict['price']
+        assert test_object.offer.name == offer_dict['name']
+
+
+    def test_for_valid_relationship_dicts(self):
+        # Given
+        test_object = Offer()
+        stock_dict1 = {
+            "price": 1
+        }
+        stock_dict2 = {
+            "price": 1
+        }
+        offer_dict = {
+            "name": "foo",
+            "stocks": [stock_dict1, stock_dict2],
+            "type": "bar"
+        }
+
+        # When
+        test_object.populate_from_dict(offer_dict)
+
+        # Then
+        assert test_object.name == offer_dict['name']
+        assert test_object.stocks[0].price == stock_dict1['price']
+        assert test_object.stocks[1].price == stock_dict2['price']
 
 
     def test_for_sql_float_value_with_string_raises_decimal_cast_error(self):

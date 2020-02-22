@@ -58,7 +58,6 @@ class SaveTest:
         assert user.metier == job
         assert user.job == job
 
-
     @clean_database
     def test_for_valid_id_humanized_synonym(self, app):
         # Given
@@ -74,3 +73,98 @@ class SaveTest:
         user_dict = as_dict(user)
         humanized_id = humanize(user.user_id)
         assert user_dict['id'] == humanized_id
+
+    @clean_database
+    def test_for_valid_relationship(self, app):
+        # Given
+        offer_dict = {
+            "name": "foo",
+            "type": "bar"
+        }
+        offer = Offer(**offer_dict)
+        ApiHandler.save(offer)
+        stock_dict = {
+            "offer": offer,
+            "price": 1
+        }
+        stock = Stock(**stock_dict)
+
+        # When
+        ApiHandler.save(stock)
+
+        # Then
+        assert stock.price == stock_dict['price']
+        assert stock.offer.id == offer.id
+        assert stock.offer.name == offer_dict['name']
+
+    @clean_database
+    def test_for_valid_relationships(self, app):
+        # Given
+        stock_dict1 = {
+            "price": 1
+        }
+        stock1 = Stock(**stock_dict1)
+        stock_dict2 = {
+            "price": 1
+        }
+        stock2 = Stock(**stock_dict2)
+        offer_dict = {
+            "name": "foo",
+            "stocks": [stock1, stock2],
+            "type": "bar"
+        }
+        offer = Offer(**offer_dict)
+
+        # When
+        ApiHandler.save(offer)
+
+        # Then
+        assert offer.name == offer_dict['name']
+        assert offer.stocks[0].id == stock1.id
+        assert offer.stocks[0].price == stock1.price
+        assert offer.stocks[1].id == stock2.id
+        assert offer.stocks[1].price == stock2.price
+
+    @clean_database
+    def test_for_valid_relationship_dict(self, app):
+        # Given
+        offer_dict = {
+            "name": "foo",
+            "type": "bar"
+        }
+        stock_dict = {
+            "offer": offer_dict,
+            "price": 1
+        }
+        stock = Stock(**stock_dict)
+
+        # When
+        ApiHandler.save(stock)
+
+        # Then
+        assert stock.price == stock_dict['price']
+        assert stock.offer.name == offer_dict['name']
+
+    @clean_database
+    def test_for_valid_relationship_dicts(self, app):
+        # Given
+        stock_dict1 = {
+            "price": 1
+        }
+        stock_dict2 = {
+            "price": 1
+        }
+        offer_dict = {
+            "name": "foo",
+            "stocks": [stock_dict1, stock_dict2],
+            "type": "bar"
+        }
+        offer = Offer(**offer_dict)
+
+        # When
+        ApiHandler.save(offer)
+
+        # Then
+        assert offer.name == offer_dict['name']
+        assert offer.stocks[0].price == stock_dict1['price']
+        assert offer.stocks[1].price == stock_dict2['price']
