@@ -3,6 +3,7 @@ from sqlalchemy_api_handler.bases.accessor import Accessor
 class DeletedRecordException(Exception):
     pass
 
+
 class Delete(Accessor):
 
     def delete(self):

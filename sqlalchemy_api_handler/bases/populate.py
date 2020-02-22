@@ -53,20 +53,11 @@ class Populate(
                 setattr(self, key, value)
 
         for (key, relationship) in self.__mapper__.relationships.items():
-            model = relationship.mapper.class_
             if key in datum:
-                value = datum[key]
-                if not isinstance(value, model):
-                    if hasattr(value, 'items'):
-                        value = model(**value)
-                    elif hasattr(value, '__iter__'):
-                        value = [
-                            model(**obj) if not isinstance(obj, model) else obj
-                            for obj in value
-                        ]
-                    else:
-                        continue
-                setattr(self, key, value)
+                model = relationship.mapper.class_
+                value = self._get_model_instance(datum[key], model)
+                if value:
+                    setattr(self, key, value)
 
         for key in self.__mapper__.synonyms.keys():
             if key in datum:
@@ -79,6 +70,19 @@ class Populate(
         allowed_columns_to_update = requested_columns_to_update - forbidden_columns
         keys_to_populate = column_keys.intersection(allowed_columns_to_update)
         return keys_to_populate
+
+    @staticmethod
+    def _get_model_instance(value, model):
+        if not isinstance(value, model):
+            if hasattr(value, 'items'):
+                if 'id' in value:
+                    model_instance = model.query.get(dehumanize(value['id']))
+                    model_instance.populate_from_dict(value)
+                    return model_instance
+                return model(**value)
+            elif hasattr(value, '__iter__'):
+                return list(map(lambda obj: Populate._get_model_instance(obj, model), value))
+        return value
 
     def _try_to_set_attribute_with_deserialized_datetime(self, col, key, value):
         try:
@@ -106,10 +110,12 @@ class Populate(
             error.add_error(col.name, "Invalid value for {} ({}): '{}'".format(key, expected_format, value))
             raise error
 
+
 def _dehumanize_if_needed(column, value: Any) -> Any:
     if _is_human_id_column(column):
         return dehumanize(value)
     return value
+
 
 def _deserialize_datetime(key, value):
     if value is None:
@@ -126,6 +132,7 @@ def _deserialize_datetime(key, value):
         raise TypeError('Invalid value for %s: %r' % (key, value), 'datetime', key)
 
     return datetime_value
+
 
 def _is_human_id_column(column: Column) -> bool:
     if column is not None:

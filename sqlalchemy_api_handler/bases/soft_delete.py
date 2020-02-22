@@ -3,8 +3,10 @@ import inspect
 class NotSoftDeletableMixinException(Exception):
     pass
 
+
 class SoftDeletedRecordException(Exception):
     pass
+
 
 class SoftDelete():
 

@@ -16,6 +16,7 @@ class paginate_obj:
         self.prev = page - self.has_prev
         self.items = paginatable[(page-1)*(per_page):(page)*(per_page)]
 
+
 def query_with_order_by(query, order_by):
     if order_by:
         if type(order_by) == str:
@@ -34,12 +35,14 @@ def query_with_order_by(query, order_by):
                 raise e
     return query
 
+
 def elements_by_with_computed_ranking(query, order_by):
     elements = sorted(
         query.all(),
         key=order_by
     )
     return elements
+
 
 def check_single_order_by_string(order_by_string):
     order_by_string = order_by_string.strip(' ')
@@ -54,10 +57,12 @@ def check_single_order_by_string(order_by_string):
                              'Invalid order_by field : "%s"' % order_by_string)
         raise api_errors
 
+
 def order_by_is_native_sqlalchemy_clause(order_by):
     return isinstance(order_by, UnaryExpression) \
            or isinstance(order_by, InstrumentedAttribute) \
            or isinstance(order_by, random)
+
 
 def check_order_by(order_by):
     if isinstance(order_by, list):
@@ -72,6 +77,7 @@ def check_order_by(order_by):
                           flags=re.IGNORECASE)
         for part in order_by.split(','):
             check_single_order_by_string(part)
+
 
 def get_result(
     modelClass,

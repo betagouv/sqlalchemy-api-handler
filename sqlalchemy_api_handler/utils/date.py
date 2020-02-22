@@ -8,6 +8,7 @@ def match_format(value: str, format: str):
     else:
         return True
 
+
 def deserialize_datetime(key, value):
     valid_patterns = ['%Y-%m-%dT%H:%M:%S.%fZ', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%SZ']
     datetime_value = None
@@ -18,8 +19,10 @@ def deserialize_datetime(key, value):
 
     return datetime_value
 
+
 def format_into_ISO_8601(value):
     return value.isoformat() + "Z"
+
 
 class DateTimes:
     def __init__(self, *datetimes):

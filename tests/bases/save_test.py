@@ -105,7 +105,7 @@ class SaveTest:
         }
         stock1 = Stock(**stock_dict1)
         stock_dict2 = {
-            "price": 1
+            "price": 2
         }
         stock2 = Stock(**stock_dict2)
         offer_dict = {
@@ -126,7 +126,7 @@ class SaveTest:
         assert offer.stocks[1].price == stock2.price
 
     @clean_database
-    def test_for_valid_relationship_dict(self, app):
+    def test_for_valid_relationship_dict_with_nested_creation(self, app):
         # Given
         offer_dict = {
             "name": "foo",
@@ -146,13 +146,38 @@ class SaveTest:
         assert stock.offer.name == offer_dict['name']
 
     @clean_database
-    def test_for_valid_relationship_dicts(self, app):
+    def test_for_valid_relationship_dict_with_nested_modification(self, app):
+        # Given
+        offer_dict = {
+            "name": "foo",
+            "type": "bar"
+        }
+        offer = Offer(**offer_dict)
+        ApiHandler.save(offer)
+        offer_dict['id'] = humanize(offer.id)
+        offer_dict['name'] = "fooo"
+        stock_dict = {
+            "offer": offer_dict,
+            "price": 1
+        }
+        stock = Stock(**stock_dict)
+
+        # When
+        ApiHandler.save(stock)
+
+        # Then
+        assert stock.price == stock_dict['price']
+        assert stock.offer.id == offer.id
+        assert stock.offer.name == offer_dict['name']
+
+    @clean_database
+    def test_for_valid_relationship_dicts_with_nested_creations(self, app):
         # Given
         stock_dict1 = {
             "price": 1
         }
         stock_dict2 = {
-            "price": 1
+            "price": 2
         }
         offer_dict = {
             "name": "foo",
@@ -167,4 +192,41 @@ class SaveTest:
         # Then
         assert offer.name == offer_dict['name']
         assert offer.stocks[0].price == stock_dict1['price']
+        assert offer.stocks[1].price == stock_dict2['price']
+
+    @clean_database
+    def test_for_valid_relationship_dicts_with_nested_modifications(self, app):
+        # Given
+        offer_dict = {
+            "name": "foo",
+            "type": "bar"
+        }
+        offer = Offer(**offer_dict)
+        ApiHandler.save(offer)
+        stock_dict1 = {
+            "offerId": humanize(offer.id),
+            "price": 1
+        }
+        stock1 = Stock(**stock_dict1)
+        ApiHandler.save(stock1)
+        stock_dict1['id'] = humanize(stock1.id)
+        stock_dict2 = {
+            "offerId": humanize(offer.id),
+            "price": 2
+        }
+        stock2 = Stock(**stock_dict2)
+        ApiHandler.save(stock2)
+        stock_dict2['id'] = humanize(stock2.id)
+        stock_dict2['price'] = 3
+        offer_dict['stocks'] = [stock_dict1, stock_dict2]
+        offer.populate_from_dict(offer_dict)
+
+        # When
+        ApiHandler.save(offer)
+
+        # Then
+        assert offer.name == offer_dict['name']
+        assert offer.stocks[0].id == stock1.id
+        assert offer.stocks[0].price == stock_dict1['price']
+        assert offer.stocks[1].id == stock2.id
         assert offer.stocks[1].price == stock_dict2['price']
