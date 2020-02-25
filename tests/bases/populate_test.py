@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 from sqlalchemy import BigInteger, Column, DateTime, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
                                               DecimalCastError, \
@@ -19,13 +19,14 @@ from tests.test_utils.models.time_interval import TimeInterval
 
 
 class PopulateFoo(ApiHandler, Model):
-    date_attribute = Column(DateTime, nullable=True)
-    entityId = Column(BigInteger, nullable=True)
-    float_attribute = Column(Float, nullable=True)
-    integer_attribute = Column(Integer, nullable=True)
+    date_attribute = Column(DateTime(), nullable=True)
+    entityId = Column(BigInteger(), nullable=True)
+    float_attribute = Column(Float(), nullable=True)
+    integer_attribute = Column(Integer(), nullable=True)
     uuid_attribute = Column(UUID(as_uuid=True), nullable=True)
     uuidId = Column(UUID(as_uuid=True), nullable=True)
-
+    bar_id = Column(BigInteger())
+    barId = synonym('bar_id')
 
 time_interval = TimeInterval()
 time_interval.start = datetime(2018, 1, 1, 10, 20, 30, 111000)
@@ -144,6 +145,21 @@ class PopulateTest:
 
         # Then
         assert test_object.entityId == dehumanize(humanized_entity_id)
+
+
+    def test_for_valid_sql_humanize_id_synonym_value_with_key_finishing_by_Id(self):
+        # Given
+        test_object = PopulateFoo()
+        humanized_bar_id = "AE"
+        dehumanized_bar_id = dehumanize(humanized_bar_id)
+        data = {'barId': humanized_bar_id}
+
+        # When
+        test_object.populate_from_dict(data)
+
+        # Then
+        assert test_object.bar_id == dehumanized_bar_id
+        assert test_object.barId == dehumanized_bar_id
 
 
     def test_for_valid_relationship_dict(self):

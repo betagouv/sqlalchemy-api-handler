@@ -9,7 +9,7 @@ from sqlalchemy import BigInteger, \
                        Numeric, \
                        String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql.schema import Column
+
 from typing import List, Any, Iterable, Set
 
 from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
@@ -18,7 +18,7 @@ from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
 from sqlalchemy_api_handler.bases.delete import Delete
 from sqlalchemy_api_handler.bases.soft_delete import SoftDelete
 from sqlalchemy_api_handler.utils.date import match_format
-from sqlalchemy_api_handler.utils.human_ids import dehumanize
+from sqlalchemy_api_handler.utils.human_ids import dehumanize, is_id_column
 
 
 class Populate(
@@ -59,9 +59,14 @@ class Populate(
                 if value:
                     setattr(self, key, value)
 
-        for key in self.__mapper__.synonyms.keys():
+        for (key, synonym) in self.__mapper__.synonyms.items():
             if key in datum:
-                setattr(self, key, datum[key])
+                value = _dehumanize_if_needed(
+                    synonym._proxied_property.columns[0],
+                    datum[key]
+                )
+                print("KKK", key, value, synonym._proxied_property.columns[0])
+                setattr(self, key, value)
 
     @staticmethod
     def _get_column_keys_to_populate(column_keys: Set[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
@@ -119,7 +124,7 @@ class Populate(
 
 
 def _dehumanize_if_needed(column, value: Any) -> Any:
-    if _is_human_id_column(column):
+    if is_id_column(column):
         return dehumanize(value)
     return value
 
@@ -139,8 +144,3 @@ def _deserialize_datetime(key, value):
         raise TypeError('Invalid value for %s: %r' % (key, value), 'datetime', key)
 
     return datetime_value
-
-
-def _is_human_id_column(column: Column) -> bool:
-    if column is not None:
-        return (column.key == 'id' or column.key.endswith('Id')) and isinstance(column.type, (BigInteger, Integer))

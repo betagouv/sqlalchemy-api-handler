@@ -1,5 +1,7 @@
 import binascii
 from base64 import b32encode, b32decode
+from sqlalchemy import BigInteger, Integer
+from sqlalchemy.sql.schema import Column
 # This library creates IDs for use in our URLs,
 # trying to achieve a balance between having a short
 # length and being usable by humans
@@ -41,3 +43,10 @@ def int_to_bytes(x):
 
 def int_from_bytes(xbytes):
     return int.from_bytes(xbytes, 'big')
+
+
+def is_id_column(column: Column) -> bool:
+    if column is None:
+        return false
+    return isinstance(column.type, (BigInteger, Integer)) \
+           and (column.key.endswith('id') or column.key.endswith('Id'))

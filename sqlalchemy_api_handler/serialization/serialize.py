@@ -6,7 +6,7 @@ from psycopg2._range import DateTimeRange
 from sqlalchemy import Integer
 
 from sqlalchemy_api_handler.utils.date import DateTimes, format_into_ISO_8601
-from sqlalchemy_api_handler.utils.human_ids import humanize
+from sqlalchemy_api_handler.utils.human_ids import humanize, is_id_column
 
 
 @singledispatch
@@ -16,9 +16,8 @@ def serialize(value, column=None):
 
 @serialize.register(int)
 def _(value, column=None):
-    if column is not None and isinstance(column.type, Integer) and column.key.lower().endswith('id'):
+    if is_id_column(column):
         return humanize(value)
-
     return value
 
 
