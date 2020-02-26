@@ -65,7 +65,6 @@ class Populate(
                     synonym._proxied_property.columns[0],
                     datum[key]
                 )
-                print("KKK", key, value, synonym._proxied_property.columns[0])
                 setattr(self, key, value)
 
     @staticmethod
