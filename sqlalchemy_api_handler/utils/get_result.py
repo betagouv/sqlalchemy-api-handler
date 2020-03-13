@@ -135,5 +135,7 @@ def get_result(
     result = { "data": data }
     if with_total_data_count:
         result['total_data_count'] = total_data_count
+        if paginate:
+            result['has_more'] = total_data_count - page * paginate > 0
 
     return result

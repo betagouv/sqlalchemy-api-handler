@@ -39,3 +39,59 @@ class GetResultTest:
 
         # Then
         assert 'order_by' in e.value.errors
+
+    @clean_database
+    def test_returns_total_data_count_with_has_more(self, app):
+        # Given
+        offer = Offer(name="foo", type="ThingType.JEUX_ABO")
+        ApiHandler.save(offer)
+        page = 2
+        paginate = 10
+        prices_length = 35
+        stocks = []
+        for price in range(prices_length):
+            stock = Stock(price=price)
+            stock.offer = offer
+            stocks.append(stock)
+        ApiHandler.save(*stocks)
+
+        # When
+        result = get_result(
+            Stock,
+            page=page,
+            paginate=paginate,
+            with_total_data_count=True
+        )
+
+        # Then
+        assert len(result['data']) == paginate
+        assert result['has_more'] == True
+        assert result['total_data_count'] == prices_length
+
+    @clean_database
+    def test_returns_total_data_count_with_has_more(self, app):
+        # Given
+        offer = Offer(name="foo", type="ThingType.JEUX_ABO")
+        ApiHandler.save(offer)
+        page = 4
+        paginate = 10
+        prices_length = 35
+        stocks = []
+        for price in range(prices_length):
+            stock = Stock(price=price)
+            stock.offer = offer
+            stocks.append(stock)
+        ApiHandler.save(*stocks)
+
+        # When
+        result = get_result(
+            Stock,
+            page=page,
+            paginate=paginate,
+            with_total_data_count=True
+        )
+
+        # Then
+        assert len(result['data']) == page * paginate - prices_length 
+        assert result['has_more'] == False
+        assert result['total_data_count'] == prices_length
