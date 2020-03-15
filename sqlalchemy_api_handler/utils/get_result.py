@@ -133,7 +133,7 @@ def get_result(
         objects = list(map(populate, objects))
 
     result = { "data": data }
-    if with_total_data_count:
+    if paginate or with_total_data_count:
         result['total_data_count'] = total_data_count
         if paginate:
             result['has_more'] = total_data_count - page * paginate > 0
