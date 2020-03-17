@@ -110,7 +110,7 @@ def get_result(
             is_already_queried = True
 
     total_data_count = None
-    if with_total_data_count:
+    if paginate or with_total_data_count:
         if is_already_queried:
             total_data_count = len(elements)
         else:
