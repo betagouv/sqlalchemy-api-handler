@@ -302,14 +302,17 @@ class PopulateTest:
     @clean_database
     def test_create_or_update_returns_new_created_offer(self, app):
         # Given
-        offer = Offer(name='foo', type='bar')
-        ApiHandler.save(offer)
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.create_or_modify({ 'name': 'fee', 'type': 'bric' }, search_by='name')
+        offer2 = Offer.create_or_modify(
+            { 'name': 'fee', 'type': 'bric' },
+            search_by='name'
+        )
 
         # Then
-        assert offer2.id != offer.id
+        assert offer2.id != offer1.id
         assert offer2.name == 'fee'
         assert offer2.type == 'bric'
 
@@ -317,13 +320,16 @@ class PopulateTest:
     @clean_database
     def test_create_or_update_returns_modified_existing_offer(self, app):
         # Given
-        offer = Offer(name="foo", type="bar")
-        ApiHandler.save(offer)
+        offer1 = Offer(name="foo", type="bar")
+        ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.create_or_modify({ 'name': 'foo', 'type': 'bric' }, search_by='name')
+        offer2 = Offer.create_or_modify(
+            { 'name': 'foo', 'type': 'bric' },
+            search_by='name'
+        )
 
         # Then
-        assert offer2.id == offer.id
+        assert offer2.id == offer1.id
         assert offer2.name == 'foo'
         assert offer2.type == 'bric'

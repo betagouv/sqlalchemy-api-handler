@@ -2,11 +2,10 @@ from pprint import pprint
 from sqlalchemy import BigInteger,\
                        Column
 
-from sqlalchemy_api_handler.bases.find_or_create import FindOrCreate
 from sqlalchemy_api_handler.bases.save import Save
 from sqlalchemy_api_handler.utils.human_ids import humanize
 
-class ApiHandler(Save, FindOrCreate):
+class ApiHandler(Save):
 
     id = Column(BigInteger,
                 primary_key=True,
