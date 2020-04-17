@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime
 from decimal import Decimal, \
@@ -14,7 +15,10 @@ from typing import List, Any, Iterable, Set
 
 from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
                                               DecimalCastError, \
-                                              UuidCastError
+                                              UuidCastError, \
+                                              ResourceNotFoundError, \
+                                              EmptyFiltersError
+
 from sqlalchemy_api_handler.bases.delete import Delete
 from sqlalchemy_api_handler.bases.soft_delete import SoftDelete
 from sqlalchemy_api_handler.utils.date import match_format
@@ -120,6 +124,58 @@ class Populate(
             error = DecimalCastError()
             error.add_error(col.name, "Invalid value for {} ({}): '{}'".format(key, expected_format, value))
             raise error
+
+    @classmethod
+    def _get_filter_dict(model, content, filter_keys):
+        if not isinstance(filter_keys, list):
+            filter_keys = [filter_keys]
+        return dict([(key, value) for key, value in content.items() if key in filter_keys])
+
+    @classmethod
+    def _update(model, object, content):
+        object.populate_from_dict(content)
+        return object
+
+    @classmethod
+    def _create(model, content):
+        return model(**content)
+
+    @classmethod
+    def find(model, content, filter_keys):
+        filters = model._get_filter_dict(content, filter_keys)
+        if not filters:
+            errors = EmptyFiltersError()
+            filters = ", ".join(filter_keys) if isinstance(filter_keys, list) else filter_keys
+            errors.add_error('_get_filter_dict', 'None of filters found among: ' + filters)
+            raise errors
+        existing = model.query.filter_by(**filters).first()
+        if not existing:
+            return None
+        return existing
+
+    @classmethod
+    def find_or_create(model, content, filter_keys):
+        existing = model.find(content, filter_keys)
+        if existing:
+            return existing
+        return model._create(content)
+
+    @classmethod
+    def find_and_update(model, content, filter_keys):
+        existing = model.find(content, filter_keys)
+        if not existing:
+            errors = ResourceNotFoundError()
+            filters = model._get_filter_dict(content, filter_keys)
+            errors.add_error('find_and_update', 'No ressource found with {} '.format(json.dumps(filters)))
+            raise errors
+        return model._update(existing, content)
+
+    @classmethod
+    def create_or_update(model, content, filter_keys):
+        existing = model.find(content, filter_keys)
+        if existing:
+            return model._update(existing, content)
+        return model._create(content)
 
 
 def _dehumanize_if_needed(column, value: Any) -> Any:
