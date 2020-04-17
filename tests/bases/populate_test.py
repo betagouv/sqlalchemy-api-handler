@@ -11,6 +11,7 @@ from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
                                               UuidCastError
 from sqlalchemy_api_handler.utils.human_ids import dehumanize, NonDehumanizableId
 
+from tests.conftest import clean_database
 from tests.test_utils.db import Model
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.stock import Stock
@@ -296,3 +297,33 @@ class PopulateTest:
         # When
         with pytest.raises(NonDehumanizableId):
             test_object.populate_from_dict(data)
+
+
+    @clean_database
+    def test_create_or_update_returns_new_created_offer(self, app):
+        # Given
+        offer = Offer(name='foo', type='bar')
+        ApiHandler.save(offer)
+
+        # When
+        offer2 = Offer.create_or_modify({ 'name': 'fee', 'type': 'bric' }, search_by='name')
+
+        # Then
+        assert offer2.id != offer.id
+        assert offer2.name == 'fee'
+        assert offer2.type == 'bric'
+
+
+    @clean_database
+    def test_create_or_update_returns_modified_existing_offer(self, app):
+        # Given
+        offer = Offer(name="foo", type="bar")
+        ApiHandler.save(offer)
+
+        # When
+        offer2 = Offer.create_or_modify({ 'name': 'foo', 'type': 'bric' }, search_by='name')
+
+        # Then
+        assert offer2.id == offer.id
+        assert offer2.name == 'foo'
+        assert offer2.type == 'bric'
