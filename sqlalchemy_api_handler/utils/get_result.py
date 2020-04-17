@@ -87,7 +87,6 @@ def get_result(
     page=None,
     populate=None,
     query=None,
-    refine=None,
     should_distinct=None,
     with_total_data_count=None
 ):
@@ -96,9 +95,6 @@ def get_result(
 
     if issubclass(modelClass, SoftDeletableMixin):
         query = query.filter(modelClass.isSoftDeleted == False)
-
-    if refine:
-        query = refine(query)
 
     is_already_queried = False
     if order_by:
