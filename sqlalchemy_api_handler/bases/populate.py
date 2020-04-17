@@ -67,6 +67,7 @@ class Populate(
                 )
                 setattr(self, key, value)
 
+
     @staticmethod
     def _get_column_keys_to_populate(column_keys: Set[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
         requested_columns_to_update = set(data.keys())
@@ -120,6 +121,21 @@ class Populate(
             error = DecimalCastError()
             error.add_error(col.name, "Invalid value for {} ({}): '{}'".format(key, expected_format, value))
             raise error
+
+
+    @classmethod
+    def create_or_modify(model, content, search_by):
+        if not isinstance(search_by, list):
+            search_by = [search_by]
+
+        filter = dict([(search_key, content[search_key])  for search_key in search_by])
+
+        existing_object = model.query.filter_by(**filter).first()
+        if existing_object:
+            existing_object.populate_from_dict(content)
+            return existing_object
+
+        return model(**content)
 
 
 def _dehumanize_if_needed(column, value: Any) -> Any:
