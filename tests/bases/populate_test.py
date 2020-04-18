@@ -8,9 +8,12 @@ from sqlalchemy.orm import relationship, synonym
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
                                               DecimalCastError, \
+                                              EmptyFiltersError, \
+                                              ResourceNotFoundError, \
                                               UuidCastError
 from sqlalchemy_api_handler.utils.human_ids import dehumanize, NonDehumanizableId
 
+from tests.conftest import clean_database
 from tests.test_utils.db import Model
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.stock import Stock
@@ -296,3 +299,125 @@ class PopulateTest:
         # When
         with pytest.raises(NonDehumanizableId):
             test_object.populate_from_dict(data)
+
+    @clean_database
+    def test_find_raise_empty_filter_error(self, app):
+        # Given
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
+
+        # When
+        with pytest.raises(EmptyFiltersError) as errors:
+            Offer.find({'name': 'fee', 'type': 'bric'}, 'position')
+
+        # Then
+        assert errors.value.errors['_get_filter_dict'] == ["None of filters found among: position"]
+
+    @clean_database
+    def test_find_returns_none(self, app):
+        # Given
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
+
+        # When
+        offer2 = Offer.find({'name': 'fee', 'type': 'bric'}, 'name')
+
+        # Then
+        assert offer2 is None
+
+    @clean_database
+    def test_find_returns_existing_offer(self, app):
+        # Given
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
+
+        # When
+        offer2 = Offer.find({'name': 'foo'}, 'name')
+
+        # Then
+        assert offer2.id == offer1.id
+        assert offer2.name == offer1.name == 'foo'
+        assert offer2.type == offer1.type == 'bar'
+
+    @clean_database
+    def test_find_or_create_returns_existing_offer(self, app):
+        # Given
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
+
+        # When
+        offer2 = Offer.find_or_create({'name': 'foo'}, 'name')
+
+        # Then
+        assert offer2.id == offer1.id
+        assert offer2.name == offer1.name == 'foo'
+        assert offer2.type == offer1.type == 'bar'
+
+    @clean_database
+    def test_find_or_create_returns_created_offer(self, app):
+        # Given
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
+
+        # When
+        offer2 = Offer.find_or_create({'name': 'fee', 'type': 'gold'}, 'name')
+
+        # Then
+        assert offer2.id != offer1.id
+        assert offer2.name == 'fee'
+        assert offer2.type == 'gold'
+
+    @clean_database
+    def test_find_and_update_returns_updated_offer(self, app):
+        # Given
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
+
+        # When
+        offer2 = Offer.find_and_update({'name': 'foo', 'type': 'bric'}, 'name')
+
+        # Then
+        assert offer2.id == offer1.id
+        assert offer2.name == offer1.name == 'foo'
+        assert offer2.type == 'bric'
+
+    @clean_database
+    def test_find_and_update_raises_ressource_not_found_error(self, app):
+        # Given
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
+
+        # When
+        with pytest.raises(ResourceNotFoundError) as e:
+            Offer.find_and_update({'name': 'fee', 'type': 'bric'}, 'name')
+
+        # Then
+        assert e.value.errors['find_and_update'] == ['No ressource found with {"name": "fee"} ']
+
+    @clean_database
+    def test_create_or_update_returns_new_created_offer(self, app):
+        # Given
+        offer1 = Offer(name='foo', type='bar')
+        ApiHandler.save(offer1)
+
+        # When
+        offer2 = Offer.create_or_update({'name': 'fee', 'type': 'bric'}, 'name')
+
+        # Then
+        assert offer2.id != offer1.id
+        assert offer2.name == 'fee'
+        assert offer2.type == 'bric'
+
+    @clean_database
+    def test_create_or_update_returns_updated_offer(self, app):
+        # Given
+        offer1 = Offer(name="foo", type="bar")
+        ApiHandler.save(offer1)
+
+        # When
+        offer2 = Offer.create_or_update({'name': 'foo', 'type': 'bric'}, 'name')
+
+        # Then
+        assert offer2.id == offer1.id
+        assert offer2.name == offer1.name == 'foo'
+        assert offer2.type == 'bric'

@@ -48,6 +48,9 @@ class DateTimeCastError(ApiErrors):
 class DecimalCastError(ApiErrors):
     pass
 
+class EmptyFiltersError(ApiErrors):
+    pass
+
 class ForbiddenError(ApiErrors):
     pass
 
