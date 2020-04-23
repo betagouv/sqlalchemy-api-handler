@@ -8,3 +8,5 @@ class Delete(Accessor):
         db = Accessor.get_db()
         for entity in entities:
              db.session.delete(entity)
+
+        db.session.commit()
