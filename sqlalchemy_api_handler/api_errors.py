@@ -1,6 +1,7 @@
 import json
 import re
 
+
 class ApiErrors(Exception):
     def __init__(self, errors: dict = None):
         self.errors = errors if errors else {}
@@ -41,24 +42,3 @@ class ApiErrors(Exception):
             return json.dumps(self.errors, indent=2)
 
     status_code = None
-
-class DateTimeCastError(ApiErrors):
-    pass
-
-class DecimalCastError(ApiErrors):
-    pass
-
-class EmptyFiltersError(ApiErrors):
-    pass
-
-class ForbiddenError(ApiErrors):
-    pass
-
-class ResourceGoneError(ApiErrors):
-    pass
-
-class ResourceNotFoundError(ApiErrors):
-    pass
-
-class UuidCastError(ApiErrors):
-    pass

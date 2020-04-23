@@ -6,11 +6,11 @@ from sqlalchemy import BigInteger, Column, DateTime, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, synonym
 from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
-                                              DecimalCastError, \
-                                              EmptyFiltersError, \
-                                              ResourceNotFoundError, \
-                                              UuidCastError
+from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
+                                                DecimalCastError, \
+                                                EmptyFilterError, \
+                                                ResourceNotFoundError, \
+                                                UuidCastError
 from sqlalchemy_api_handler.utils.human_ids import dehumanize, NonDehumanizableId
 
 from tests.conftest import clean_database
@@ -307,7 +307,7 @@ class PopulateTest:
         ApiHandler.save(offer1)
 
         # When
-        with pytest.raises(EmptyFiltersError) as errors:
+        with pytest.raises(EmptyFilterError) as errors:
             Offer.find({'name': 'fee', 'type': 'bric'}, 'position')
 
         # Then

@@ -10,19 +10,19 @@ from sqlalchemy import BigInteger, \
                        Numeric, \
                        String
 from sqlalchemy.dialects.postgresql import UUID
-
 from typing import List, Any, Iterable, Set
 
-from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
-                                              DecimalCastError, \
-                                              UuidCastError, \
-                                              ResourceNotFoundError, \
-                                              EmptyFiltersError
-
 from sqlalchemy_api_handler.bases.delete import Delete
+from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
+                                                DecimalCastError, \
+                                                EmptyFilterError, \
+                                                ResourceNotFoundError, \
+                                                UuidCastError
 from sqlalchemy_api_handler.bases.soft_delete import SoftDelete
 from sqlalchemy_api_handler.utils.date import match_format
 from sqlalchemy_api_handler.utils.human_ids import dehumanize, is_id_column
+
+
 
 
 class Populate(
@@ -144,7 +144,7 @@ class Populate(
     def find(model, content, filter_keys):
         filters = model._get_filter_dict(content, filter_keys)
         if not filters:
-            errors = EmptyFiltersError()
+            errors = EmptyFilterError()
             filters = ", ".join(filter_keys) if isinstance(filter_keys, list) else filter_keys
             errors.add_error('_get_filter_dict', 'None of filters found among: ' + filters)
             raise errors
