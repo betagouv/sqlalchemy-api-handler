@@ -25,14 +25,14 @@ from sqlalchemy_api_handler.utils.human_ids import dehumanize, is_id_column
 
 
 
-class Populate(
+class Modify(
         Delete,
         SoftDelete
 ):
     def __init__(self, **options):
-        self.populate_from_dict(options)
+        self.modify(options)
 
-    def populate_from_dict(self, datum: dict, skipped_keys: List[str] = []):
+    def modify(self, datum: dict, skipped_keys: List[str] = []):
         self.check_not_soft_deleted()
         columns = self.__mapper__.columns
         columns_keys_to_populate = self._get_column_keys_to_populate(
@@ -71,12 +71,14 @@ class Populate(
                 )
                 setattr(self, key, value)
 
+        return self
+
     @staticmethod
     def _get_column_keys_to_populate(column_keys: Set[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
-        requested_columns_to_update = set(data.keys())
+        requested_columns_to_modify = set(data.keys())
         forbidden_columns = set(['id', 'deleted'] + skipped_keys)
-        allowed_columns_to_update = requested_columns_to_update - forbidden_columns
-        keys_to_populate = column_keys.intersection(allowed_columns_to_update)
+        allowed_columns_to_modify = requested_columns_to_modify - forbidden_columns
+        keys_to_populate = column_keys.intersection(allowed_columns_to_modify)
         return keys_to_populate
 
     @staticmethod
@@ -92,11 +94,11 @@ class Populate(
                         for (index, column) in enumerate(primary_key_columns)
                     ]
                     model_instance = model.query.get(pks)
-                    model_instance.populate_from_dict(value)
+                    model_instance.modify(value)
                     return model_instance
                 return model(**value)
             elif hasattr(value, '__iter__'):
-                return list(map(lambda obj: Populate._get_model_instance(obj, model), value))
+                return list(map(lambda obj: Modify._get_model_instance(obj, model), value))
         return value
 
     def _try_to_set_attribute_with_deserialized_datetime(self, col, key, value):
@@ -132,15 +134,6 @@ class Populate(
         return dict([(key, value) for key, value in content.items() if key in filter_keys])
 
     @classmethod
-    def _update(model, object, content):
-        object.populate_from_dict(content)
-        return object
-
-    @classmethod
-    def _create(model, content):
-        return model(**content)
-
-    @classmethod
     def find(model, content, filter_keys):
         filters = model._get_filter_dict(content, filter_keys)
         if not filters:
@@ -158,24 +151,24 @@ class Populate(
         existing = model.find(content, filter_keys)
         if existing:
             return existing
-        return model._create(content)
+        return model(**content)
 
     @classmethod
-    def find_and_update(model, content, filter_keys):
+    def find_and_modify(model, content, filter_keys):
         existing = model.find(content, filter_keys)
         if not existing:
             errors = ResourceNotFoundError()
             filters = model._get_filter_dict(content, filter_keys)
-            errors.add_error('find_and_update', 'No ressource found with {} '.format(json.dumps(filters)))
+            errors.add_error('find_and_modify', 'No ressource found with {} '.format(json.dumps(filters)))
             raise errors
-        return model._update(existing, content)
+        return model.modify(existing, content)
 
     @classmethod
-    def create_or_update(model, content, filter_keys):
+    def create_or_modify(model, content, filter_keys):
         existing = model.find(content, filter_keys)
         if existing:
-            return model._update(existing, content)
-        return model._create(content)
+            return model.modify(existing, content)
+        return model(**content)
 
 
 def _dehumanize_if_needed(column, value: Any) -> Any:
