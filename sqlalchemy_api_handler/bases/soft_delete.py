@@ -1,11 +1,7 @@
 import inspect
 
-class NotSoftDeletableMixinException(Exception):
-    pass
-
-
-class SoftDeletedRecordException(Exception):
-    pass
+from sqlalchemy_api_handler.bases.errors import NotSoftDeletableMixinException, \
+                                                SoftDeletedRecordException
 
 
 class SoftDelete():
@@ -15,7 +11,9 @@ class SoftDelete():
 
     def check_not_soft_deleted(self):
         if self.is_soft_deleted():
-            raise SoftDeletedRecordException
+            api_errors = SoftDeletedRecordException()
+            api_errors.add_error('check_not_soft_deleted', 'Entity already soft deleted')
+            raise api_errors
 
     def is_soft_deleted(self):
         classes = inspect.getmro(type(self))
@@ -23,13 +21,12 @@ class SoftDelete():
             return self.isSoftDeleted
         return False
 
-    def soft_delete(self):
-        classes = inspect.getmro(type(self))
-        if 'SoftDeletableMixin' not in [cl.__name__ for cl in classes]:
-            raise NotSoftDeletableMixinException
-        self.isSoftDeleted = True
-        return self
-
     @staticmethod
-    def soft_delete_objects(*objects):
-        return list(map(SoftDelete.soft_delete, objects))
+    def soft_delete(*entities):
+        for entity in entities:
+            classes = inspect.getmro(type(entity))
+            if 'SoftDeletableMixin' not in [cl.__name__ for cl in classes]:
+                api_errors = NotSoftDeletableMixinException()
+                api_errors.add_error('soft_delete', 'cannot soft delete this entity')
+                raise api_errors
+            entity.isSoftDeleted = True

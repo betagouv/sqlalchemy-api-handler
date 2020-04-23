@@ -117,14 +117,22 @@ class DecimalCastError(ApiErrors):
 class EmptyFilterError(ApiErrors):
     pass
 
-    
+
 class ForbiddenError(ApiErrors):
+    pass
+
+
+class NotSoftDeletableMixinException(ApiErrors):
     pass
 
 
 class ResourceGoneError(ApiErrors):
     pass
 
+
+class SoftDeletedRecordException(ApiErrors):
+    pass
+    
 
 class ResourceNotFoundError(ApiErrors):
     pass
