@@ -2,26 +2,27 @@ from sqlalchemy.exc import DataError, IntegrityError, InternalError
 
 from sqlalchemy_api_handler.api_errors import ApiErrors
 from sqlalchemy_api_handler.bases.errors import Errors
-from sqlalchemy_api_handler.bases.populate import Populate
+from sqlalchemy_api_handler.bases.modify import Modify
 
-class Save(Populate, Errors):
+
+class Save(Modify, Errors):
 
     @staticmethod
-    def save(*objects):
-        if not objects:
+    def save(*entities):
+        if not entities:
             return None
 
         db = Save.get_db()
 
         # CUMULATE ERRORS IN ONE SINGLE API ERRORS DURING ADD TIME
         api_errors = ApiErrors()
-        for obj in objects:
+        for entity in entities:
             with db.session.no_autoflush:
-                obj_api_errors = obj.errors()
-            if obj_api_errors.errors.keys():
-                api_errors.errors.update(obj_api_errors.errors)
+                entity_api_errors = entity.errors()
+            if entity_api_errors.errors.keys():
+                api_errors.errors.update(entity_api_errors.errors)
             else:
-                db.session.add(obj)
+                db.session.add(entity)
 
         # CHECK BEFORE COMMIT
         if api_errors.errors.keys():
@@ -39,8 +40,8 @@ class Save(Populate, Errors):
             db.session.rollback()
             raise api_errors
         except InternalError as ie:
-            for obj in objects:
-                api_errors.add_error(*obj.restize_internal_error(ie))
+            for entity in entities:
+                api_errors.add_error(*entity.restize_internal_error(ie))
             db.session.rollback()
             raise api_errors
         except TypeError as te:

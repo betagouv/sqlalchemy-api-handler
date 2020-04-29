@@ -6,11 +6,11 @@ from sqlalchemy import BigInteger, Column, DateTime, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, synonym
 from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.api_errors import DateTimeCastError, \
-                                              DecimalCastError, \
-                                              EmptyFiltersError, \
-                                              ResourceNotFoundError, \
-                                              UuidCastError
+from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
+                                                DecimalCastError, \
+                                                EmptyFilterError, \
+                                                ResourceNotFoundError, \
+                                                UuidCastError
 from sqlalchemy_api_handler.utils.human_ids import dehumanize, NonDehumanizableId
 
 from tests.conftest import clean_database
@@ -21,7 +21,7 @@ from tests.test_utils.models.user import User
 from tests.test_utils.models.time_interval import TimeInterval
 
 
-class PopulateFoo(ApiHandler, Model):
+class ModifyFoo(ApiHandler, Model):
     date_attribute = Column(DateTime(), nullable=True)
     entityId = Column(BigInteger(), nullable=True)
     float_attribute = Column(Float(), nullable=True)
@@ -36,7 +36,7 @@ time_interval.start = datetime(2018, 1, 1, 10, 20, 30, 111000)
 time_interval.end = datetime(2018, 2, 2, 5, 15, 25, 222000)
 now = datetime.utcnow()
 
-class PopulateTest:
+class ModifyTest:
     def test_user_string_fields_are_stripped_of_whitespace(self):
         # Given
         user_data = {
@@ -59,92 +59,92 @@ class PopulateTest:
 
     def test_for_sql_integer_value_with_string_raises_decimal_cast_error(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'integer_attribute': 'yolo'}
 
         # When
         with pytest.raises(DecimalCastError) as errors:
-            test_object.populate_from_dict(data)
+            test_object.modify(data)
 
         # Then
         assert errors.value.errors['integer_attribute'] == ["Invalid value for integer_attribute (integer): 'yolo'"]
 
     def test_for_sql_integer_value_with_str_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'integer_attribute': '12.9'}
 
         # When
-        test_object.populate_from_dict(data)
+        test_object.modify(data)
 
         # Then
         assert test_object.integer_attribute == Decimal('12.9')
 
     def test_for_sql_float_value_with_str_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'float_attribute': '12.9'}
 
         # When
-        test_object.populate_from_dict(data)
+        test_object.modify(data)
 
         # Then
         assert test_object.float_attribute == Decimal('12.9')
 
     def test_for_sql_integer_value_with_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'integer_attribute': 12}
 
         # When
-        test_object.populate_from_dict(data)
+        test_object.modify(data)
 
         # Then
         assert test_object.integer_attribute == 12
 
     def test_for_sql_float_value_with_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'float_attribute': 12.9}
 
         # When
-        test_object.populate_from_dict(data)
+        test_object.modify(data)
 
         # Then
         assert test_object.float_attribute == 12.9
 
     def test_for_valid_sql_uuid_value(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         uuid_attribute = str(uuid.uuid4())
         data = {'uuid_attribute': uuid_attribute}
 
         # When
-        test_object.populate_from_dict(data)
+        test_object.modify(data)
 
         # Then
         assert test_object.uuid_attribute == uuid_attribute
 
     def test_for_valid_sql_uuid_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         uuid_id = str(uuid.uuid4())
         data = {'uuidId': uuid_id}
 
         # When
-        test_object.populate_from_dict(data)
+        test_object.modify(data)
 
         # Then
         assert test_object.uuidId == uuid_id
 
     def test_for_valid_sql_humanize_id_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         humanized_entity_id = "AE"
         data = {'entityId': humanized_entity_id}
 
         # When
-        test_object.populate_from_dict(data)
+        test_object.modify(data)
 
         # Then
         assert test_object.entityId == dehumanize(humanized_entity_id)
@@ -152,13 +152,13 @@ class PopulateTest:
 
     def test_for_valid_sql_humanize_id_synonym_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         humanized_bar_id = "AE"
         dehumanized_bar_id = dehumanize(humanized_bar_id)
         data = {'barId': humanized_bar_id}
 
         # When
-        test_object.populate_from_dict(data)
+        test_object.modify(data)
 
         # Then
         assert test_object.bar_id == dehumanized_bar_id
@@ -178,7 +178,7 @@ class PopulateTest:
         }
 
         # When
-        test_object.populate_from_dict(stock_dict)
+        test_object.modify(stock_dict)
 
         # Then
         assert test_object.price == stock_dict['price']
@@ -201,7 +201,7 @@ class PopulateTest:
         }
 
         # When
-        test_object.populate_from_dict(offer_dict)
+        test_object.modify(offer_dict)
 
         # Then
         assert test_object.name == offer_dict['name']
@@ -211,24 +211,24 @@ class PopulateTest:
 
     def test_for_sql_float_value_with_string_raises_decimal_cast_error(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'float_attribute': 'yolo'}
 
         # When
         with pytest.raises(DecimalCastError) as errors:
-            test_object.populate_from_dict(data)
+            test_object.modify(data)
 
         # Then
         assert errors.value.errors['float_attribute'] == ["Invalid value for float_attribute (float): 'yolo'"]
 
     def test_for_sql_datetime_value_in_wrong_format_returns_400_and_affected_key_in_error(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'date_attribute': {'date_attribute': None}}
 
         # When
         with pytest.raises(DateTimeCastError) as errors:
-            test_object.populate_from_dict(data)
+            test_object.modify(data)
 
         # Then
         assert errors.value.errors['date_attribute'] == [
@@ -239,7 +239,7 @@ class PopulateTest:
         raw_data = {'start': '2018-03-03T15:25:35.123Z', 'end': '2018-04-04T20:10:30.456Z'}
 
         # When
-        time_interval.populate_from_dict(raw_data)
+        time_interval.modify(raw_data)
 
         # Then
         assert time_interval.start == datetime(2018, 3, 3, 15, 25, 35, 123000)
@@ -250,7 +250,7 @@ class PopulateTest:
         raw_data = {'start': '2018-03-03T15:25:35', 'end': '2018-04-04T20:10:30'}
 
         # When
-        time_interval.populate_from_dict(raw_data)
+        time_interval.modify(raw_data)
 
         # Then
         assert time_interval.start == datetime(2018, 3, 3, 15, 25, 35)
@@ -261,7 +261,7 @@ class PopulateTest:
         raw_data = {'start': '2018-03-03T15:25:35Z', 'end': '2018-04-04T20:10:30Z'}
 
         # When
-        time_interval.populate_from_dict(raw_data)
+        time_interval.modify(raw_data)
 
         # Then
         assert time_interval.start == datetime(2018, 3, 3, 15, 25, 35)
@@ -273,19 +273,19 @@ class PopulateTest:
 
         # When
         with pytest.raises(DateTimeCastError) as errors:
-            time_interval.populate_from_dict(raw_data)
+            time_interval.modify(raw_data)
 
         # Then
         assert errors.value.errors['end'] == ["Invalid value for end (datetime): 'abcdef'"]
 
     def test_raises_type_error_if_raw_uuid_is_invalid(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'uuidId': 'foo'}
 
         # When
         with pytest.raises(UuidCastError) as errors:
-            test_object.populate_from_dict(data)
+            test_object.modify(data)
 
         # Then
         assert errors.value.errors['uuidId'] == [
@@ -293,12 +293,12 @@ class PopulateTest:
 
     def test_raises_type_error_if_raw_humanized_id_is_invalid(self):
         # Given
-        test_object = PopulateFoo()
+        test_object = ModifyFoo()
         data = {'entityId': '12R-..2foo'}
 
         # When
         with pytest.raises(NonDehumanizableId):
-            test_object.populate_from_dict(data)
+            test_object.modify(data)
 
     @clean_database
     def test_find_raise_empty_filter_error(self, app):
@@ -307,7 +307,7 @@ class PopulateTest:
         ApiHandler.save(offer1)
 
         # When
-        with pytest.raises(EmptyFiltersError) as errors:
+        with pytest.raises(EmptyFilterError) as errors:
             Offer.find({'name': 'fee', 'type': 'bric'}, 'position')
 
         # Then
@@ -368,13 +368,13 @@ class PopulateTest:
         assert offer2.type == 'gold'
 
     @clean_database
-    def test_find_and_update_returns_updated_offer(self, app):
+    def test_find_and_modify_returns_modified_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find_and_update({'name': 'foo', 'type': 'bric'}, 'name')
+        offer2 = Offer.find_and_modify({'name': 'foo', 'type': 'bric'}, 'name')
 
         # Then
         assert offer2.id == offer1.id
@@ -382,26 +382,26 @@ class PopulateTest:
         assert offer2.type == 'bric'
 
     @clean_database
-    def test_find_and_update_raises_ressource_not_found_error(self, app):
+    def test_find_and_modify_raises_ressource_not_found_error(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
         ApiHandler.save(offer1)
 
         # When
         with pytest.raises(ResourceNotFoundError) as e:
-            Offer.find_and_update({'name': 'fee', 'type': 'bric'}, 'name')
+            Offer.find_and_modify({'name': 'fee', 'type': 'bric'}, 'name')
 
         # Then
-        assert e.value.errors['find_and_update'] == ['No ressource found with {"name": "fee"} ']
+        assert e.value.errors['find_and_modify'] == ['No ressource found with {"name": "fee"} ']
 
     @clean_database
-    def test_create_or_update_returns_new_created_offer(self, app):
+    def test_create_or_modify_returns_created_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.create_or_update({'name': 'fee', 'type': 'bric'}, 'name')
+        offer2 = Offer.create_or_modify({'name': 'fee', 'type': 'bric'}, 'name')
 
         # Then
         assert offer2.id != offer1.id
@@ -409,13 +409,13 @@ class PopulateTest:
         assert offer2.type == 'bric'
 
     @clean_database
-    def test_create_or_update_returns_updated_offer(self, app):
+    def test_create_or_modify_returns_modified_offer(self, app):
         # Given
         offer1 = Offer(name="foo", type="bar")
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.create_or_update({'name': 'foo', 'type': 'bric'}, 'name')
+        offer2 = Offer.create_or_modify({'name': 'foo', 'type': 'bric'}, 'name')
 
         # Then
         assert offer2.id == offer1.id

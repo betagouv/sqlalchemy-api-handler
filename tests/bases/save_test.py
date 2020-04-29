@@ -218,7 +218,7 @@ class SaveTest:
         stock_dict2['id'] = humanize(stock2.id)
         stock_dict2['price'] = 3
         offer_dict['stocks'] = [stock_dict1, stock_dict2]
-        offer.populate_from_dict(offer_dict)
+        offer.modify(offer_dict)
 
         # When
         ApiHandler.save(offer)

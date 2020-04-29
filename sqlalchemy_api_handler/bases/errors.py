@@ -104,3 +104,39 @@ class Errors():
                and not isinstance(val, int):
                 api_errors.add_error(key, 'doit être un nombre')
         return api_errors
+
+
+class DateTimeCastError(ApiErrors):
+    pass
+
+
+class DecimalCastError(ApiErrors):
+    pass
+
+
+class EmptyFilterError(ApiErrors):
+    pass
+
+
+class ForbiddenError(ApiErrors):
+    pass
+
+
+class NotSoftDeletableMixinException(ApiErrors):
+    pass
+
+
+class ResourceGoneError(ApiErrors):
+    pass
+
+
+class SoftDeletedRecordException(ApiErrors):
+    pass
+    
+
+class ResourceNotFoundError(ApiErrors):
+    pass
+
+
+class UuidCastError(ApiErrors):
+    pass
