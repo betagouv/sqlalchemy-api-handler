@@ -308,7 +308,7 @@ class ModifyTest:
 
         # When
         with pytest.raises(EmptyFilterError) as errors:
-            Offer.find({'name': 'fee', 'type': 'bric'}, 'position')
+            Offer.find({'name': 'fee', 'type': 'bric'}, search_by='position')
 
         # Then
         assert errors.value.errors['_get_filter_dict'] == ["None of filters found among: position"]
@@ -320,7 +320,8 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find({'name': 'fee', 'type': 'bric'}, 'name')
+        offer2 = Offer.find(
+            {'name': 'fee', 'type': 'bric'}, search_by='name')
 
         # Then
         assert offer2 is None
@@ -332,7 +333,7 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find({'name': 'foo'}, 'name')
+        offer2 = Offer.find({'name': 'foo'}, search_by='name')
 
         # Then
         assert offer2.id == offer1.id
@@ -346,7 +347,7 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find_or_create({'name': 'foo'}, 'name')
+        offer2 = Offer.find_or_create({'name': 'foo'}, search_by='name')
 
         # Then
         assert offer2.id == offer1.id
@@ -360,7 +361,7 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find_or_create({'name': 'fee', 'type': 'gold'}, 'name')
+        offer2 = Offer.find_or_create({'name': 'fee', 'type': 'gold'}, search_by='name')
 
         # Then
         assert offer2.id != offer1.id
@@ -374,7 +375,7 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find_and_modify({'name': 'foo', 'type': 'bric'}, 'name')
+        offer2 = Offer.find_and_modify({'name': 'foo', 'type': 'bric'}, search_by='name')
 
         # Then
         assert offer2.id == offer1.id
@@ -389,7 +390,7 @@ class ModifyTest:
 
         # When
         with pytest.raises(ResourceNotFoundError) as e:
-            Offer.find_and_modify({'name': 'fee', 'type': 'bric'}, 'name')
+            Offer.find_and_modify({'name': 'fee', 'type': 'bric'}, search_by='name')
 
         # Then
         assert e.value.errors['find_and_modify'] == ['No ressource found with {"name": "fee"} ']
@@ -401,7 +402,7 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.create_or_modify({'name': 'fee', 'type': 'bric'}, 'name')
+        offer2 = Offer.create_or_modify({'name': 'fee', 'type': 'bric'}, search_by='name')
 
         # Then
         assert offer2.id != offer1.id
@@ -415,7 +416,7 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.create_or_modify({'name': 'foo', 'type': 'bric'}, 'name')
+        offer2 = Offer.create_or_modify({'name': 'foo', 'type': 'bric'}, search_by='name')
 
         # Then
         assert offer2.id == offer1.id

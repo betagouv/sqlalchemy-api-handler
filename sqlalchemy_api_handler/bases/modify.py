@@ -128,17 +128,17 @@ class Modify(
             raise error
 
     @classmethod
-    def _get_filter_dict(model, content, filter_keys):
-        if not isinstance(filter_keys, list):
-            filter_keys = [filter_keys]
-        return dict([(key, value) for key, value in content.items() if key in filter_keys])
+    def _get_filter_dict(model, content, search_by=[]):
+        if not isinstance(search_by, list):
+            search_by = [search_by]
+        return dict([(key, value) for key, value in content.items() if key in search_by])
 
     @classmethod
-    def find(model, content, filter_keys):
-        filters = model._get_filter_dict(content, filter_keys)
+    def find(model, content, search_by=[]):
+        filters = model._get_filter_dict(content, search_by=search_by)
         if not filters:
             errors = EmptyFilterError()
-            filters = ", ".join(filter_keys) if isinstance(filter_keys, list) else filter_keys
+            filters = ", ".join(search_by) if isinstance(search_by, list) else search_by
             errors.add_error('_get_filter_dict', 'None of filters found among: ' + filters)
             raise errors
         existing = model.query.filter_by(**filters).first()
@@ -147,25 +147,25 @@ class Modify(
         return existing
 
     @classmethod
-    def find_or_create(model, content, filter_keys):
-        existing = model.find(content, filter_keys)
+    def find_or_create(model, content, search_by=[]):
+        existing = model.find(content, search_by=search_by)
         if existing:
             return existing
         return model(**content)
 
     @classmethod
-    def find_and_modify(model, content, filter_keys):
-        existing = model.find(content, filter_keys)
+    def find_and_modify(model, content, search_by=[]):
+        existing = model.find(content, search_by=search_by)
         if not existing:
             errors = ResourceNotFoundError()
-            filters = model._get_filter_dict(content, filter_keys)
+            filters = model._get_filter_dict(content, search_by)
             errors.add_error('find_and_modify', 'No ressource found with {} '.format(json.dumps(filters)))
             raise errors
         return model.modify(existing, content)
 
     @classmethod
-    def create_or_modify(model, content, filter_keys):
-        existing = model.find(content, filter_keys)
+    def create_or_modify(model, content, search_by=[]):
+        existing = model.find(content, search_by=search_by)
         if existing:
             return model.modify(existing, content)
         return model(**content)
