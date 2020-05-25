@@ -141,8 +141,6 @@ class Modify(
                 value = _dehumanize_if_needed(column, datum.get(key))
                 filter_dict[key] = value
 
-        print(filter_dict)
-
         return filter_dict
 
     @classmethod
