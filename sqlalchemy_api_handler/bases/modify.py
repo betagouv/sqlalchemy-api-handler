@@ -35,9 +35,9 @@ class Modify(
     def modify(self, datum: dict, skipped_keys: List[str] = []):
         self.check_not_soft_deleted()
         columns = self.__mapper__.columns
-        columns_keys_to_populate = self._get_column_keys_to_populate(
+        column_keys_to_modify = self._column_keys_from(
             set(columns.keys()), datum, skipped_keys)
-        for key in columns_keys_to_populate:
+        for key in column_keys_to_modify:
             column = columns[key]
             value = _dehumanize_if_needed(column, datum.get(key))
             if isinstance(value, str):
@@ -74,12 +74,11 @@ class Modify(
         return self
 
     @staticmethod
-    def _get_column_keys_to_populate(column_keys: Set[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
+    def _column_keys_from(column_keys: Set[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
         requested_columns_to_modify = set(data.keys())
         forbidden_columns = set(['id', 'deleted'] + skipped_keys)
         allowed_columns_to_modify = requested_columns_to_modify - forbidden_columns
-        keys_to_populate = column_keys.intersection(allowed_columns_to_modify)
-        return keys_to_populate
+        return column_keys.intersection(allowed_columns_to_modify)
 
     @staticmethod
     def _get_model_instance(value, model):
@@ -128,14 +127,27 @@ class Modify(
             raise error
 
     @classmethod
-    def _get_filter_dict(model, content, search_by=[]):
+    def _get_filter_dict(model, datum, search_by=[]):
         if not isinstance(search_by, list):
             search_by = [search_by]
-        return dict([(key, value) for key, value in content.items() if key in search_by])
+
+        columns = model.__mapper__.columns
+        column_keys = list(model._column_keys_from(set(columns.keys()), datum, [])) + ['id']
+
+        filter_dict = {}
+        for key in column_keys:
+            column = columns[key]
+            if key in search_by:
+                value = _dehumanize_if_needed(column, datum.get(key))
+                filter_dict[key] = value
+
+        print(filter_dict)
+
+        return filter_dict
 
     @classmethod
-    def find(model, content, search_by=[]):
-        filters = model._get_filter_dict(content, search_by=search_by)
+    def find(model, datum, search_by=[]):
+        filters = model._get_filter_dict(datum, search_by=search_by)
         if not filters:
             errors = EmptyFilterError()
             filters = ", ".join(search_by) if isinstance(search_by, list) else search_by
@@ -147,28 +159,28 @@ class Modify(
         return existing
 
     @classmethod
-    def find_or_create(model, content, search_by=[]):
-        existing = model.find(content, search_by=search_by)
+    def find_or_create(model, datum, search_by=[]):
+        existing = model.find(datum, search_by=search_by)
         if existing:
             return existing
-        return model(**content)
+        return model(**datum)
 
     @classmethod
-    def find_and_modify(model, content, search_by=[]):
-        existing = model.find(content, search_by=search_by)
+    def find_and_modify(model, datum, search_by=[]):
+        existing = model.find(datum, search_by=search_by)
         if not existing:
             errors = ResourceNotFoundError()
-            filters = model._get_filter_dict(content, search_by)
+            filters = model._get_filter_dict(datum, search_by)
             errors.add_error('find_and_modify', 'No ressource found with {} '.format(json.dumps(filters)))
             raise errors
-        return model.modify(existing, content)
+        return model.modify(existing, datum)
 
     @classmethod
-    def create_or_modify(model, content, search_by=[]):
-        existing = model.find(content, search_by=search_by)
+    def create_or_modify(model, datum, search_by=[]):
+        existing = model.find(datum, search_by=search_by)
         if existing:
-            return model.modify(existing, content)
-        return model(**content)
+            return model.modify(existing, datum)
+        return model(**datum)
 
 
 def _dehumanize_if_needed(column, value: Any) -> Any:

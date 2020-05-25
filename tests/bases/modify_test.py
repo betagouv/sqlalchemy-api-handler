@@ -11,13 +11,15 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 EmptyFilterError, \
                                                 ResourceNotFoundError, \
                                                 UuidCastError
-from sqlalchemy_api_handler.utils.human_ids import dehumanize, NonDehumanizableId
+from sqlalchemy_api_handler.utils.human_ids import dehumanize, humanize, NonDehumanizableId
 
 from tests.conftest import clean_database
 from tests.test_utils.db import Model
 from tests.test_utils.models.offer import Offer
+from tests.test_utils.models.offerer import Offerer
 from tests.test_utils.models.stock import Stock
 from tests.test_utils.models.user import User
+from tests.test_utils.models.user_offerer import UserOfferer
 from tests.test_utils.models.time_interval import TimeInterval
 
 
@@ -422,3 +424,71 @@ class ModifyTest:
         assert offer2.id == offer1.id
         assert offer2.name == offer1.name == 'foo'
         assert offer2.type == 'bric'
+
+
+    @clean_database
+    def test_create_or_modify_returns_modified_offerer_search_by_id(self, app):
+        # Given
+        offerer1 = Offerer(name="foo")
+
+        ApiHandler.save(offerer1)
+
+        # When
+        offerer2 = Offerer.create_or_modify(
+            {'id': humanize(offerer1.id), 'name': 'fee'},
+            search_by=['id']
+        )
+
+        # Then
+        assert offerer2.id == offerer1.id
+        assert offerer2.name == "fee"
+
+    @clean_database
+    def test_create_or_modify_returns_created_user_offerer_search_by_relationship_ids(self, app):
+        # Given
+        offerer = Offerer(name="foo")
+        user = User(email="foo.marx@com", publicName="Foo Marx")
+        ApiHandler.save(offerer, user)
+
+        # When
+        user_offerer = UserOfferer.create_or_modify(
+            {
+                'rights': 'admin',
+                'offererId': humanize(offerer.id),
+                'userId': humanize(user.id)
+            },
+            search_by=['offererId', 'userId']
+        )
+
+        # Then
+        assert user_offerer.offererId == offerer.id
+        assert user_offerer.rights == 'admin'
+        assert user_offerer.userId == user.id
+
+
+    @clean_database
+    def test_create_or_modify_returns_modified_user_offerer_search_by_relationship_ids(self, app):
+        # Given
+        offerer = Offerer(name="foo")
+        user = User(email="foo.marx@com", publicName="Foo Marx")
+        user_offerer = UserOfferer(
+            rights='admin',
+            offerer=offerer,
+            user=user
+        )
+        ApiHandler.save(user_offerer)
+
+        # When
+        user_offerer = UserOfferer.create_or_modify(
+            {
+                'offererId': humanize(offerer.id),
+                'rights': 'editor',
+                'userId': humanize(user.id)
+            },
+            search_by=['offererId', 'userId']
+        )
+
+        # Then
+        assert user_offerer.offererId == offerer.id
+        assert user_offerer.rights == 'editor'
+        assert user_offerer.userId == user.id
