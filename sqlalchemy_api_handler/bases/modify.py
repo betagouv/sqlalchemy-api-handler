@@ -181,7 +181,9 @@ class Modify(
         existing = model.find(datum, search_by=search_by)
         if existing:
             print('ON PASSE')
-            return model.modify(existing, datum)
+            a = model.modify(existing, datum)
+            print('BEN', a)
+            return a
         return model(**datum)
 
 
