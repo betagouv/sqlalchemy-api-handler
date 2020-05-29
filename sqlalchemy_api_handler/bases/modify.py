@@ -33,9 +33,7 @@ class Modify(
         self.modify(initial_datum)
 
     def modify(self, datum: dict, skipped_keys: List[str] = []):
-        print('MODIFY', self)
         self.check_not_soft_deleted()
-        print('MODIFY AFTER SOFT', self)
         columns = self.__mapper__.columns
         column_keys_to_modify = self._column_keys_from(
             set(columns.keys()), datum, skipped_keys)
@@ -72,8 +70,6 @@ class Modify(
                     datum[key]
                 )
                 setattr(self, key, value)
-
-        print('RETURN', self)
         return self
 
     @staticmethod
@@ -180,10 +176,7 @@ class Modify(
     def create_or_modify(model, datum, search_by=[]):
         existing = model.find(datum, search_by=search_by)
         if existing:
-            print('ON PASSE')
-            a = model.modify(existing, datum)
-            print('BEN', a)
-            return a
+            return model.modify(existing, datum)
         return model(**datum)
 
 
