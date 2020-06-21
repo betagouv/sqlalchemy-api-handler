@@ -2,6 +2,7 @@ from enum import Enum
 from sqlalchemy_api_handler.serialization.as_dict import as_dict
 from typing import Iterable
 
+
 class SearchableType(Enum):
     @classmethod
     def find_from_sub_labels(cls, sub_labels):
@@ -13,6 +14,7 @@ class SearchableType(Enum):
                 matching_types.append(type)
 
         return matching_types
+
 
 class ThingType(SearchableType):
     ACTIVATION = {
