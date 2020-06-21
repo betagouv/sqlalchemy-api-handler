@@ -2,15 +2,15 @@ from datetime import datetime, timedelta
 import pytest
 from sqlalchemy_api_handler.serialization.serialize import serialize
 
-from tests.test_utils.models.offer import Offer
+from tests.test_utils.models.offer import Offer, ThingType
 from tests.test_utils.models.time_interval import TimeInterval
-from tests.test_utils.models.thing_type import ThingType
 from tests.test_utils.models.stock import Stock
 
 time_interval = TimeInterval()
 time_interval.start = datetime(2018, 1, 1, 10, 20, 30, 111000)
 time_interval.end = datetime(2018, 2, 2, 5, 15, 25, 222000)
 now = datetime.utcnow()
+
 
 class SerializeTest:
     def test_on_datetime_list_returns_string_with_date_in_ISO_8601_list(self):

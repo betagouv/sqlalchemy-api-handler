@@ -13,7 +13,7 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 UuidCastError
 from sqlalchemy_api_handler.utils.human_ids import dehumanize, humanize, NonDehumanizableId
 
-from tests.conftest import clean_database
+from tests.conftest import with_clean
 from tests.test_utils.db import Model
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.offerer import Offerer
@@ -302,7 +302,7 @@ class ModifyTest:
         with pytest.raises(NonDehumanizableId):
             test_object.modify(data)
 
-    @clean_database
+    @with_clean
     def test_find_raise_empty_filter_error(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -315,7 +315,7 @@ class ModifyTest:
         # Then
         assert errors.value.errors['_get_filter_dict'] == ["None of filters found among: position"]
 
-    @clean_database
+    @with_clean
     def test_find_returns_none(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -328,7 +328,7 @@ class ModifyTest:
         # Then
         assert offer2 is None
 
-    @clean_database
+    @with_clean
     def test_find_returns_existing_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -342,7 +342,7 @@ class ModifyTest:
         assert offer2.name == offer1.name == 'foo'
         assert offer2.type == offer1.type == 'bar'
 
-    @clean_database
+    @with_clean
     def test_find_or_create_returns_existing_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -356,7 +356,7 @@ class ModifyTest:
         assert offer2.name == offer1.name == 'foo'
         assert offer2.type == offer1.type == 'bar'
 
-    @clean_database
+    @with_clean
     def test_find_or_create_returns_created_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -370,7 +370,7 @@ class ModifyTest:
         assert offer2.name == 'fee'
         assert offer2.type == 'gold'
 
-    @clean_database
+    @with_clean
     def test_find_and_modify_returns_modified_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -384,7 +384,7 @@ class ModifyTest:
         assert offer2.name == offer1.name == 'foo'
         assert offer2.type == 'bric'
 
-    @clean_database
+    @with_clean
     def test_find_and_modify_raises_ressource_not_found_error(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -397,7 +397,7 @@ class ModifyTest:
         # Then
         assert e.value.errors['find_and_modify'] == ['No ressource found with {"name": "fee"} ']
 
-    @clean_database
+    @with_clean
     def test_create_or_modify_returns_created_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -411,7 +411,7 @@ class ModifyTest:
         assert offer2.name == 'fee'
         assert offer2.type == 'bric'
 
-    @clean_database
+    @with_clean
     def test_create_or_modify_returns_modified_offer(self, app):
         # Given
         offer1 = Offer(name="foo", type="bar")
@@ -426,7 +426,7 @@ class ModifyTest:
         assert offer2.type == 'bric'
 
 
-    @clean_database
+    @with_clean
     def test_create_or_modify_returns_modified_offerer_search_by_id(self, app):
         # Given
         offerer1 = Offerer(name="foo")
@@ -443,7 +443,7 @@ class ModifyTest:
         assert offerer2.id == offerer1.id
         assert offerer2.name == "fee"
 
-    @clean_database
+    @with_clean
     def test_create_or_modify_returns_created_user_offerer_search_by_relationship_ids(self, app):
         # Given
         offerer = Offerer(name="foo")
@@ -466,7 +466,7 @@ class ModifyTest:
         assert user_offerer.userId == user.id
 
 
-    @clean_database
+    @with_clean
     def test_create_or_modify_returns_modified_user_offerer_search_by_relationship_ids(self, app):
         # Given
         offerer = Offerer(name="foo")

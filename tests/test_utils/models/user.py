@@ -4,6 +4,7 @@ from sqlalchemy_api_handler import ApiHandler
 
 from tests.test_utils.db import Model
 
+
 class User(ApiHandler, Model):
     firstName = Column(String(128), nullable=True)
 
@@ -24,8 +25,8 @@ class User(ApiHandler, Model):
     id = synonym('user_id')
 
     __as_dict_includes__ = [
-        "-metier",
-        "-user_id",
-        "id",
-        "job"
+        '-metier',
+        '-user_id',
+        'id',
+        'job'
     ]

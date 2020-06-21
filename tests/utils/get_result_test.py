@@ -1,12 +1,12 @@
 import pytest
 from sqlalchemy_api_handler import ApiErrors, ApiHandler, humanize, get_result
 
-from tests.conftest import clean_database
+from tests.conftest import with_clean
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.stock import Stock
 
 class GetResultTest:
-    @clean_database
+    @with_clean
     def test_return_only_not_soft_deleted_stocks(self, app):
         # Given
         offer = Offer(name="foo", type="ThingType.JEUX_ABO")
@@ -31,7 +31,7 @@ class GetResultTest:
         assert data[1]['id'] == humanize(stock3.id)
         assert data[2]['id'] == humanize(stock4.id)
 
-    @clean_database
+    @with_clean
     def test_check_order_by(self, app):
         # When
         with pytest.raises(ApiErrors) as e:
@@ -40,7 +40,7 @@ class GetResultTest:
         # Then
         assert 'order_by' in e.value.errors
 
-    @clean_database
+    @with_clean
     def test_returns_total_data_count_with_has_more(self, app):
         # Given
         offer = Offer(name="foo", type="ThingType.JEUX_ABO")
@@ -68,7 +68,7 @@ class GetResultTest:
         assert result['has_more'] == True
         assert result['total_data_count'] == prices_length
 
-    @clean_database
+    @with_clean
     def test_returns_total_data_count_with_has_more(self, app):
         # Given
         offer = Offer(name="foo", type="ThingType.JEUX_ABO")
