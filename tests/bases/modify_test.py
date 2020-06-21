@@ -17,7 +17,9 @@ from tests.conftest import with_clean
 from tests.test_utils.db import Model
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.offerer import Offerer
+from tests.test_utils.models.scope import Scope, ScopeType
 from tests.test_utils.models.stock import Stock
+from tests.test_utils.models.tag import Tag
 from tests.test_utils.models.user import User
 from tests.test_utils.models.user_offerer import UserOfferer
 from tests.test_utils.models.time_interval import TimeInterval
@@ -492,3 +494,48 @@ class ModifyTest:
         assert user_offerer.offererId == offerer.id
         assert user_offerer.rights == 'editor'
         assert user_offerer.userId == user.id
+
+    @with_clean
+    def test_create_or_modify_returns_created_tag_with_nested_scope(self, app):
+        # Given
+        tag = Tag.create_or_modify(
+            {
+                'label': 'Very High',
+                'scopes': [
+                    {
+                        'type': ScopeType.REVIEW
+                    }
+                ]
+            },
+            search_by=['label']
+        )
+
+        # When
+        ApiHandler.save(tag)
+
+        # Then
+        assert tag.scopes[0].tagId == tag.id
+
+    @with_clean
+    def test_create_or_modify_returns_modified_tag_with_nested_scope(self, app):
+        # Given
+        tag_dict = {
+            'label': 'Very High',
+            'scopes': [
+                {
+                    '__SEARCH_BY__': ['type'],
+                    'type': ScopeType.REVIEW
+                }
+            ]
+        }
+        tag1 = Tag(**tag_dict)
+        ApiHandler.save(tag1)
+
+        # When
+        tag2 = Tag.create_or_modify(tag_dict, search_by=['label'])
+        ApiHandler.save(tag2)
+
+        # Then
+        assert tag2.id == tag1.id
+        assert len(tag2.scopes) == 1
+        assert tag2.scopes[0].tagId == tag2.id

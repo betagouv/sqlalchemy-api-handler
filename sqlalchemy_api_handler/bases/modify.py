@@ -80,7 +80,7 @@ class Modify(
         return column_keys.intersection(allowed_columns_to_modify)
 
     @staticmethod
-    def _get_model_instance(value, model):
+    def _get_model_instance(value, model, search_by=None):
         if not isinstance(value, model):
             if hasattr(value, 'items'):
                 primary_key_columns = model.__mapper__.primary_key
@@ -92,11 +92,12 @@ class Modify(
                         for (index, column) in enumerate(primary_key_columns)
                     ]
                     model_instance = model.query.get(pks)
-                    model_instance.modify(value)
-                    return model_instance
+                    return model_instance.modify(value)
+                if '__SEARCH_BY__' in value:
+                    return model.create_or_modify(value, search_by=value['__SEARCH_BY__'])
                 return model(**value)
             elif hasattr(value, '__iter__'):
-                return list(map(lambda obj: Modify._get_model_instance(obj, model), value))
+                return list(map(lambda obj: Modify._get_model_instance(obj, model, search_by=search_by), value))
         return value
 
     def _try_to_set_attribute_with_deserialized_datetime(self, col, key, value):

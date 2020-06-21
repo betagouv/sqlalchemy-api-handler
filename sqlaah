@@ -71,6 +71,11 @@ elif [[ "$CMD" == "restart" ]]; then
        docker-compose up --force-recreate'
 
 
+# Erase docker shared volumes
+elif [[ "$CMD" == "rmdb" ]]; then
+  RUN='sudo rm -rf docker_data/postgres;'
+
+
 # Start with database
 elif [[ "$CMD" == "start" ]]; then
   RUN='docker-compose up $*'
