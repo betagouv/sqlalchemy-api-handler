@@ -133,7 +133,6 @@ The success will return
 Links
 -----
 
--   Documentation: https://sqlalchemy-api-handler.betagouv.fr/
 -   Releases: https://pypi.org/project/SQLAlchemy-Api-Handler/
 -   Code: https://github.com/betagouv/sqlalchemy-api-handler
 -   Issue tracker: https://github.com/betagouv/sqlalchemy-api-handler/issues
