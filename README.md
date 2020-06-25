@@ -12,17 +12,16 @@ Installing
 
 Install and update using `pip`:
 
-.. code-block:: text
-
+```bash
   $ pip install -U SQLAlchemy-Api-Handler
+```
 
 A Simple Example
 ----------------
 
 Suppose a request POST /users {"email": "marx.foo@plop.fr", name: "Marx Foo"} :
 
-.. code-block:: python
-
+```python
     from flask import Flask, jsonify, request
     from sqlalchemy_api_handler import ApiHandler
 
@@ -40,21 +39,21 @@ Suppose a request POST /users {"email": "marx.foo@plop.fr", name: "Marx Foo"} :
       user = User(**request.form)
       ApiHandler.save(user)
       return jsonify(as_dict(user))
+```
 
 The success result will have stored a user object at, let's say id = 32,
 and so will fetch an object at humanized id = humanize(32), ie
 
-.. code-block:: text
-
+```
   {"id": "EA", "email": "marx.foo@plop.fr", name: "Marx Foo"}
+```
 
 Playing with nesting data
 -------------------------
 
 Suppose a request GET /offers
 
-.. code-block:: python
-
+```python
     from flask import Flask, jsonify, request
     from sqlalchemy.orm import relationship
     from sqlalchemy_api_handler import ApiHandler
@@ -109,11 +108,11 @@ Suppose a request GET /offers
     def get_offers():
       offers = Offer.query.all()
       return jsonify(as_dict(offers, includes=offer_includes))
+```
 
 The success will return
 
-.. code-block:: text
-
+```
   [
     {
       "id": "AE",
@@ -129,6 +128,7 @@ The success will return
       }
     }
   ]
+```
 
 Links
 -----
@@ -146,10 +146,9 @@ Deploy
 
 First, make sure that the deploy environment is started:
 
-.. code-block:: text
-
+```bash
   ./sqlaah start
-
+```
 
 In a second tab, then:
 
@@ -157,12 +156,12 @@ In a second tab, then:
 
 3. Pre publish:
 
-.. code-block:: text
-
+```bash
   ./sqlaah prepublish
+```
 
 4. Publish:
 
-.. code-block:: text
-
+```bash
   ./sqlaah publish
+```
