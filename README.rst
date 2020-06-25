@@ -5,7 +5,7 @@ SQLAlchemy-Api-Handler is an extension that adds support for handling apis with 
 humanized ids once it is jsonified, throws api errors for some casting of value during the save time, and dictifies model objects into jsonified ones.
 
 [![CircleCI](https://circleci.com/gh/betagouv/sqlalchemy-api-handler/tree/master.svg?style=svg)](https://circleci.com/gh/betagouv/sqlalchemy-api-handler/tree/master)
-[![Coverage Status](https://coveralls.io/repos/github/betagouv/sqlalchemy-api-handler/badge.svg)](https://coveralls.io/github/betagouv/sqlalchemy-api-handler)
+
 
 Installing
 ----------
