@@ -136,8 +136,6 @@ Links
 -   Releases: https://pypi.org/project/SQLAlchemy-Api-Handler/
 -   Code: https://github.com/betagouv/sqlalchemy-api-handler
 -   Issue tracker: https://github.com/betagouv/sqlalchemy-api-handler/issues
--   Test status: https://travis-ci.org/betagouv/sqlalchemy-api-handler
--   Test coverage: https://codecov.io/gh/betagouv/sqlalchemy-api-handler
 
 - Flask: https://betagouvprojects.com/p/flask/
 - SQLAlchemy: https://www.sqlalchemy.org
