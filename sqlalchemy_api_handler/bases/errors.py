@@ -29,22 +29,20 @@ class Errors():
         if e.args and len(e.args) > 0 and e.args[0].startswith('(psycopg2.DataError) value too long for type'):
             max_length = re.search('\(psycopg2.DataError\) value too long for type (.*?) varying\((.*?)\)', e.args[0], re.IGNORECASE).group(2)
             return ['global', "La valeur d'une entrée est trop longue (max " + max_length + ")"]
-        else:
-            return Errors.restize_global_error(e)
+        return Errors.restize_global_error(e)
 
     @staticmethod
     def restize_integrity_error(e):
         if hasattr(e, 'orig') and hasattr(e.orig, 'pgcode') and e.orig.pgcode == DUPLICATE_KEY_ERROR_CODE:
             field = re.search('Key \((.*?)\)=', str(e._message), re.IGNORECASE).group(1)
             return [field, 'Une entrée avec cet identifiant existe déjà dans notre base de données']
-        elif hasattr(e, 'orig') and hasattr(e.orig, 'pgcode') and e.orig.pgcode == NOT_FOUND_KEY_ERROR_CODE:
+        if hasattr(e, 'orig') and hasattr(e.orig, 'pgcode') and e.orig.pgcode == NOT_FOUND_KEY_ERROR_CODE:
             field = re.search('Key \((.*?)\)=', str(e._message), re.IGNORECASE).group(1)
             return [field, 'Aucun objet ne correspond à cet identifiant dans notre base de données']
-        elif hasattr(e, 'orig') and hasattr(e.orig, 'pgcode') and e.orig.pgcode == OBLIGATORY_FIELD_ERROR_CODE:
+        if hasattr(e, 'orig') and hasattr(e.orig, 'pgcode') and e.orig.pgcode == OBLIGATORY_FIELD_ERROR_CODE:
             field = re.search('column "(.*?)"', e.orig.pgerror, re.IGNORECASE).group(1)
             return [field, 'Ce champ est obligatoire']
-        else:
-            return Errors.restize_global_error(e)
+        return Errors.restize_global_error(e)
 
     @staticmethod
     def restize_internal_error(e):
@@ -52,21 +50,19 @@ class Errors():
 
     @staticmethod
     def restize_type_error(e):
-        if e.args and len(e.args)>1 and e.args[1] == 'geography':
+        if e.args and len(e.args) > 1 and e.args[1] == 'geography':
             return [e.args[2], 'doit etre une liste de nombre décimaux comme par exemple : [2.22, 3.22]']
-        elif e.args and len(e.args)>1 and e.args[1] and e.args[1]=='decimal':
+        if e.args and len(e.args) > 1 and e.args[1] and e.args[1] == 'decimal':
             return [e.args[2], 'doit être un nombre décimal']
-        elif e.args and len(e.args)>1 and e.args[1] and e.args[1]=='integer':
+        if e.args and len(e.args) > 1 and e.args[1] and e.args[1] == 'integer':
             return [e.args[2], 'doit être un entier']
-        else:
-            return Errors.restize_global_error(e)
+        return Errors.restize_global_error(e)
 
     @staticmethod
     def restize_value_error(e):
         if len(e.args)>1 and e.args[1] == 'enum':
             return [e.args[2], ' doit etre dans cette liste : '+",".join(map(lambda x : '"'+x+'"', e.args[3]))]
-        else:
-            return Errors.restize_global_error(e)
+        return Errors.restize_global_error(e)
 
     def errors(self):
         api_errors = ApiErrors()
@@ -91,11 +87,11 @@ class Errors():
             if isinstance(col.type, (CHAR, String))\
                and isinstance(val, str)\
                and col.type.length\
-               and len(val)>col.type.length:
+               and len(val) > col.type.length:
                 api_errors.add_error(key,
-                                'Vous devez saisir moins de '
-                                      + str(col.type.length)
-                                      + ' caractères')
+                                     'Vous devez saisir moins de '
+                                     + str(col.type.length)
+                                     + ' caractères')
             if isinstance(col.type, Integer)\
                and not isinstance(val, int):
                 api_errors.add_error(key, 'doit être un entier')
@@ -132,7 +128,7 @@ class ResourceGoneError(ApiErrors):
 
 class SoftDeletedRecordException(ApiErrors):
     pass
-    
+
 
 class ResourceNotFoundError(ApiErrors):
     pass
