@@ -8,7 +8,7 @@ with io.open("README.md", "rt", encoding="utf8") as f:
     readme = f.read()
 
 with io.open("{}/__init__.py".format(os.environ.get('MODULE_NAME')), "rt", encoding="utf8") as f:
-    version = re.search(r'__version__ = "(.*?)"', f.read(), re.M).group(1)
+    version = re.search(r'__version__ = \'(.*?)\'', f.read(), re.M).group(1)
 
 setup(
     name=os.environ.get('PIP_NAME'),
