@@ -1,3 +1,5 @@
+# pylint: disable=W0212
+
 import json
 import uuid
 from datetime import datetime
@@ -10,6 +12,7 @@ from sqlalchemy import BigInteger, \
                        Numeric, \
                        String
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.schema import Sequence
 from typing import List, Any, Iterable, Set
 
 from sqlalchemy_api_handler.bases.delete import Delete
@@ -20,26 +23,33 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 UuidCastError
 from sqlalchemy_api_handler.bases.soft_delete import SoftDelete
 from sqlalchemy_api_handler.utils.date import match_format
-from sqlalchemy_api_handler.utils.human_ids import dehumanize, is_id_column
+from sqlalchemy_api_handler.utils.human_ids import dehumanize, \
+                                                   humanize, \
+                                                   is_id_column
 
 
 
 
-class Modify(
-        Delete,
-        SoftDelete
-):
+class Modify(Delete, SoftDelete):
     def __init__(self, **initial_datum):
         self.modify(initial_datum)
 
-    def modify(self, datum: dict, skipped_keys: List[str] = []):
+    def modify(self,
+               datum: dict,
+               skipped_keys: List[str] = [],
+               with_add=False):
+
+        if with_add:
+            Modify.add(self)
+
         self.check_not_soft_deleted()
         columns = self.__mapper__.columns
-        column_keys_to_modify = self._column_keys_from(
-            set(columns.keys()), datum, skipped_keys)
+        column_keys_to_modify = self._column_keys_from(set(columns.keys()),
+                                                       datum,
+                                                       skipped_keys)
         for key in column_keys_to_modify:
             column = columns[key]
-            value = _dehumanize_if_needed(column, datum.get(key))
+            value = dehumanize_if_needed(column, datum.get(key))
             if isinstance(value, str):
                 if isinstance(column.type, Integer):
                     self._try_to_set_attribute_with_decimal_value(column, key, value, 'integer')
@@ -59,45 +69,77 @@ class Modify(
         for (key, relationship) in self.__mapper__.relationships.items():
             if key in datum:
                 model = relationship.mapper.class_
-                value = self._get_model_instance(datum[key], model)
+                value = model.instance_from(datum[key], parent=self)
                 if value:
                     setattr(self, key, value)
 
         for (key, synonym) in self.__mapper__.synonyms.items():
             if key in datum:
-                value = _dehumanize_if_needed(
-                    synonym._proxied_property.columns[0],
-                    datum[key]
-                )
+                value = dehumanize_if_needed(synonym._proxied_property.columns[0],
+                                             datum[key])
                 setattr(self, key, value)
         return self
 
     @staticmethod
-    def _column_keys_from(column_keys: Set[str], data: dict, skipped_keys: Iterable[str]) -> Set[str]:
+    def _column_keys_from(column_keys: Set[str],
+                          data: dict,
+                          skipped_keys: Iterable[str]) -> Set[str]:
         requested_columns_to_modify = set(data.keys())
-        forbidden_columns = set(['id', 'deleted'] + skipped_keys)
-        allowed_columns_to_modify = requested_columns_to_modify - forbidden_columns
+        allowed_columns_to_modify = requested_columns_to_modify - set(skipped_keys)
         return column_keys.intersection(allowed_columns_to_modify)
 
-    @staticmethod
-    def _get_model_instance(value, model, search_by=None):
+    @classmethod
+    def instance_from_primary_value(model, value):
+        primary_key_columns = model.__mapper__.primary_key
+        primary_keys = [
+            column.key
+            for column in primary_key_columns
+        ]
+        primary_keys_values = [
+            value.get(primary_key)
+            for primary_key in primary_keys
+        ]
+        if all(primary_keys_values):
+            pks = [
+                dehumanize_if_needed(column, primary_keys_values[index])
+                for (index, column) in enumerate(primary_key_columns)
+            ]
+            instance = model.query.get(pks)
+            return instance.modify(value)
+
+    @classmethod
+    def instance_from_search_by_value(model, value, parent=None):
+        value_dict = {}
+        for (column_name, sub_value) in value.items():
+            column_value = sub_value
+            if hasattr(sub_value, 'items') \
+                and 'type' in sub_value \
+                and sub_value['type'] == '__PARENT__':
+                column_value = getattr(parent, sub_value['key'])
+                if 'humanized' in sub_value and sub_value['humanized']:
+                    column_value = humanize(column_value)
+            value_dict[column_name] = column_value
+        return model.create_or_modify(value_dict)
+
+    @classmethod
+    def instance_from(model,
+                      value,
+                      parent=None):
         if not isinstance(value, model):
             if hasattr(value, 'items'):
-                primary_key_columns = model.__mapper__.primary_key
-                primary_keys = [column.key for column in primary_key_columns]
-                primary_keys_values = list(map(lambda primary_key: value.get(primary_key), primary_keys))
-                if all(primary_keys_values):
-                    pks = [
-                        _dehumanize_if_needed(column, primary_keys_values[index])
-                        for (index, column) in enumerate(primary_key_columns)
-                    ]
-                    model_instance = model.query.get(pks)
-                    return model_instance.modify(value)
+                instance = model.instance_from_primary_value(value)
+                if instance:
+                    return instance
                 if '__SEARCH_BY__' in value:
-                    return model.create_or_modify(value, search_by=value['__SEARCH_BY__'])
+                    return model.instance_from_search_by_value(value,
+                                                               parent=parent)
                 return model(**value)
-            elif hasattr(value, '__iter__'):
-                return list(map(lambda obj: Modify._get_model_instance(obj, model, search_by=search_by), value))
+
+            if hasattr(value, '__iter__'):
+                return [
+                    model.instance_from(obj, parent=parent)
+                    for obj in value
+                ]
         return value
 
     def _try_to_set_attribute_with_deserialized_datetime(self, col, key, value):
@@ -106,7 +148,7 @@ class Modify(
             setattr(self, key, datetime_value)
         except TypeError:
             error = DateTimeCastError()
-            error.add_error(col.name, "Invalid value for %s (datetime): %r" % (key, value))
+            error.add_error(col.name, 'Invalid value for %s (datetime): %r' % (key, value))
             raise error
 
     def _try_to_set_attribute_with_uuid(self, col, key, value):
@@ -115,7 +157,7 @@ class Modify(
             setattr(self, key, value)
         except ValueError:
             error = UuidCastError()
-            error.add_error(col.name, "Invalid value for %s (uuid): %r" % (key, value))
+            error.add_error(col.name, 'Invalid value for %s (uuid): %r' % (key, value))
             raise error
 
     def _try_to_set_attribute_with_decimal_value(self, col, key, value, expected_format):
@@ -127,61 +169,87 @@ class Modify(
             raise error
 
     @classmethod
-    def _get_filter_dict(model, datum, search_by=[]):
+    def _filter_from(model, datum):
+        if '__SEARCH_BY__' not in datum or not datum['__SEARCH_BY__']:
+            errors = EmptyFilterError()
+            errors.add_error('_filter_from', 'No __SEARCH_BY__ item inside datum')
+            raise errors
+
+        search_by = datum['__SEARCH_BY__']
         if not isinstance(search_by, list):
             search_by = [search_by]
 
         columns = model.__mapper__.columns
-        column_keys = list(model._column_keys_from(set(columns.keys()), datum, [])) + ['id']
+        column_keys = list(model._column_keys_from(set(columns.keys()), datum, []))
 
         filter_dict = {}
         for key in column_keys:
             column = columns[key]
             if key in search_by:
-                value = _dehumanize_if_needed(column, datum.get(key))
+                value = dehumanize_if_needed(column, datum.get(key))
                 filter_dict[key] = value
+
+        for key in model.__mapper__.relationships.keys():
+            if key in search_by:
+                filter_dict[key] = datum.get(key)
 
         return filter_dict
 
     @classmethod
-    def find(model, datum, search_by=[]):
-        filters = model._get_filter_dict(datum, search_by=search_by)
-        if not filters:
-            errors = EmptyFilterError()
-            filters = ", ".join(search_by) if isinstance(search_by, list) else search_by
-            errors.add_error('_get_filter_dict', 'None of filters found among: ' + filters)
-            raise errors
-        existing = model.query.filter_by(**filters).first()
-        if not existing:
-            return None
+    def _created_from(model, datum):
+        created = {**datum}
+        if 'id' in created and created['id'] == '__NEXT_ID_IF_NOT_EXISTS__':
+            db = Modify.get_db()
+            seq = Sequence('{}_id_seq'.format(model.__tablename__))
+            created['id'] = humanize(db.session.execute(seq))
+        return created
+
+    @classmethod
+    def _existing_from(model, datum):
+        existing = {**datum}
+        if 'id' in existing and existing['id'] == '__NEXT_ID_IF_NOT_EXISTS__':
+            del existing['id']
         return existing
 
     @classmethod
-    def find_or_create(model, datum, search_by=[]):
-        existing = model.find(datum, search_by=search_by)
-        if existing:
-            return existing
-        return model(**datum)
+    def find(model, datum):
+        filters = model._filter_from(datum)
+        if not filters:
+            search_by = datum['__SEARCH_BY__']
+            errors = EmptyFilterError()
+            filters = ', '.join(search_by) if isinstance(search_by, list) else search_by
+            errors.add_error('_filter_from', 'None of filters found among: ' + filters)
+            raise errors
+        entity = model.query.filter_by(**filters).first()
+        if not entity:
+            return None
+        return entity
 
     @classmethod
-    def find_and_modify(model, datum, search_by=[]):
-        existing = model.find(datum, search_by=search_by)
-        if not existing:
+    def find_or_create(model, datum):
+        entity = model.find(datum)
+        if entity:
+            return entity
+        return model(**model._created_from(datum))
+
+    @classmethod
+    def find_and_modify(model, datum):
+        entity = model.find(datum)
+        if not entity:
             errors = ResourceNotFoundError()
-            filters = model._get_filter_dict(datum, search_by)
+            filters = model._filter_from(datum)
             errors.add_error('find_and_modify', 'No ressource found with {} '.format(json.dumps(filters)))
             raise errors
-        return model.modify(existing, datum)
+        return model.modify(entity, model._existing_from(datum))
 
     @classmethod
-    def create_or_modify(model, datum, search_by=[]):
-        existing = model.find(datum, search_by=search_by)
-        if existing:
-            return model.modify(existing, datum)
-        return model(**datum)
+    def create_or_modify(model, datum):
+        entity = model.find(datum)
+        if entity:
+            return model.modify(entity, model._existing_from(datum))
+        return model(**model._created_from(datum))
 
-
-def _dehumanize_if_needed(column, value: Any) -> Any:
+def dehumanize_if_needed(column, value: Any) -> Any:
     if is_id_column(column):
         return dehumanize(value)
     return value

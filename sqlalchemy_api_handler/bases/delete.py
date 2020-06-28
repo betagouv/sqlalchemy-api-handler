@@ -1,11 +1,11 @@
-from sqlalchemy_api_handler.bases.accessor import Accessor
+from sqlalchemy_api_handler.bases.add import Add
 
 
-class Delete(Accessor):
+class Delete(Add):
 
     @staticmethod
     def delete(*entities):
-        db = Accessor.get_db()
+        db = Add.get_db()
         for entity in entities:
              db.session.delete(entity)
 
