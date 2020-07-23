@@ -11,7 +11,7 @@ class Accessor():
         Accessor.db = db
 
     @classmethod
-    def model_with_table_name(cls, table_name):
+    def model_from_table_name(cls, table_name):
         for model in Accessor.get_db().Model._decl_class_registry.values():
             if not hasattr(model, '__table__'):
                 continue
@@ -19,5 +19,5 @@ class Accessor():
                 return model
 
     @classmethod
-    def model_with_plural_name(cls, plural_name):
-        return Accessor.model_with_table_name(inflect.engine().singular_noun(plural_name))
+    def model_from_plural_name(cls, plural_name):
+        return Accessor.model_from_table_name(inflect.engine().singular_noun(plural_name))
