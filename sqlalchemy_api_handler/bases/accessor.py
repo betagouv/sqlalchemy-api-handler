@@ -1,4 +1,6 @@
 import inflect
+import inspect
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
 class Accessor():
@@ -21,3 +23,8 @@ class Accessor():
     @classmethod
     def model_from_plural_name(cls, plural_name):
         return Accessor.model_from_table_name(inflect.engine().singular_noun(plural_name))
+
+    @classmethod
+    def instrumented_attributes_from_model_name(model_name):
+        return inspect.getmembers(Accessor.model_from_table_name(model_name),
+                                  lambda p: isinstance(p, InstrumentedAttribute))
