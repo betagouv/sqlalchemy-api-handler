@@ -1,5 +1,8 @@
 from sqlalchemy_api_handler.api_errors import ApiErrors
 from sqlalchemy_api_handler.api_handler import ApiHandler
+from sqlalchemy_api_handler.mixins.activity_mixin import ActivityMixin
+from sqlalchemy_api_handler.mixins.needs_validation_mixin import NeedsValidationMixin
+from sqlalchemy_api_handler.mixins.soft_deletable_mixin import SoftDeletableMixin
 from sqlalchemy_api_handler.serialization.as_dict import as_dict
 from sqlalchemy_api_handler.utils.get_result import get_result
 from sqlalchemy_api_handler.utils.human_ids import humanize, dehumanize
