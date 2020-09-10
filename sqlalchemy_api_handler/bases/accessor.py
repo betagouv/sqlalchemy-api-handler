@@ -5,6 +5,14 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 class Accessor():
     @classmethod
+    def get_activity(cls):
+        return Accessor.activity_cls
+
+    @classmethod
+    def set_activity(cls, activity_cls):
+        Accessor.activity_cls = activity_cls
+
+    @classmethod
     def get_db(cls):
         return Accessor.db
 
@@ -13,10 +21,15 @@ class Accessor():
         Accessor.db = db
 
     @classmethod
+    def models(cls):
+        return [
+            v for v in Accessor.get_db().Model._decl_class_registry.values()
+            if hasattr(v, '__table__')
+        ]
+
+    @classmethod
     def model_from_table_name(cls, table_name):
-        for model in Accessor.get_db().Model._decl_class_registry.values():
-            if not hasattr(model, '__table__'):
-                continue
+        for model in Accessor.models():
             if model.__tablename__ == table_name:
                 return model
 
