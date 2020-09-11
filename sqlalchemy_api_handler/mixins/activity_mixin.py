@@ -1,21 +1,27 @@
-from sqlalchemy import Column, text
+from sqlalchemy import Column, \
+                       desc, \
+                       Integer
 from sqlalchemy.dialects.postgresql import UUID
-from postgresql_audit.flask import versioning_manager
-
-from utils.db import db
+from sqlalchemy_api_handler.bases.accessor import Accessor
 
 
 class ActivityMixin(object):
     __versioned__ = {}
 
-    activityUuid = Column(UUID(as_uuid=True),
-                          nullable=False)
+    activityUuid = Column(UUID(as_uuid=True))
 
-    def activity(self):
-        Activity = versioning_manager.activity_cls
-        text_filter = text(
-            "table_name='" + self.__tablename__ \
-            + "' AND cast(changed_data->>'id' AS INT) = " + str(self.id)
-        )
-        return Activity.query.filter(text_filter)\
-                             .order_by(db.desc(Activity.id))
+
+    def activities_query(self):
+        Activity = Accessor.get_activity()
+        is_on_table = Activity.table_name == self.__tablename__
+        changed_data_matches_id = Activity.changed_data['id'] \
+                                          .astext.cast(Integer) == self.id
+
+
+    @property
+    def activities(self):
+        Activity = Accessor.get_activity()
+        is_on_table = Activity.table_name == self.__tablename__
+        return Activity.query.filter(is_on_table & (Activity.uuid == self.activityUuid)) \
+                             .order_by(desc(Activity.id)) \
+                             .all()

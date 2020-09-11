@@ -1,17 +1,7 @@
 import inflect
-import inspect
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
 class Accessor():
-    @classmethod
-    def get_activity(cls):
-        return Accessor.activity_cls
-
-    @classmethod
-    def set_activity(cls, activity_cls):
-        Accessor.activity_cls = activity_cls
-
     @classmethod
     def get_db(cls):
         return Accessor.db

@@ -1,6 +1,5 @@
 from sqlalchemy.exc import DataError, IntegrityError, InternalError
 
-from sqlalchemy_api_handler.api_errors import ApiErrors
 from sqlalchemy_api_handler.bases.errors import Errors
 from sqlalchemy_api_handler.bases.modify import Modify
 
