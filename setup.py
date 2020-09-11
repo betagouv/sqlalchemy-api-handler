@@ -1,10 +1,16 @@
 import io
+import pathlib
 import os
 import re
 
 from setuptools import setup
 
-with io.open("README.md", "rt", encoding="utf8") as f:
+
+HERE = pathlib.Path(__file__).parent
+INSTALL_REQUIRES = (HERE / 'requirements.txt').read_text().splitlines()
+TESTS_REQUIRE = (HERE / 'test-requirements.txt').read_text().splitlines()[1:]
+
+with io.open('README.md', 'rt', encoding='utf8') as f:
     readme = f.read()
 
 with io.open("{}/__init__.py".format(os.environ.get('MODULE_NAME')), "rt", encoding="utf8") as f:
@@ -35,7 +41,8 @@ setup(
     ],
     include_package_data=True,
     python_requires=">= 2.7, != 3.0.*, != 3.1.*, != 3.2.*, != 3.3.*",
-    install_requires=["Flask>=0.10", "SQLAlchemy>=0.8.0"],
+    install_requires=INSTALL_REQUIRES,
+    tests_require=TESTS_REQUIRE,
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
