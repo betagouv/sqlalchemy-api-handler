@@ -70,10 +70,31 @@ class Modify(Delete, SoftDelete):
         relationships = self.__mapper__.relationships
         relationship_keys_to_modify = set(relationships.keys()).intersection(datum_keys_with_skipped_keys)
         for key in relationship_keys_to_modify:
-            model = relationships[key].mapper.class_
-            value = model.instance_from(datum[key], parent=self)
-            if value:
-                setattr(self, key, value)
+            relationship = relationships[key]
+            model = relationship.mapper.class_
+            value = datum[key]
+            if isinstance(value, dict):
+                value = model.instance_from(value, parent=self)
+                if value:
+                    setattr(self, key, value)
+            else:
+                #setattr(self, key, value)
+                print(key, value)
+                if True:
+                    foreign_column = list(relationship._calculated_foreign_keys)[0]
+                    foreign_column_key = list(foreign_column.foreign_keys)[0].column.key
+                    print(foreign_column_key)
+                    if isinstance(value, list):
+                        print("LIST", key, value)
+                        pass
+                    else:
+                        foreign_value = getattr(value, foreign_column_key)
+                        if foreign_value:
+                            setattr(self, foreign_column.key, getattr(value, foreign_column_key))
+                        else:
+                            setattr(self, key, value)
+                        print('ICI', foreign_column.key, value, )
+
 
         synonyms = self.__mapper__.synonyms
         synonym_keys_to_modify = set(synonyms.keys()).intersection(datum_keys_with_skipped_keys)

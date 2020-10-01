@@ -174,12 +174,12 @@ class ModifyTest:
         # Given
         test_object = Stock()
         offer_dict = {
-            "name": "foo",
-            "type": "bar"
+            'name': 'foo',
+            'type': 'bar'
         }
         stock_dict = {
-            "offer": offer_dict,
-            "price": 1
+            'offer': offer_dict,
+            'price': 1
         }
 
         # When
