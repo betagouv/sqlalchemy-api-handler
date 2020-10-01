@@ -194,15 +194,15 @@ class ModifyTest:
         # Given
         test_object = Offer()
         stock_dict1 = {
-            "price": 1
+            'price': 1
         }
         stock_dict2 = {
-            "price": 1
+            'price': 1
         }
         offer_dict = {
-            "name": "foo",
-            "stocks": [stock_dict1, stock_dict2],
-            "type": "bar"
+            'name': 'foo',
+            'stocks': [stock_dict1, stock_dict2],
+            'type': 'bar'
         }
 
         # When
