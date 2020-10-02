@@ -18,7 +18,7 @@ class Accessor():
         ]
 
     @classmethod
-    def model_from_table_name(cls, name):
+    def model_from_name(cls, name):
         for model in Accessor.models():
             if model.__name__ == name:
                 return model
