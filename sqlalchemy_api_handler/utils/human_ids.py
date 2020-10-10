@@ -37,12 +37,12 @@ def humanize(integer):
               .rstrip('=')
 
 
-def int_to_bytes(x):
-    return x.to_bytes((x.bit_length() + 7) // 8, 'big')
-
-
 def int_from_bytes(xbytes):
     return int.from_bytes(xbytes, 'big')
+
+
+def int_to_bytes(x):
+    return x.to_bytes((x.bit_length() + 7) // 8, 'big')
 
 
 def is_id_column(column: Column) -> bool:
@@ -50,3 +50,25 @@ def is_id_column(column: Column) -> bool:
         return False
     return isinstance(column.type, (BigInteger, Integer)) \
            and (column.key.endswith('id') or column.key.endswith('Id'))
+
+
+def dehumanize_ids_in(datum, model):
+    if not datum:
+        return None
+    dehumanized_datum = {**datum}
+    for (key, value) in datum.items():
+        if hasattr(model, key):
+            if is_id_column(getattr(model, key)):
+                dehumanized_datum[key] = dehumanize(value)
+    return dehumanized_datum
+
+
+def humanize_ids_in(datum, model):
+    if not datum:
+        return None
+    humanized_datum = {**datum}
+    for (key, value) in datum.items():
+        if hasattr(model, key):
+            if is_id_column(getattr(model, key)):
+                humanized_datum[key] = humanize(value)
+    return humanized_datum

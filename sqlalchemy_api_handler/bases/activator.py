@@ -11,7 +11,6 @@ def merged_datum_from_activities(activities, initial=None):
                   activities,
                   initial if initial else {})
 
-
 class Activator(Save):
     @classmethod
     def get_activity(cls):
