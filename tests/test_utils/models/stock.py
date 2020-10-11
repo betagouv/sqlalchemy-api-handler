@@ -17,16 +17,16 @@ from sqlalchemy.sql import select, func
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.mixins.soft_deletable_mixin import SoftDeletableMixin
 
-from tests.test_utils.db import Model
+from tests.test_utils.db import db
 
 
 class Stock(ApiHandler,
-            Model,
+            db.Model,
             SoftDeletableMixin):
     # We redefine this so we can reference it in the baseScore column_property
-    id = Column(BigInteger,
-                primary_key=True,
-                autoincrement=True)
+    #id = Column(BigInteger,
+    #            primary_key=True,
+    #            autoincrement=True)
 
     dateModified = Column(DateTime,
                           nullable=False,

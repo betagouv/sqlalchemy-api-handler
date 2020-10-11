@@ -6,84 +6,153 @@ set -o nounset
 #  Global config of the application
 # =============================================
 
-export COMMAND_NAME="sqlaah"
-export DB_NAME="sqlalchemy_api_handler"
-export GITHUB_NAME="betagouv/sqlalchemy-api-handler"
-export MODULE_NAME="sqlalchemy_api_handler"
-export PIP_NAME="SQLAlchemy-Api-Handler"
+PRG="$BASH_SOURCE"
+while [ -h "$PRG" ] ; do
+  ls=$(ls -ld "$PRG")
+  link=$(expr "$ls" : '.*-> \(.*\)$')
+  if expr "$link" : '/.*' > /dev/null; then
+    PRG="$link"
+  else
+    PRG=$(dirname "$PRG")"/$link"
+  fi
+done
+
+ROOT_PATH="."
+if [ -x "$(command -v realpath)" ]; then
+  ROOT_PATH=$(realpath "$(dirname "$PRG")")
+fi
+
+set -o allexport
+source $ROOT_PATH/.env
+set +o allexport
 
 # =============================================
 #  Helper that describes all functionalities
 # =============================================
 
 if [[ $# -eq 0 ]] || [[ "$1" == "-h" ]]; then
-    echo "$(basename "$0") [-h] [-e env -b backend -f file c] -- program to deal with Pass Culture ecosystem
+    echo "$(basename "$0") [-h] [-e env -b backend -f file c] -- program to deal with $APP_NAME ecosystem
 where:
     -h  show this help text"
     exit 0
 fi
 
-# =============================================
-# Get script parameters
-# =============================================
-
 CMD="$1"
 shift
 
+# =============================================
+# Global Utilities
+# =============================================
+
+function check {
+  STATE=$1
+  CONTAINER=${APP_NAME}_${2}
+  GREP=$(docker ps | grep $CONTAINER)
+  if [[ "$GREP" ]]; then
+    if [[ "$STATE" == "stop" ]]; then
+      exit_with_error "$CONTAINER is running. You should stop it before applying your command."
+    fi
+  elif [[ "$STATE" == "start" ]]; then
+    exit_with_error "$CONTAINER is not running. You should start it before applying your command."
+  fi
+}
+
+
+function exit_with_error {
+  MESSAGE=${1-"end of $APP_NAME command."}
+  RED='\033[0;31m'
+  NO_COLOR='\033[0m'
+  echo -e "${RED}""ERROR : $MESSAGE""${NO_COLOR}"
+  exit 1
+}
+
+
+function exit_with_success {
+  MESSAGE=${1-"end of $APP_NAME command."}
+  GREEN='\033[0;32m'
+  NO_COLOR='\033[0m'
+  echo -e "${GREEN}""SUCCESS : $MESSAGE""${NO_COLOR}"
+  exit 0
+}
+
+
+# =============================================
+# Local commands : use Docker
+# =============================================
+
 # Build the docker images
 if [[ "$CMD" == "build" ]]; then
-  RUN='docker-compose build $*'
+  docker-compose build $*
+  exit_with_success
+
+
+# Apply sub command to the databases from tar db files
+elif [[ "$CMD" == "database" ]]; then
+  SUB_CMD=$1
+  shift
+  check start apidb
+  check start api
+
+  if [[ "$SUB_CMD" == "rm" ]]; then
+    check stop apidb
+    check stop api
+    sudo rm -rf $ROOT_PATH/docker_data/apidb
+  else
+    docker exec $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. python manager.py database $SUB_CMD"
+    exit_with_success
+  fi
 
 
 # Connect to Postgresql database in command line using psql
 elif [[ "$CMD" == "psql" ]]; then
 	COLUMNS=${COLUMNS:-''};
-	RUN='docker exec -it $COMMAND_NAME-postgres bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$DB_NAME'_user '$DB_NAME' $*"'
+	docker exec -it $APP_NAME-apidb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '$APP_NAME' $*"
+  exit_with_success
 
 
 # Publish package to test PyPi
 elif [[ "$CMD" == "prepublish" ]]; then
   VERSION=$(./$COMMAND_NAME version);
-  RUN='docker exec -it $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp &&
+  check start api
+  docker exec -it $APP_NAME-api bash -c "cd /opt/api &&
     rm -rf build &&
     rm -rf dist &&
     PYTHONPATH=. python setup.py sdist bdist_wheel &&
     sleep 1 &&
     twine check dist/$PIP_NAME-$VERSION.tar.gz &&
-    twine upload --repository-url https://test.pypi.org/legacy/ dist/*"'
+    twine upload --repository-url https://test.pypi.org/legacy/ dist/*"
+  exit_with_success
 
 
 # Publish package to PyPi
 elif [[ "$CMD" == "publish" ]]; then
-  RUN='docker exec -it $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp &&
-    PYTHONPATH=. twine upload dist/*"'
-
+  check start api
+  docker exec -it $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. twine upload dist/*"
+  exit_with_success
 
 # Force docker-compose to build the docker images
 elif [[ "$CMD" == "rebuild" ]]; then
-  RUN='docker-compose build --no-cache $*'
+  docker-compose build --no-cache $*
+  exit_with_success
 
 
 # Restart API after removing the database and files
 elif [[ "$CMD" == "restart" ]]; then
-  RUN='rm -rf docker_data;
-       docker-compose down --volumes;
-       docker-compose up --force-recreate'
-
-
-# Erase docker shared volumes
-elif [[ "$CMD" == "rmdb" ]]; then
-  RUN='sudo rm -rf docker_data/postgres;'
+  docker-compose down --volumes
+  docker-compose up --force-recreate
+  exit_with_success
 
 
 # Start with database
 elif [[ "$CMD" == "start" ]]; then
-  RUN='docker-compose up $*'
+  docker-compose up $*
+  exit_with_success
 
 
 # Create symlink to use COMMAND_NAME command (admin rights may be needed)
 elif [[ "$CMD" == "symlink" ]]; then
-  RUN='cd /usr/local/bin && ln -sf '"$(pwd)"'/$COMMAND_NAME $COMMAND_NAME && chmod +x $COMMAND_NAME && chmod +x '"$(pwd)"'/$COMMAND_NAME'
+  cd /usr/local/bin && ln -sf '"$(pwd)"'/$COMMAND_NAME $COMMAND_NAME && chmod +x $COMMAND_NAME && chmod +x '"$(pwd)"'/$COMMAND_NAME
+  exit_with_success
 
 
 # Run tests for API (Need start-backend to be successful and delete all data)
@@ -93,19 +162,20 @@ elif [[ "$CMD" == "test" ]]; then
   else
     PYTEST_ARGS=$*
   fi
-  RUN='docker exec $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"'
+  check start api
+  docker exec $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"
+  exit_with_success
 
 
 # Get the last version of the library
 elif [[ "$CMD" == "version" ]]; then
-  RUN='docker exec $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""'
-  eval $RUN
-  exit 0
+  check start api
+  docker exec $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""
+  exit_with_success
 fi
 
 # =============================================
 # Execute command
 # =============================================
 
-echo $RUN
-eval $RUN
+exit_with_error "Did not find a matched command for $CMD"

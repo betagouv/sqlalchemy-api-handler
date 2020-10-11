@@ -6,16 +6,17 @@ from sqlalchemy import Column, \
 from sqlalchemy.orm import relationship
 from sqlalchemy_api_handler import ApiHandler
 
-from tests.test_utils.db import Model
+from tests.test_utils.db import db
 
 
 class Offerer(ApiHandler,
-              Model):
+              db.Model):
     dateCreated = Column(DateTime,
-                         nullable=False,
-                         default=datetime.utcnow)
+                         default=datetime.utcnow,
+                         nullable=False)
 
-    name = Column(String(140), nullable=False)
+    name = Column(String(140),
+                  nullable=False)
 
     siren = Column(String(9),
                    nullable=True,

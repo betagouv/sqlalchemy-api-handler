@@ -9,7 +9,7 @@ from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.serialization.as_dict import as_dict
 from sqlalchemy_api_handler.utils.date import DateTimes
 
-from tests.test_utils.db import Model
+from tests.test_utils.db import db
 from tests.test_utils.models.stock import Stock
 
 
@@ -208,10 +208,7 @@ class ProductType:
 
 
 class Offer(ApiHandler,
-            Model):
-    id = Column(BigInteger,
-                primary_key=True,
-                autoincrement=True)
+            db.Model):
 
     bookingEmail = Column(String(120), nullable=True)
 
@@ -235,19 +232,19 @@ class Offer(ApiHandler,
     url = Column(String(255), nullable=True)
 
     mediaUrls = Column(ARRAY(String(220)),
-                       nullable=False,
-                       default=[])
+                       default=[],
+                       nullable=False)
 
     durationMinutes = Column(Integer, nullable=True)
 
     isNational = Column(Boolean,
-                        server_default=false(),
                         default=False,
-                        nullable=False)
+                        nullable=False,
+                        server_default=false())
 
     dateCreated = Column(DateTime,
-                         nullable=False,
-                         default=datetime.utcnow)
+                         default=datetime.utcnow,
+                         nullable=False)
 
     @property
     def dateRange(self):

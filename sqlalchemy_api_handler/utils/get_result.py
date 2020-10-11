@@ -7,6 +7,7 @@ from sqlalchemy.sql.functions import random
 from sqlalchemy_api_handler import ApiErrors, as_dict
 from sqlalchemy_api_handler.mixins.soft_deletable_mixin import SoftDeletableMixin
 
+
 class paginate_obj:
     """ Pagination dummy object. Takes a list and paginates it similar to sqlalchemy paginate() """
     def __init__(self, paginatable, page, per_page):
@@ -79,18 +80,16 @@ def check_order_by(order_by):
             check_single_order_by_string(part)
 
 
-def get_result(
-    modelClass,
-    includes=None,
-    order_by=None,
-    paginate=None,
-    page=None,
-    populate=None,
-    query=None,
-    refine=None,
-    should_distinct=None,
-    with_total_data_count=None
-):
+def get_result(modelClass,
+               includes=None,
+               order_by=None,
+               paginate=None,
+               page=None,
+               populate=None,
+               query=None,
+               refine=None,
+               should_distinct=None,
+               with_total_data_count=None):
     if query is None:
         query = modelClass.query
 

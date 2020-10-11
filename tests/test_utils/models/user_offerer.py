@@ -3,7 +3,7 @@ from sqlalchemy import BigInteger, Column, Enum, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy_api_handler import ApiHandler
 
-from tests.test_utils.db import Model
+from tests.test_utils.db import db
 
 
 class RightsType(enum.Enum):
@@ -11,7 +11,8 @@ class RightsType(enum.Enum):
     editor = "editor"
 
 
-class UserOfferer(ApiHandler, Model):
+class UserOfferer(ApiHandler,
+                  db.Model):
 
     userId = Column(BigInteger,
                     ForeignKey('user.user_id'),

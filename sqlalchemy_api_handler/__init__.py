@@ -1,11 +1,10 @@
-from sqlalchemy_api_handler.activity import Activity
-from sqlalchemy_api_handler.api_errors import ApiErrors
-from sqlalchemy_api_handler.api_handler import ApiHandler
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
-from sqlalchemy_api_handler.utils.get_result import get_result
-from sqlalchemy_api_handler.utils.human_ids import humanize, dehumanize
-from sqlalchemy_api_handler.utils.load_or_404 import load_or_404
-from sqlalchemy_api_handler.utils.logger import logger
-
+from sqlalchemy_api_handler.api_errors import *
+from sqlalchemy_api_handler.api_handler import *
+from sqlalchemy_api_handler.mixins import *
+from sqlalchemy_api_handler.serialization import *
+from sqlalchemy_api_handler.utils.get_result import *
+from sqlalchemy_api_handler.utils.human_ids import *
+from sqlalchemy_api_handler.utils.load_or_404 import *
+from sqlalchemy_api_handler.utils.logger import *
 
 __version__ = '0.4.13'

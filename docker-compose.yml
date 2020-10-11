@@ -1,40 +1,42 @@
 version: "3.7"
 
 services:
-  flask:
+  api:
     build: .
     command: >
       bash -c "set -x;
-               cd /opt/services/flaskapp;
+               cd /opt/api;
                pip install -r ./requirements.txt;
                sleep infinity;"
-    container_name: ${COMMAND_NAME}-flask
+    container_name: ${APP_NAME}-api
+    depends_on:
+      - apidb
+    env_file:
+      - ./.env
     environment:
       - GITHUB_NAME=${GITHUB_NAME}
       - MODULE_NAME=${MODULE_NAME}
       - ENV=${ENV:-development}
       - PIP_NAME=${PIP_NAME}
-      - POSTGRES_URL=postgresql://${DB_NAME}_user:${DB_NAME}_password@postgres/${DB_NAME}
+      - POSTGRES_URL=postgresql://${APP_NAME}_user:${APP_NAME}_password@apidb/${APP_NAME}_api
     networks:
       - db_nw
       - web_nw
-    depends_on:
-      - postgres
     volumes:
-      - ./:/opt/services/flaskapp
+      - ./:/opt/api
 
-  postgres:
-    image: postgres:10.1
-    container_name: ${COMMAND_NAME}-postgres
-    environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_NAME}_user
-      - POSTGRES_PASSWORD=${DB_NAME}_password
+  apidb:
     command: postgres -c logging_collector=on -c log_destination=stderr -c log_min_duration_statement=0 -c log_statement=all -c log_duration=on
+    container_name: ${APP_NAME}-apidb
+    environment:
+      - POSTGRES_DB=${APP_NAME}_api
+      - POSTGRES_PASSWORD=${APP_NAME}_password
+      - POSTGRES_USER=${APP_NAME}_user
+    image: postgres:10.1
     networks:
       - db_nw
     volumes:
-      - ./docker_data/postgres:/var/lib/postgresql/data
+      - ./docker_data/apidb:/var/lib/postgresql
 
 networks:
   db_nw:
@@ -43,4 +45,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  docker_data:

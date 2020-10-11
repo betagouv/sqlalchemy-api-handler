@@ -7,9 +7,10 @@ from sqlalchemy_api_handler.bases.save import Save
 
 
 def merged_datum_from_activities(activities, initial=None):
-    return reduce(lambda agg, activity: {**agg, **activity.changed_data},
+    return reduce(lambda agg, activity: {**agg, **activity.patch},
                   activities,
                   initial if initial else {})
+
 
 class Activator(Save):
     @classmethod
@@ -22,49 +23,53 @@ class Activator(Save):
 
     @staticmethod
     def activate(*activities):
-        Save.save(*activities)
-        Activity = Activator.get_activity()
-        entities = []
-        for uuid, grouped_activities in groupby(activities, lambda activity: activity.uuid):
-            grouped_activities = list(grouped_activities)
+        for (uuid, grouped_activities) in groupby(activities, key=lambda activity: activity.uuid):
+            grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
 
-            table_name = grouped_activities[0].table_name
-            model = Save.model_from_table_name(table_name)
+            table_name = grouped_activities[0].tableName
+            model = ApiHandler.model_from_table_name(table_name)
             if model is None:
                 errors = ApiErrors()
                 errors.add_error('activity', 'model from {} not found'.format(table_name))
                 raise errors
 
+            first_activity = grouped_activities[0]
+            id_key = model.id.property.key
+            entity_id = first_activity.old_data.get(id_key) \
+                        if first_activity.old_data else None
+            if not entity_id:
+                entity = model(**first_activity.patch)
+                entity.activityUuid = uuid
+                Save.save(entity)
+                insert_activity = Activity.query.filter(
+                    (Activity.tableName == table_name) & \
+                    (Activity.data[id_key].astext.cast(Integer) == entity.id) & \
+                    (Activity.verb == 'insert')
+                ).one()
+                insert_activity.dateCreated = first_activity.dateCreated
+                insert_activity.uuid = uuid
+                ApiHandler.save(insert_activity)
+                for activity in grouped_activities[1:]:
+                    activity.old_data = { id_key: entity.id }
+                activate(*grouped_activities[1:])
+                continue
 
+            min_date = min(map(lambda a: a.dateCreated, grouped_activities))
+            already_activities_since_min_date = Activity.query \
+                                                        .filter(
+                                                            (Activity.tableName == table_name) & \
+                                                            (Activity.data[id_key].astext.cast(Integer) == entity_id) & \
+                                                            (Activity.dateCreated >= min_date)
+                                                        ) \
+                                                        .all()
 
-            min_issued_at = min(map(lambda a: a.issued_at, grouped_activities))
-            last_activity_with_old_data_since = Activity.query \
-                                           .filter(
-                                               (Activity.old_data != None) & \
-                                               (Activity.issued_at <= min_issued_at) & \
-                                               (Activity.uuid == uuid)) \
-                                           .order_by(Activity.issued_at.desc()).first()
-            if not last_activity_with_old_data_since:
-                all_activities_since = Activity.query \
-                                               .filter(
-                                                   (Activity.issued_at >= min_issued_at) & \
-                                                   (Activity.uuid == uuid)) \
-                                               .order_by(Activity.issued_at) \
-                                               .all()
-                created_datum = merged_datum_from_activities(all_activities_since)
-                entity = model(**created_datum)
-            else:
-                all_activities_since = Activity.query \
-                                               .filter(
-                                                   (Activity.issued_at >= last_activity_with_old_data_since.issued_at) & \
-                                                   (Activity.uuid == uuid)) \
-                                               .order_by(Activity.issued_at) \
-                                               .all()
-                modified_datum = merged_datum_from_activities(all_activities_since,
-                                                              last_activity_with_old_data_since.old_data)
-                entity = last_activity_with_old_data_since.object
-                entity.modify(modified_datum)
-
-            entity.activityUuid = uuid
-            entities.append(entity)
-        Save.save(*entities)
+            Save.save(*grouped_activities)
+            all_activities_since_min_date = sorted(already_activities_since_min_date + grouped_activities,
+                                                   key=lambda activity: activity.dateCreated)
+            datum = merged_datum_from_activities(all_activities_since_min_date,
+                                                 all_activities_since_min_date[0].datum)
+            del datum[model.id.key]
+            datum['activityUuid'] = uuid
+            entity = model.query.get(entity_id)
+            entity.modify(datum)
+            Save.save(entity)
