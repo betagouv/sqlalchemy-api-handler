@@ -5,8 +5,8 @@ import traceback
 from flask import current_app as app
 from flask_script import Command
 
-import utils.db
-from utils.config import COMMAND_NAME
+import tests.test_utils.db
+from tests.test_utils.config import COMMAND_NAME
 
 
 @app.manager.add_command

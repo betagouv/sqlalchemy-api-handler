@@ -2,7 +2,7 @@ from flask import current_app as app
 from flask_script import Command
 from sqlalchemy_api_handler import humanize as h
 
-from utils.config import COMMAND_NAME
+from tests.test_utils.config import COMMAND_NAME
 
 
 @app.manager.add_command

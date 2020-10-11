@@ -1,11 +1,11 @@
 import pytest
 
 from sqlalchemy_api_handler import ApiHandler
-from tests.conftest import with_clean
+from tests.conftest import with_delete
 from tests.test_utils.models.user import User
 
 class SaveTest():
-    @with_clean
+    @with_delete
     def test_save_user(self, app):
         # given
         user = User(

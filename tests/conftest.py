@@ -2,7 +2,7 @@ from functools import wraps
 from flask import Flask
 import pytest
 
-from tests.test_utils.db import clean, db
+from tests.test_utils.db import db, delete
 from tests.test_utils.setup import setup
 
 
@@ -13,11 +13,11 @@ def app():
     return FLASK_APP
 
 
-def with_clean(f):
+def with_delete(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         db.session.rollback()
-        clean()
+        delete()
         return f(*args, **kwargs)
 
     return decorated_function

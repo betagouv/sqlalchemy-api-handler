@@ -46,7 +46,7 @@ shift
 
 function check {
   STATE=$1
-  CONTAINER=${APP_NAME}_${2}
+  CONTAINER=${APP_NAME}-${2}
   GREP=$(docker ps | grep $CONTAINER)
   if [[ "$GREP" ]]; then
     if [[ "$STATE" == "stop" ]]; then
@@ -90,17 +90,16 @@ if [[ "$CMD" == "build" ]]; then
 elif [[ "$CMD" == "database" ]]; then
   SUB_CMD=$1
   shift
-  check start apidb
-  check start api
-
   if [[ "$SUB_CMD" == "rm" ]]; then
     check stop apidb
     check stop api
     sudo rm -rf $ROOT_PATH/docker_data/apidb
   else
+    check start apidb
+    check start api
     docker exec $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. python manager.py database $SUB_CMD"
-    exit_with_success
   fi
+  exit_with_success
 
 
 # Connect to Postgresql database in command line using psql
@@ -143,9 +142,15 @@ elif [[ "$CMD" == "restart" ]]; then
   exit_with_success
 
 
-# Start with database
+# Start containers
 elif [[ "$CMD" == "start" ]]; then
   docker-compose up $*
+  exit_with_success
+
+
+# Stop containerss
+elif [[ "$CMD" == "stop" ]]; then
+  docker-compose stop $*
   exit_with_success
 
 
@@ -172,10 +177,21 @@ elif [[ "$CMD" == "version" ]]; then
   check start api
   docker exec $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""
   exit_with_success
+
+
+else
+  INTERACTIVE_MODE=''
+  if [[ "$CMD" == "python" ]]; then
+    CMD="shell"
+    INTERACTIVE_MODE='-it'
+  fi
+  check start api
+  docker exec $INTERACTIVE_MODE $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. python manager.py $CMD $*"
+  exit_with_success
 fi
 
 # =============================================
 # Execute command
 # =============================================
 
-exit_with_error "Did not find a matched command for $CMD"
+exit_with_error "Did not find a matched command for '$CMD'"
