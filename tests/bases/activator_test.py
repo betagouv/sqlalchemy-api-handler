@@ -1,10 +1,12 @@
 from sqlalchemy_api_handler import ApiHandler
 
+from tests.conftest import with_delete
 from tests.test_utils.models.activity import Activity
 from tests.test_utils.models.user import User
 
 
 class ActivatorTest:
+    @with_delete
     def test_create_user_save_an_insert_activity(self):
         # Given
         user = User(email='foo@foo.com',
@@ -15,8 +17,11 @@ class ActivatorTest:
         ApiHandler.save(user)
 
         # Then
-        activity = Activity.query.one()
-        assert 3 == 3
+        user = User.query.one()
+        print(user)
+        activities = Activity.query.all()
+        print("MMM", activities)
+        assert 2 == 3
 
 
 

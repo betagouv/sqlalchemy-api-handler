@@ -1,12 +1,13 @@
 from sqlalchemy import BigInteger, Column, Text, String
 from sqlalchemy.orm import synonym
-from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler import ApiHandler, HasActivitiesMixin
 
 from tests.test_utils.db import db
 
 
 class User(ApiHandler,
-           db.Model):
+           db.Model,
+           HasActivitiesMixin):
 
     firstName = Column(String(128),
                        nullable=True)

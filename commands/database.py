@@ -18,7 +18,7 @@ class DatabaseCommand(Command):
 
     def run(self, args):
         try:
-            func = getattr(utils.db, args[0])()
+            func = getattr(tests.test_utils.db, args[0])()
         except Exception as e:
             print('ERROR: ' + str(e))
             traceback.print_tb(e.__traceback__)

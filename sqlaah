@@ -104,8 +104,9 @@ elif [[ "$CMD" == "database" ]]; then
 
 # Connect to Postgresql database in command line using psql
 elif [[ "$CMD" == "psql" ]]; then
+  check start apidb
 	COLUMNS=${COLUMNS:-''};
-	docker exec -it $APP_NAME-apidb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '$APP_NAME' $*"
+	docker exec -it $APP_NAME-apidb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '${APP_NAME}_api' $*"
   exit_with_success
 
 
