@@ -80,8 +80,15 @@ function exit_with_success {
 # Local commands : use Docker
 # =============================================
 
+# Connect to instance in bash mode
+if [[ "$CMD" == "bash" ]]; then
+  check start apiweb
+  docker exec -it $APP_NAME-apiweb bash
+  exit_with_success
+
+
 # Build the docker images
-if [[ "$CMD" == "build" ]]; then
+elif [[ "$CMD" == "build" ]]; then
   docker-compose build $*
   exit_with_success
 
@@ -92,11 +99,11 @@ elif [[ "$CMD" == "database" ]]; then
   shift
   if [[ "$SUB_CMD" == "rm" ]]; then
     check stop apidb
-    check stop api
+    check stop apiweb
     sudo rm -rf $ROOT_PATH/docker_data/apidb
   else
     check start apidb
-    check start api
+    check start apiweb
     docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python manager.py database $SUB_CMD"
   fi
   exit_with_success
@@ -112,21 +119,22 @@ elif [[ "$CMD" == "psql" ]]; then
 
 # Publish package to test PyPi
 elif [[ "$CMD" == "prepublish" ]]; then
-  VERSION=$(./$COMMAND_NAME version);
-  check start api
+  VERSION=$(./$COMMAND_NAME version)
+  VERSION=$(echo $VERSION  | cut -d' ' -f1)
+  check start apiweb
   docker exec -it $APP_NAME-apiweb bash -c "cd /opt/apiweb &&
     rm -rf build &&
     rm -rf dist &&
     PYTHONPATH=. python setup.py sdist bdist_wheel &&
     sleep 1 &&
-    twine check dist/$PIP_NAME-$VERSION.tar.gz &&
+    twine check dist/${PIP_NAME}-${VERSION}.tar.gz &&
     twine upload --repository-url https://test.pypi.org/legacy/ dist/*"
   exit_with_success
 
 
 # Publish package to PyPi
 elif [[ "$CMD" == "publish" ]]; then
-  check start api
+  check start apiweb
   docker exec -it $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. twine upload dist/*"
   exit_with_success
 
@@ -168,17 +176,16 @@ elif [[ "$CMD" == "test" ]]; then
   else
     PYTEST_ARGS=$*
   fi
-  check start api
+  check start apiweb
   docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"
   exit_with_success
 
 
 # Get the last version of the library
 elif [[ "$CMD" == "version" ]]; then
-  check start api
+  check start apiweb
   docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""
   exit_with_success
-
 
 else
   INTERACTIVE_MODE=''
@@ -186,7 +193,7 @@ else
     CMD="shell"
     INTERACTIVE_MODE='-it'
   fi
-  check start api
+  check start apiweb
   docker exec $INTERACTIVE_MODE $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python manager.py $CMD $*"
   exit_with_success
 fi
