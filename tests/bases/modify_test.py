@@ -2,9 +2,6 @@ import pytest
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import BigInteger, Column, DateTime, Integer, Float
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, synonym
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 DecimalCastError, \
@@ -17,7 +14,7 @@ from sqlalchemy_api_handler.utils import dehumanize, \
 from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
-from tests.test_utils.database import db
+from tests.test_utils.models.foo import Foo
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.offerer import Offerer
 from tests.test_utils.models.scope import ScopeType
@@ -27,16 +24,6 @@ from tests.test_utils.models.user import User
 from tests.test_utils.models.user_offerer import UserOfferer
 from tests.test_utils.models.time_interval import TimeInterval
 
-
-class ModifyFoo(ApiHandler, db.Model):
-    date_attribute = Column(DateTime(), nullable=True)
-    entityId = Column(BigInteger(), nullable=True)
-    float_attribute = Column(Float(), nullable=True)
-    integer_attribute = Column(Integer(), nullable=True)
-    uuid_attribute = Column(UUID(as_uuid=True), nullable=True)
-    uuidId = Column(UUID(as_uuid=True), nullable=True)
-    bar_id = Column(BigInteger())
-    barId = synonym('bar_id')
 
 time_interval = TimeInterval()
 time_interval.start = datetime(2018, 1, 1, 10, 20, 30, 111000)
@@ -66,7 +53,7 @@ class ModifyTest:
 
     def test_for_sql_integer_value_with_string_raises_decimal_cast_error(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'integer_attribute': 'yolo'}
 
         # When
@@ -78,7 +65,7 @@ class ModifyTest:
 
     def test_for_sql_integer_value_with_str_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'integer_attribute': '12.9'}
 
         # When
@@ -89,7 +76,7 @@ class ModifyTest:
 
     def test_for_sql_float_value_with_str_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'float_attribute': '12.9'}
 
         # When
@@ -100,7 +87,7 @@ class ModifyTest:
 
     def test_for_sql_integer_value_with_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'integer_attribute': 12}
 
         # When
@@ -111,7 +98,7 @@ class ModifyTest:
 
     def test_for_sql_float_value_with_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'float_attribute': 12.9}
 
         # When
@@ -122,7 +109,7 @@ class ModifyTest:
 
     def test_for_valid_sql_uuid_value(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         uuid_attribute = str(uuid.uuid4())
         data = {'uuid_attribute': uuid_attribute}
 
@@ -134,7 +121,7 @@ class ModifyTest:
 
     def test_for_valid_sql_uuid_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         uuid_id = str(uuid.uuid4())
         data = {'uuidId': uuid_id}
 
@@ -146,7 +133,7 @@ class ModifyTest:
 
     def test_for_valid_sql_humanize_id_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         humanized_entity_id = "AE"
         data = {'entityId': humanized_entity_id}
 
@@ -159,7 +146,7 @@ class ModifyTest:
 
     def test_for_valid_sql_humanize_id_synonym_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         humanized_bar_id = "AE"
         dehumanized_bar_id = dehumanize(humanized_bar_id)
         data = {'barId': humanized_bar_id}
@@ -218,7 +205,7 @@ class ModifyTest:
 
     def test_for_sql_float_value_with_string_raises_decimal_cast_error(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'float_attribute': 'yolo'}
 
         # When
@@ -230,7 +217,7 @@ class ModifyTest:
 
     def test_for_sql_datetime_value_in_wrong_format_returns_400_and_affected_key_in_error(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'date_attribute': {'date_attribute': None}}
 
         # When
@@ -287,7 +274,7 @@ class ModifyTest:
 
     def test_raises_type_error_if_raw_uuid_is_invalid(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'uuidId': 'foo'}
 
         # When
@@ -300,7 +287,7 @@ class ModifyTest:
 
     def test_raises_type_error_if_raw_humanized_id_is_invalid(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'entityId': '12R-..2foo'}
 
         # When

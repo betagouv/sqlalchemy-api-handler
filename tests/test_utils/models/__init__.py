@@ -7,6 +7,7 @@ from tests.test_utils.database import db
 
 def import_models():
     from tests.test_utils.models.activity import Activity
+    from tests.test_utils.models.foo import Foo
     from tests.test_utils.models.offer import Offer
     from tests.test_utils.models.offerer import Offerer
     from tests.test_utils.models.scope import Scope
