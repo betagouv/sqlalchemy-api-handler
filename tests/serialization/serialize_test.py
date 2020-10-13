@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import pytest
-from sqlalchemy_api_handler.serialization.serialize import serialize
+from sqlalchemy_api_handler.serialization import serialize
 
 from tests.test_utils.models.offer import Offer, ThingType
 from tests.test_utils.models.time_interval import TimeInterval

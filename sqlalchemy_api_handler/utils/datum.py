@@ -1,6 +1,6 @@
-from sqlalchemy_api_handler.utils.human_ids import dehumanize, \
-                                                   humanize, \
-                                                   is_id_column
+from sqlalchemy_api_handler.utils.dehumanize import dehumanize
+from sqlalchemy_api_handler.utils.humanize import humanize
+from sqlalchemy_api_handler.utils.is_id_column import is_id_column
 
 
 def dehumanize_ids_in(datum, model):

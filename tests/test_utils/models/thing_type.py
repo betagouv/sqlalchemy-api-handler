@@ -1,5 +1,5 @@
 from enum import Enum
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
+from sqlalchemy_api_handler.serialization import as_dict
 from typing import Iterable
 
 

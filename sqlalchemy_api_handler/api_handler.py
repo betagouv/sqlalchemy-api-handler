@@ -3,7 +3,7 @@ from sqlalchemy import BigInteger,\
                        Column
 
 from sqlalchemy_api_handler.bases.activator import Activator
-from sqlalchemy_api_handler.utils.human_ids import humanize
+from sqlalchemy_api_handler.utils.humanize import humanize
 
 
 class ApiHandler(Activator):

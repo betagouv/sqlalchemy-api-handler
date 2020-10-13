@@ -11,8 +11,10 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 EmptyFilterError, \
                                                 ResourceNotFoundError, \
                                                 UuidCastError
-from sqlalchemy_api_handler.utils.human_ids import dehumanize, humanize, NonDehumanizableId
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
+from sqlalchemy_api_handler.utils import dehumanize, \
+                                         humanize, \
+                                         NonDehumanizableId
+from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
 from tests.test_utils.database import db

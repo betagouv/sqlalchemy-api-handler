@@ -4,12 +4,10 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship, synonym
 
-from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.utils.datum import dehumanize_ids_in, \
-                                               humanize_ids_in, \
-                                               relationships_in, \
+from sqlalchemy_api_handler.utils.datum import relationships_in, \
                                                synonyms_in
-
+from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
+from sqlalchemy_api_handler.utils.humanize import humanize_ids_in
 
 
 inflect_engine = inflect.engine()
@@ -71,10 +69,9 @@ class ActivityMixin(object):
                 dehumanized_datum[dehumanized_key] = dehumanize_ids_in(dehumanized_datum[humanized_key],
                                                                        model)
                 del dehumanized_datum[humanized_key]
-        ApiHandler.modify(self,
-                          dehumanized_datum,
-                          skipped_keys=skipped_keys,
-                          with_add=with_add)
+        super().modify(dehumanized_datum,
+                       skipped_keys=skipped_keys,
+                       with_add=with_add)
 
 
     __as_dict_includes__ = [

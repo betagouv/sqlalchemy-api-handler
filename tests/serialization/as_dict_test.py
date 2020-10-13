@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
+from sqlalchemy_api_handler.serialization import as_dict
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.stock import Stock
 from tests.test_utils.models.user import User

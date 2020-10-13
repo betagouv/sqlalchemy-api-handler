@@ -23,11 +23,9 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 UuidCastError
 from sqlalchemy_api_handler.bases.soft_delete import SoftDelete
 from sqlalchemy_api_handler.utils.date import match_format
-from sqlalchemy_api_handler.utils.human_ids import dehumanize, \
-                                                   humanize, \
-                                                   is_id_column
-
-
+from sqlalchemy_api_handler.utils.dehumanize import dehumanize
+from sqlalchemy_api_handler.utils.humanize import humanize
+from sqlalchemy_api_handler.utils.is_id_column import is_id_column
 
 
 class Modify(Delete, SoftDelete):

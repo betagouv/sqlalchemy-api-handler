@@ -4,7 +4,8 @@ import uuid
 from werkzeug.local import LocalProxy
 from flask import current_app as app, jsonify, request, session
 from flask_login import current_user, login_user
-from sqlalchemy_api_handler import ApiErrors, ApiHandler, as_dict
+from sqlalchemy_api_handler import ApiErrors, ApiHandler
+from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.test_utils.models.user import User
 

@@ -1,6 +1,7 @@
 from sqlalchemy import BigInteger, Column, Text, String
 from sqlalchemy.orm import synonym
-from sqlalchemy_api_handler import ApiHandler, HasActivitiesMixin
+from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler.mixins import HasActivitiesMixin
 
 from tests.test_utils.database import db
 

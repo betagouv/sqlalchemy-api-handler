@@ -1,7 +1,7 @@
 from sqlalchemy import orm
 from flask_sqlalchemy import SQLAlchemy
 
-from sqlalchemy_api_handler import logger
+from sqlalchemy_api_handler.utils import logger
 
 
 db = SQLAlchemy()

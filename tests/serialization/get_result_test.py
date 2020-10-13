@@ -1,5 +1,7 @@
 import pytest
-from sqlalchemy_api_handler import ApiErrors, ApiHandler, humanize, get_result
+from sqlalchemy_api_handler import ApiErrors, ApiHandler
+from sqlalchemy_api_handler.serialization import get_result
+from sqlalchemy_api_handler.utils import humanize
 
 from tests.conftest import with_delete
 from tests.test_utils.models.offer import Offer
@@ -92,6 +94,6 @@ class GetResultTest:
         )
 
         # Then
-        assert len(result['data']) == page * paginate - prices_length 
+        assert len(result['data']) == page * paginate - prices_length
         assert result['has_more'] == False
         assert result['total_data_count'] == prices_length

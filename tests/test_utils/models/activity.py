@@ -3,8 +3,8 @@ from sqlalchemy import BigInteger, \
                        ForeignKey
 from postgresql_audit.flask import versioning_manager
 from sqlalchemy.orm import relationship
-from sqlalchemy_api_handler import ApiHandler, \
-                                   ActivityMixin
+from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler.mixins import ActivityMixin
 
 from tests.test_utils.database import db
 
