@@ -2,7 +2,7 @@ from functools import wraps
 from flask import Flask
 import pytest
 
-from tests.test_utils.db import create, db, delete
+from tests.test_utils.database import create, db, delete
 from tests.test_utils.setup import setup
 
 

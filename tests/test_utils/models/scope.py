@@ -7,7 +7,7 @@ from sqlalchemy import BigInteger, \
 from sqlalchemy.orm import relationship
 from sqlalchemy_api_handler import ApiHandler
 
-from tests.test_utils.db import db
+from tests.test_utils.database import db
 
 
 class ScopeType(enum.Enum):

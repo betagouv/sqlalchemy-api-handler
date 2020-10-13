@@ -1,27 +1,44 @@
-from sqlalchemy_api_handler import ApiHandler
+import pytest
+from flask_login import login_user
+from sqlalchemy import Integer
+from sqlalchemy_api_handler import ApiHandler, humanize
 
 from tests.conftest import with_delete
-from tests.test_utils.models.activity import Activity
+from tests.test_utils.models.activity import Activity, versioning_manager
+from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.user import User
 
 
 class ActivatorTest:
     @with_delete
-    def test_create_user_save_an_insert_activity(self):
+    def test_create_offer_save_an_insert_activity(self, app):
         # Given
-        user = User(email='foo@foo.com',
-                    firstName='Foo',
-                    publicName='foo')
+        offer = Offer(name='bar', type='foo')
 
         # When
-        ApiHandler.save(user)
+        ApiHandler.save(offer)
 
         # Then
-        user = User.query.one()
-        print(user)
-        activities = Activity.query.all()
-        print("MMM", activities)
-        assert 2 == 3
+        activity = Activity.query.filter(Activity.changed_data['id'].astext.cast(Integer) == offer.id).one()
+        print(activity)
+        assert activity.verb == 'insert'
+        assert activity.transaction == None
+
+    @with_delete
+    def test_create_offer_with_login_user_save_an_insert_activity_with_transaction(self, app):
+        # Given
+        offer = Offer(name='bar', type='foo')
+        user = User(email='fee@bar.com', firstName='fee', publicName='foo')
+        ApiHandler.save(user)
+        login_user(user)
+
+        # When
+        ApiHandler.save(offer)
+
+        # Then
+        activity = Activity.query.filter(Activity.changed_data['id'].astext.cast(Integer) == offer.id).one()
+        assert activity.verb == 'insert'
+        assert activity.transaction.actor.id == user.id
 
 
 

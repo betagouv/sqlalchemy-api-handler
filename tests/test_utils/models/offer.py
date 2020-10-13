@@ -5,11 +5,10 @@ from sqlalchemy import BigInteger, Column, DateTime, desc, ForeignKey, String
 from sqlalchemy import and_, ARRAY, Boolean, CheckConstraint, false, Integer, Text, TEXT
 from sqlalchemy.orm import column_property
 from sqlalchemy.sql import select, func
-from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
+from sqlalchemy_api_handler import ApiHandler, as_dict, HasActivitiesMixin
 from sqlalchemy_api_handler.utils.date import DateTimes
 
-from tests.test_utils.db import db
+from tests.test_utils.database import db
 from tests.test_utils.models.stock import Stock
 
 
@@ -208,44 +207,50 @@ class ProductType:
 
 
 class Offer(ApiHandler,
-            db.Model):
-
-    bookingEmail = Column(String(120), nullable=True)
-
-    type = Column(String(50),
-                  CheckConstraint("type != 'None'"),
-                  index=True,
-                  nullable=False)
-
-    name = Column(String(140), nullable=False)
-
-    description = Column(Text, nullable=True)
-
-    conditions = Column(String(120),
-                        nullable=True)
+            db.Model,
+            HasActivitiesMixin):
 
     ageMin = Column(Integer,
                     nullable=True)
     ageMax = Column(Integer,
                     nullable=True)
 
-    url = Column(String(255), nullable=True)
+    bookingEmail = Column(String(120),
+                          nullable=True)
 
-    mediaUrls = Column(ARRAY(String(220)),
-                       default=[],
-                       nullable=False)
+    conditions = Column(String(120),
+                        nullable=True)
 
-    durationMinutes = Column(Integer, nullable=True)
+    dateCreated = Column(DateTime,
+                         default=datetime.utcnow,
+                         nullable=False)
+
+    description = Column(Text,
+                         nullable=True)
+
+    durationMinutes = Column(Integer,
+                             nullable=True)
 
     isNational = Column(Boolean,
                         default=False,
                         nullable=False,
                         server_default=false())
 
-    dateCreated = Column(DateTime,
-                         default=datetime.utcnow,
-                         nullable=False)
+    mediaUrls = Column(ARRAY(String(220)),
+                       default=[],
+                       nullable=False)
 
+    name = Column(String(140),
+                  nullable=False)
+
+    type = Column(String(50),
+                  CheckConstraint("type != 'None'"),
+                  index=True,
+                  nullable=False)
+
+    url = Column(String(255), nullable=True)
+
+    
     @property
     def dateRange(self):
         if ProductType.is_thing(self.type) or not self.notDeletedStocks:

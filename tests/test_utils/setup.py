@@ -1,6 +1,7 @@
 import os
+from flask_login import LoginManager
 from sqlalchemy_api_handler import ApiHandler
-from tests.test_utils.db import db
+from tests.test_utils.database import db
 from tests.test_utils.models import import_models
 
 
@@ -15,3 +16,14 @@ def setup(flask_app):
 
     flask_app.app_context().push()
     import_models()
+
+    flask_app.config['SESSION_COOKIE_HTTPONLY'] = not flask_app.config['TESTING']
+    flask_app.config['SESSION_COOKIE_SECURE'] = False
+    flask_app.config['REMEMBER_COOKIE_HTTPONLY'] = not flask_app.config['TESTING']
+    if not flask_app.config['TESTING']:
+        flask_app.config['PERMANENT_SESSION_LIFETIME'] = 90 * 24 * 3600
+        flask_app.config['REMEMBER_COOKIE_DURATION'] = 90 * 24 * 3600
+        flask_app.config['REMEMBER_COOKIE_SECURE'] = True
+    login_manager = LoginManager()
+    login_manager.init_app(flask_app)
+    import tests.test_utils.login_manager

@@ -14,10 +14,9 @@ from sqlalchemy import BigInteger, \
     or_
 from sqlalchemy.orm import column_property, relationship
 from sqlalchemy.sql import select, func
-from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.mixins.soft_deletable_mixin import SoftDeletableMixin
+from sqlalchemy_api_handler import ApiHandler, SoftDeletableMixin
 
-from tests.test_utils.db import db
+from tests.test_utils.database import db
 
 
 class Stock(ApiHandler,

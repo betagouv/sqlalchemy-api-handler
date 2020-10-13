@@ -3,10 +3,10 @@ from sqlalchemy import BigInteger, \
                        ForeignKey
 from postgresql_audit.flask import versioning_manager
 from sqlalchemy.orm import relationship
-from sqlalchemy_api_handler.mixins import ActivityMixin
-from sqlalchemy_api_handler.api_handler import ApiHandler
+from sqlalchemy_api_handler import ApiHandler, \
+                                   ActivityMixin
 
-from tests.test_utils.db import db
+from tests.test_utils.database import db
 
 
 versioning_manager.init(db.Model)
@@ -19,9 +19,9 @@ class Activity(ApiHandler,
 
     id = versioning_manager.activity_cls.id
 
-    userId = Column(BigInteger(),
-                    ForeignKey('user.user_id'))
+    #userId = Column(BigInteger(),
+    #                ForeignKey('user.user_id'))
 
-    user = relationship('User',
-                        foreign_keys=[userId],
-                        backref='activities')
+    #user = relationship('User',
+    #                    foreign_keys=[userId],
+    #                    backref='activities')

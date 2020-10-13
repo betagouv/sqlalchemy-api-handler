@@ -21,7 +21,7 @@ def create_activity_and_transaction_and_user_tables():
     # plus we need to create user table first as Activity model depends on it
     from tests.test_utils.models.activity import Activity, versioning_manager
     orm.configure_mappers()
-    Activity.user.mapper.class_.__table__.create(db.session.get_bind())
+    #Activity.user.mapper.class_.__table__.create(db.session.get_bind())
     versioning_manager.transaction_cls.__table__.create(db.session.get_bind())
     Activity.__table__.create(db.session.get_bind())
 
@@ -30,12 +30,13 @@ def create():
     logger.info('create all the database...')
     from tests.test_utils.models.activity import Activity
     create_activity_and_transaction_and_user_tables()
-    tables_except_user = [
-        table
-        for (table_name, table) in db.metadata.tables.items()
-        if table_name != Activity.user.mapper.class_.__tablename__
-    ]
-    db.metadata.create_all(db.engine,
-                           tables=tables_except_user)
+    #tables_except_user = [
+    #    table
+    #    for (table_name, table) in db.metadata.tables.items()
+    #    if table_name != Activity.user.mapper.class_.__tablename__
+    #]
+    #db.metadata.create_all(db.engine,
+    #                       tables=tables_except_user)
+    db.create_all()
     db.session.commit()
     logger.info('create all the database...Done.')

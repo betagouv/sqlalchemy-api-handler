@@ -25,16 +25,16 @@ class ActivityMixin(object):
         return synonym('table_name')
 
 
-    @declared_attr
-    def userId(cls):
-        return Column(BigInteger(),
-                      ForeignKey('user.user_id'))
+    #@declared_attr
+    #def userId(cls):
+    #    return Column(BigInteger(),
+    #                  ForeignKey('user.user_id'))
 
-    @declared_attr
-    def user(cls):
-        return relationship('User',
-                            backref='activities',
-                            foreign_keys=[userId])
+    #@declared_attr
+    #def user(cls):
+    #    return relationship('User',
+    #                        backref='activities',
+    #                        foreign_keys=[userId])
 
     uuid = Column(UUID(as_uuid=True))
 

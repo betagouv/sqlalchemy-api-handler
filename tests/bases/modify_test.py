@@ -1,7 +1,7 @@
+import pytest
 import uuid
 from datetime import datetime
 from decimal import Decimal
-import pytest
 from sqlalchemy import BigInteger, Column, DateTime, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, synonym
@@ -15,7 +15,7 @@ from sqlalchemy_api_handler.utils.human_ids import dehumanize, humanize, NonDehu
 from sqlalchemy_api_handler.serialization.as_dict import as_dict
 
 from tests.conftest import with_delete
-from tests.test_utils.db import db
+from tests.test_utils.database import db
 from tests.test_utils.models.offer import Offer
 from tests.test_utils.models.offerer import Offerer
 from tests.test_utils.models.scope import ScopeType

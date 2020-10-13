@@ -3,7 +3,7 @@ from sqlalchemy import BigInteger, Column, Enum, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy_api_handler import ApiHandler
 
-from tests.test_utils.db import db
+from tests.test_utils.database import db
 
 
 class RightsType(enum.Enum):
