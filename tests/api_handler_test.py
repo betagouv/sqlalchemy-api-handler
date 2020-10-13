@@ -2,7 +2,7 @@ import pytest
 
 from sqlalchemy_api_handler import ApiHandler
 from tests.conftest import with_delete
-from tests.api.models.user import User
+from api.models.user import User
 
 class SaveTest():
     @with_delete

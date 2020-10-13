@@ -6,11 +6,11 @@ from sqlalchemy_api_handler.utils import dehumanize, \
                                          NonDehumanizableId
 
 from tests.conftest import with_delete
-from tests.api.models.offer import Offer
-from tests.api.models.offerer import Offerer
-from tests.api.models.stock import Stock
-from tests.api.models.user import User
-from tests.api.models.user_offerer import UserOfferer
+from api.models.offer import Offer
+from api.models.offerer import Offerer
+from api.models.stock import Stock
+from api.models.user import User
+from api.models.user_offerer import UserOfferer
 
 
 class SaveTest:

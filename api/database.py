@@ -17,7 +17,7 @@ def delete():
 
 
 def create_activity_and_transaction_tables():
-    from tests.api.models.activity import Activity, versioning_manager
+    from api.models.activity import Activity, versioning_manager
     orm.configure_mappers()
     versioning_manager.transaction_cls.__table__.create(db.session.get_bind())
     Activity.__table__.create(db.session.get_bind())
@@ -25,7 +25,7 @@ def create_activity_and_transaction_tables():
 
 def create():
     logger.info('Create all the database...')
-    from tests.api.models.activity import Activity
+    from api.models.activity import Activity
     create_activity_and_transaction_tables()
     db.create_all()
     db.session.commit()

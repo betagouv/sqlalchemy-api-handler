@@ -3,7 +3,9 @@ import json
 from sqlalchemy import String
 from sqlalchemy.sql.expression import and_
 from flask import current_app as app, jsonify
-from sqlalchemy_api_handler import ApiHandler, as_dict
+from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler.serialization import as_dict
+
 
 INDEXES = range(0, 10)
 

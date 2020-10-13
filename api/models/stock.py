@@ -18,7 +18,7 @@ from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.mixins import HasActivitiesMixin, \
                                           SoftDeletableMixin
 
-from tests.api.database import db
+from api.database import db
 
 
 class Stock(ApiHandler,

@@ -4,8 +4,8 @@ from sqlalchemy_api_handler.serialization import get_result
 from sqlalchemy_api_handler.utils import humanize
 
 from tests.conftest import with_delete
-from tests.api.models.offer import Offer
-from tests.api.models.stock import Stock
+from api.models.offer import Offer
+from api.models.stock import Stock
 
 class GetResultTest:
     @with_delete

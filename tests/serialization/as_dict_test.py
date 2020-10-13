@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy_api_handler.serialization import as_dict
-from tests.api.models.offer import Offer
-from tests.api.models.stock import Stock
-from tests.api.models.user import User
+from api.models.offer import Offer
+from api.models.stock import Stock
+from api.models.user import User
 
 class AsDictTest:
     def test_simple_dictify(self, app):

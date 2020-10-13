@@ -7,10 +7,10 @@ from sqlalchemy_api_handler import ApiHandler, humanize
 from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
-from tests.api.models.activity import Activity
-from tests.api.models.offer import Offer
-from tests.api.models.offer import Stock
-from tests.api.models.user import User
+from api.models.activity import Activity
+from api.models.offer import Offer
+from api.models.offer import Stock
+from api.models.user import User
 
 
 class ActivatorTest:

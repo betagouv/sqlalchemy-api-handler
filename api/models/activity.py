@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.mixins import ActivityMixin
 
-from tests.api.database import db
+from api.database import db
 
 
 versioning_manager.init(db.Model)
