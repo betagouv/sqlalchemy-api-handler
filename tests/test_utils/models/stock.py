@@ -14,19 +14,17 @@ from sqlalchemy import BigInteger, \
     or_
 from sqlalchemy.orm import column_property, relationship
 from sqlalchemy.sql import select, func
-from sqlalchemy_api_handler import ApiHandler, SoftDeletableMixin
+from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler.mixins import HasActivitiesMixin, \
+                                          SoftDeletableMixin
 
 from tests.test_utils.database import db
 
 
 class Stock(ApiHandler,
             db.Model,
+            HasActivitiesMixin,
             SoftDeletableMixin):
-    # We redefine this so we can reference it in the baseScore column_property
-    #id = Column(BigInteger,
-    #            primary_key=True,
-    #            autoincrement=True)
-
     dateModified = Column(DateTime,
                           nullable=False,
                           default=datetime.utcnow)

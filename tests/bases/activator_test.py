@@ -7,8 +7,9 @@ from sqlalchemy_api_handler import ApiHandler, humanize
 from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
-from tests.test_utils.models.activity import Activity, versioning_manager
+from tests.test_utils.models.activity import Activity
 from tests.test_utils.models.offer import Offer
+from tests.test_utils.models.offer import Stock
 from tests.test_utils.models.user import User
 
 
@@ -93,36 +94,51 @@ class ActivatorTest:
         assert activity.datum['id'] == humanize(offer.id)
         assert activity.patch['id'] == humanize(offer.id)
 
-    """
-    user.modify({
-        'email': '{}test.diagnostician0@{}'.format(COMMAND_NAME, EMAIL_HOST),
-        'firstName': 'faa',
-        'lastName': 'fee'
-    })
-    dossier = Dossier(inseeCode='fee',
-                      number='Mauvais numero',
-                      user=user)
-    ApiHandler.save(dossier, user)
-    dossier.number = '022-AF0032-1'
-    ApiHandler.save(dossier)
-    dossier_uuid = uuid4()
-    first_activity = Activity(dateCreated=datetime.utcnow(),
-                              oldDatum={'dossier_id': humanize(dossier.id)},
-                              patch={'inseeCode': 'foo'},
-                              tableName='dossier',
-                              userId=humanize(user.id),
-                              uuid=dossier_uuid)
-    second_activity = Activity(dateCreated=datetime.utcnow(),
-                               oldDatum={'dossier_id': humanize(dossier.id)},
-                               patch={'goodOccupiersCount': 3 },
-                               tableName='dossier',
-                               userId=humanize(user.id),
-                               uuid=dossier_uuid)
-    ApiHandler.activate(first_activity, second_activity)
-    activities = Activity.query.all()
-    print("INSERT ACTIVITY FROM A DOSSIER SAVE", activities[0], activities[0].verb, humanize(dossier.id), activities[0].datum['id'])
-    print("UPDATE ACTIVITY FROM A DOSSIER SAVE", activities[1], activities[1].verb, dossier.number, activities[1].patch['number'])
-    print("TRANSITORY ACTIVITY FROM A DOSSIER ACTIVATE", activities[2], activities[2].verb, dossier.activityUuid, activities[2].uuid, dossier.inseeCode, activities[2].patch)
-    print("TRANSITORY ACTIVITY FROM A DOSSIER ACTIVATE", activities[3], activities[3].verb, dossier.activityUuid, activities[3].uuid, dossier.goodOccupiersCount, activities[3].patch)
-    print("UPDATE ACTIVITY FROM A DOSSIER ACTIVATE", activities[4], activities[4].verb, dossier.activityUuid, activities[4].uuid, activities[4].patch)
-    """
+    @with_delete
+    def test_create_two_activities_offer_saves_an_insert_and_an_update_activity(self, app):
+        # Given
+        offer_uuid = uuid4()
+        first_patch = { 'name': 'bar', 'type': 'foo' }
+        first_activity = Activity(dateCreated=datetime.utcnow(),
+                                  patch=first_patch,
+                                  tableName='offer',
+                                  uuid=offer_uuid)
+        second_patch = { 'name': 'bor' }
+        second_activity = Activity(dateCreated=datetime.utcnow(),
+                                   patch=second_patch,
+                                   tableName='offer',
+                                   uuid=offer_uuid)
+
+        # When
+        ApiHandler.activate(first_activity, second_activity)
+
+        # Then
+        activities = Activity.query.filter_by(uuid=offer_uuid).all()
+        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+        assert len(activities) == 2
+        assert offer.name == 'bor'
+
+
+    @with_delete
+    def test_create_activity_stock_binds_relationship_with_offer(self, app):
+        # Given
+        offer_uuid = uuid4()
+        offer_patch = { 'name': 'bar', 'type': 'foo' }
+        offer_activity = Activity(dateCreated=datetime.utcnow(),
+                                  patch=offer_patch,
+                                  tableName='offer',
+                                  uuid=offer_uuid)
+        stock_uuid = uuid4()
+        stock_patch = { 'offerActivityUuid': offer_uuid, 'price': 3 }
+        stock_activity = Activity(dateCreated=datetime.utcnow(),
+                                  patch=stock_patch,
+                                  tableName='stock',
+                                  uuid=stock_uuid)
+
+        # When
+        ApiHandler.activate(offer_activity, stock_activity)
+
+        # Then
+        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+        stock = Stock.query.filter_by(activityUuid=stock_uuid).one()
+        assert stock.offerId == offer.id
