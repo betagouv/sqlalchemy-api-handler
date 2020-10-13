@@ -6,84 +6,167 @@ set -o nounset
 #  Global config of the application
 # =============================================
 
-export COMMAND_NAME="sqlaah"
-export DB_NAME="sqlalchemy_api_handler"
-export GITHUB_NAME="betagouv/sqlalchemy-api-handler"
-export MODULE_NAME="sqlalchemy_api_handler"
-export PIP_NAME="SQLAlchemy-Api-Handler"
+PRG="$BASH_SOURCE"
+while [ -h "$PRG" ] ; do
+  ls=$(ls -ld "$PRG")
+  link=$(expr "$ls" : '.*-> \(.*\)$')
+  if expr "$link" : '/.*' > /dev/null; then
+    PRG="$link"
+  else
+    PRG=$(dirname "$PRG")"/$link"
+  fi
+done
+
+ROOT_PATH="."
+if [ -x "$(command -v realpath)" ]; then
+  ROOT_PATH=$(realpath "$(dirname "$PRG")")
+fi
+
+set -o allexport
+source $ROOT_PATH/.env
+set +o allexport
 
 # =============================================
 #  Helper that describes all functionalities
 # =============================================
 
 if [[ $# -eq 0 ]] || [[ "$1" == "-h" ]]; then
-    echo "$(basename "$0") [-h] [-e env -b backend -f file c] -- program to deal with Pass Culture ecosystem
+    echo "$(basename "$0") [-h] [-e env -b backend -f file c] -- program to deal with $APP_NAME ecosystem
 where:
     -h  show this help text"
     exit 0
 fi
 
-# =============================================
-# Get script parameters
-# =============================================
-
 CMD="$1"
 shift
 
+# =============================================
+# Global Utilities
+# =============================================
+
+function check {
+  STATE=$1
+  CONTAINER=${APP_NAME}-${2}
+  GREP=$(docker ps | grep $CONTAINER)
+  if [[ "$GREP" ]]; then
+    if [[ "$STATE" == "stop" ]]; then
+      exit_with_error "$CONTAINER is running. You should stop it before applying your command."
+    fi
+  elif [[ "$STATE" == "start" ]]; then
+    exit_with_error "$CONTAINER is not running. You should start it before applying your command."
+  fi
+}
+
+
+function exit_with_error {
+  MESSAGE=${1-"end of $APP_NAME command."}
+  RED='\033[0;31m'
+  NO_COLOR='\033[0m'
+  echo -e "${RED}""ERROR : $MESSAGE""${NO_COLOR}"
+  exit 1
+}
+
+
+function exit_with_success {
+  MESSAGE=${1-"end of $APP_NAME command."}
+  GREEN='\033[0;32m'
+  NO_COLOR='\033[0m'
+  echo -e "${GREEN}""SUCCESS : $MESSAGE""${NO_COLOR}"
+  exit 0
+}
+
+
+# =============================================
+# Local commands : use Docker
+# =============================================
+
+# Connect to instance in bash mode
+if [[ "$CMD" == "bash" ]]; then
+  check start apiweb
+  docker exec -it $APP_NAME-apiweb bash
+  exit_with_success
+
+
 # Build the docker images
-if [[ "$CMD" == "build" ]]; then
-  RUN='docker-compose build $*'
+elif [[ "$CMD" == "build" ]]; then
+  docker-compose build $*
+  exit_with_success
+
+
+# Apply sub command to the databases from tar db files
+elif [[ "$CMD" == "database" ]]; then
+  SUB_CMD=$1
+  shift
+  if [[ "$SUB_CMD" == "rm" ]]; then
+    check stop apidb
+    check stop apiweb
+    sudo rm -rf $ROOT_PATH/docker_data/apidb
+  else
+    check start apidb
+    check start apiweb
+    docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python manager.py database $SUB_CMD"
+  fi
+  exit_with_success
 
 
 # Connect to Postgresql database in command line using psql
 elif [[ "$CMD" == "psql" ]]; then
+  check start apidb
 	COLUMNS=${COLUMNS:-''};
-	RUN='docker exec -it $COMMAND_NAME-postgres bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$DB_NAME'_user '$DB_NAME' $*"'
+	docker exec -it $APP_NAME-apidb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '${APP_NAME}_api' $*"
+  exit_with_success
 
 
 # Publish package to test PyPi
 elif [[ "$CMD" == "prepublish" ]]; then
-  VERSION=$(./$COMMAND_NAME version);
-  RUN='docker exec -it $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp &&
+  VERSION=$(./$COMMAND_NAME version)
+  VERSION=$(echo $VERSION  | cut -d' ' -f1)
+  check start apiweb
+  docker exec -it $APP_NAME-apiweb bash -c "cd /opt/apiweb &&
     rm -rf build &&
     rm -rf dist &&
     PYTHONPATH=. python setup.py sdist bdist_wheel &&
     sleep 1 &&
-    twine check dist/$PIP_NAME-$VERSION.tar.gz &&
-    twine upload --repository-url https://test.pypi.org/legacy/ dist/*"'
+    twine check dist/${PIP_NAME}-${VERSION}.tar.gz &&
+    twine upload --repository-url https://test.pypi.org/legacy/ dist/*"
+  exit_with_success
 
 
 # Publish package to PyPi
 elif [[ "$CMD" == "publish" ]]; then
-  RUN='docker exec -it $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp &&
-    PYTHONPATH=. twine upload dist/*"'
-
+  check start apiweb
+  docker exec -it $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. twine upload dist/*"
+  exit_with_success
 
 # Force docker-compose to build the docker images
 elif [[ "$CMD" == "rebuild" ]]; then
-  RUN='docker-compose build --no-cache $*'
+  docker-compose build --no-cache $*
+  exit_with_success
 
 
 # Restart API after removing the database and files
 elif [[ "$CMD" == "restart" ]]; then
-  RUN='rm -rf docker_data;
-       docker-compose down --volumes;
-       docker-compose up --force-recreate'
+  docker-compose down --volumes
+  docker-compose up --force-recreate
+  exit_with_success
 
 
-# Erase docker shared volumes
-elif [[ "$CMD" == "rmdb" ]]; then
-  RUN='sudo rm -rf docker_data/postgres;'
-
-
-# Start with database
+# Start containers
 elif [[ "$CMD" == "start" ]]; then
-  RUN='docker-compose up $*'
+  docker-compose up $*
+  exit_with_success
+
+
+# Stop containerss
+elif [[ "$CMD" == "stop" ]]; then
+  docker-compose stop $*
+  exit_with_success
 
 
 # Create symlink to use COMMAND_NAME command (admin rights may be needed)
 elif [[ "$CMD" == "symlink" ]]; then
-  RUN='cd /usr/local/bin && ln -sf '"$(pwd)"'/$COMMAND_NAME $COMMAND_NAME && chmod +x $COMMAND_NAME && chmod +x '"$(pwd)"'/$COMMAND_NAME'
+  cd /usr/local/bin && ln -sf '"$(pwd)"'/$COMMAND_NAME $COMMAND_NAME && chmod +x $COMMAND_NAME && chmod +x '"$(pwd)"'/$COMMAND_NAME
+  exit_with_success
 
 
 # Run tests for API (Need start-backend to be successful and delete all data)
@@ -93,19 +176,30 @@ elif [[ "$CMD" == "test" ]]; then
   else
     PYTEST_ARGS=$*
   fi
-  RUN='docker exec $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"'
+  check start apiweb
+  docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"
+  exit_with_success
 
 
 # Get the last version of the library
 elif [[ "$CMD" == "version" ]]; then
-  RUN='docker exec $COMMAND_NAME-flask bash -c "cd /opt/services/flaskapp && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""'
-  eval $RUN
-  exit 0
+  check start apiweb
+  docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""
+  exit_with_success
+
+else
+  INTERACTIVE_MODE=''
+  if [[ "$CMD" == "python" ]]; then
+    CMD="shell"
+    INTERACTIVE_MODE='-it'
+  fi
+  check start apiweb
+  docker exec $INTERACTIVE_MODE $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python manager.py $CMD $*"
+  exit_with_success
 fi
 
 # =============================================
 # Execute command
 # =============================================
 
-echo $RUN
-eval $RUN
+exit_with_error "Did not find a matched command for '$CMD'"

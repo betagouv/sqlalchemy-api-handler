@@ -1,6 +1,17 @@
 from enum import Enum
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
+from datetime import datetime
 from typing import Iterable
+from sqlalchemy import BigInteger, Column, DateTime, desc, ForeignKey, String
+from sqlalchemy import and_, ARRAY, Boolean, CheckConstraint, false, Integer, Text, TEXT
+from sqlalchemy.orm import column_property
+from sqlalchemy.sql import select, func
+from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler.mixins import HasActivitiesMixin
+from sqlalchemy_api_handler.serialization import as_dict
+from sqlalchemy_api_handler.utils.date import DateTimes
+
+from api.database import db
+from api.models.stock import Stock
 
 
 class SearchableType(Enum):
@@ -14,7 +25,6 @@ class SearchableType(Enum):
                 matching_types.append(type)
 
         return matching_types
-
 
 class ThingType(SearchableType):
     ACTIVATION = {
@@ -186,3 +196,68 @@ def _(thing_type, column=None, includes: Iterable = ()):
     }
     dict_value.update(thing_type.value)
     return dict_value
+
+
+class ProductType:
+    @classmethod
+    def is_thing(cls, name: str) -> object:
+        for possible_type in list(ThingType):
+            if str(possible_type) == name:
+                return True
+
+        return False
+
+
+class Offer(ApiHandler,
+            db.Model,
+            HasActivitiesMixin):
+
+    ageMin = Column(Integer,
+                    nullable=True)
+    ageMax = Column(Integer,
+                    nullable=True)
+
+    bookingEmail = Column(String(120),
+                          nullable=True)
+
+    conditions = Column(String(120),
+                        nullable=True)
+
+    dateCreated = Column(DateTime,
+                         default=datetime.utcnow,
+                         nullable=False)
+
+    description = Column(Text,
+                         nullable=True)
+
+    durationMinutes = Column(Integer,
+                             nullable=True)
+
+    isNational = Column(Boolean,
+                        default=False,
+                        nullable=False,
+                        server_default=false())
+
+    name = Column(String(140),
+                  nullable=False)
+
+    type = Column(String(50),
+                  CheckConstraint("type != 'None'"),
+                  index=True,
+                  nullable=False)
+
+    url = Column(String(255), nullable=True)
+
+
+    @property
+    def dateRange(self):
+        if ProductType.is_thing(self.type) or not self.notDeletedStocks:
+            return DateTimes()
+
+        start = min([stock.beginningDatetime for stock in self.notDeletedStocks])
+        end = max([stock.endDatetime for stock in self.notDeletedStocks])
+        return DateTimes(start, end)
+
+    @property
+    def notDeletedStocks(self):
+        return [stock for stock in self.stocks if not stock.isSoftDeleted]

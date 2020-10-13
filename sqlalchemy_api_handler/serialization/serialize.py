@@ -6,7 +6,8 @@ from psycopg2._range import DateTimeRange
 from sqlalchemy import Integer
 
 from sqlalchemy_api_handler.utils.date import DateTimes, format_into_ISO_8601
-from sqlalchemy_api_handler.utils.human_ids import humanize, is_id_column
+from sqlalchemy_api_handler.utils.humanize import humanize
+from sqlalchemy_api_handler.utils.is_id_column import is_id_column
 
 
 @singledispatch

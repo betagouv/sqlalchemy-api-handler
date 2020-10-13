@@ -1,20 +1,20 @@
 import pytest
-from sqlalchemy_api_handler import ApiHandler, as_dict
-from sqlalchemy_api_handler.utils.human_ids import dehumanize, \
-                                                   humanize, \
-                                                   NonDehumanizableId
+from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler.serialization import as_dict
+from sqlalchemy_api_handler.utils import dehumanize, \
+                                         humanize, \
+                                         NonDehumanizableId
 
-from tests.conftest import with_clean
-from tests.test_utils.db import Model
-from tests.test_utils.models.offer import Offer
-from tests.test_utils.models.offerer import Offerer
-from tests.test_utils.models.stock import Stock
-from tests.test_utils.models.user import User
-from tests.test_utils.models.user_offerer import UserOfferer
+from tests.conftest import with_delete
+from api.models.offer import Offer
+from api.models.offerer import Offerer
+from api.models.stock import Stock
+from api.models.user import User
+from api.models.user_offerer import UserOfferer
 
 
 class SaveTest:
-    @with_clean
+    @with_delete
     def test_for_valid_one_to_many_relationship(self, app):
         # Given
         offer = Offer(name="foo", type="bar")
@@ -26,7 +26,7 @@ class SaveTest:
         # Then
         assert stock.offerId == offer.id
 
-    @with_clean
+    @with_delete
     def test_for_valid_many_to_many_relationship(self, app):
         # Given
         offerer = Offerer(name="foo", type="bar")
@@ -41,7 +41,7 @@ class SaveTest:
         assert user_offerer.offererId == offerer.id
         assert user_offerer.userId == user.id
 
-    @with_clean
+    @with_delete
     def test_for_valid_synonym(self, app):
         # Given
         job = "foo"
@@ -58,7 +58,7 @@ class SaveTest:
         assert user.metier == job
         assert user.job == job
 
-    @with_clean
+    @with_delete
     def test_for_valid_id_humanized_synonym(self, app):
         # Given
         user = User(
@@ -74,7 +74,7 @@ class SaveTest:
         humanized_id = humanize(user.user_id)
         assert user_dict['id'] == humanized_id
 
-    @with_clean
+    @with_delete
     def test_for_valid_relationship(self, app):
         # Given
         offer_dict = {
@@ -97,7 +97,7 @@ class SaveTest:
         assert stock.offer.id == offer.id
         assert stock.offer.name == offer_dict['name']
 
-    @with_clean
+    @with_delete
     def test_for_valid_relationships(self, app):
         # Given
         stock_dict1 = {
@@ -125,7 +125,7 @@ class SaveTest:
         assert offer_stock1.price == stock1.price
         assert offer_stock2.price == stock2.price
 
-    @with_clean
+    @with_delete
     def test_for_valid_relationship_dict_with_nested_creation(self, app):
         # Given
         offer_dict = {
@@ -145,7 +145,7 @@ class SaveTest:
         assert stock.price == stock_dict['price']
         assert stock.offer.name == offer_dict['name']
 
-    @with_clean
+    @with_delete
     def test_for_valid_relationship_dict_with_nested_modification(self, app):
         # Given
         offer_dict = {
@@ -170,7 +170,7 @@ class SaveTest:
         assert stock.offer.id == offer.id
         assert stock.offer.name == offer_dict['name']
 
-    @with_clean
+    @with_delete
     def test_for_valid_relationship_dicts_with_nested_creations(self, app):
         # Given
         stock_dict1 = {
@@ -193,7 +193,7 @@ class SaveTest:
         assert offer.name == offer_dict['name']
         assert set([s.price for s in offer.stocks]) == set([stock_dict1['price'], stock_dict2['price']])
 
-    @with_clean
+    @with_delete
     def test_for_valid_relationship_dicts_with_nested_modifications(self, app):
         # Given
         offer_dict = {

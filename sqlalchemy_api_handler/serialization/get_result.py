@@ -4,8 +4,11 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.functions import random
-from sqlalchemy_api_handler import ApiErrors, as_dict
+
+from sqlalchemy_api_handler.api_errors import ApiErrors
 from sqlalchemy_api_handler.mixins.soft_deletable_mixin import SoftDeletableMixin
+from sqlalchemy_api_handler.serialization.as_dict import as_dict
+
 
 class paginate_obj:
     """ Pagination dummy object. Takes a list and paginates it similar to sqlalchemy paginate() """
@@ -79,18 +82,16 @@ def check_order_by(order_by):
             check_single_order_by_string(part)
 
 
-def get_result(
-    modelClass,
-    includes=None,
-    order_by=None,
-    paginate=None,
-    page=None,
-    populate=None,
-    query=None,
-    refine=None,
-    should_distinct=None,
-    with_total_data_count=None
-):
+def get_result(modelClass,
+               includes=None,
+               order_by=None,
+               paginate=None,
+               page=None,
+               populate=None,
+               query=None,
+               refine=None,
+               should_distinct=None,
+               with_total_data_count=None):
     if query is None:
         query = modelClass.query
 
@@ -132,7 +133,7 @@ def get_result(
     if populate:
         objects = list(map(populate, objects))
 
-    result = { "data": data }
+    result = { 'data': data }
     if paginate or with_total_data_count:
         result['total_data_count'] = total_data_count
         if paginate:

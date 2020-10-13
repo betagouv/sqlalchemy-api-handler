@@ -23,11 +23,9 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 UuidCastError
 from sqlalchemy_api_handler.bases.soft_delete import SoftDelete
 from sqlalchemy_api_handler.utils.date import match_format
-from sqlalchemy_api_handler.utils.human_ids import dehumanize, \
-                                                   humanize, \
-                                                   is_id_column
-
-
+from sqlalchemy_api_handler.utils.dehumanize import dehumanize
+from sqlalchemy_api_handler.utils.humanize import humanize
+from sqlalchemy_api_handler.utils.is_id_column import is_id_column
 
 
 class Modify(Delete, SoftDelete):
@@ -43,10 +41,11 @@ class Modify(Delete, SoftDelete):
             Modify.add(self)
 
         self.check_not_soft_deleted()
+
+        datum_keys_with_skipped_keys = set(datum.keys()) - set(skipped_keys)
+
         columns = self.__mapper__.columns
-        column_keys_to_modify = self._column_keys_from(set(columns.keys()),
-                                                       datum,
-                                                       skipped_keys)
+        column_keys_to_modify = set(columns.keys()).intersection(datum_keys_with_skipped_keys)
         for key in column_keys_to_modify:
             column = columns[key]
             value = dehumanize_if_needed(column, datum.get(key))
@@ -66,27 +65,23 @@ class Modify(Delete, SoftDelete):
             else:
                 setattr(self, key, value)
 
-        for (key, relationship) in self.__mapper__.relationships.items():
-            if key in datum:
-                model = relationship.mapper.class_
-                value = model.instance_from(datum[key], parent=self)
-                if value:
-                    setattr(self, key, value)
-
-        for (key, synonym) in self.__mapper__.synonyms.items():
-            if key in datum:
-                value = dehumanize_if_needed(synonym._proxied_property.columns[0],
-                                             datum[key])
+        relationships = self.__mapper__.relationships
+        relationship_keys_to_modify = set(relationships.keys()).intersection(datum_keys_with_skipped_keys)
+        for key in relationship_keys_to_modify:
+            relationship = relationships[key]
+            model = relationship.mapper.class_
+            value = model.instance_from(datum[key], parent=self)
+            if value:
                 setattr(self, key, value)
+
+        synonyms = self.__mapper__.synonyms
+        synonym_keys_to_modify = set(synonyms.keys()).intersection(datum_keys_with_skipped_keys)
+        for key in synonym_keys_to_modify:
+            value = dehumanize_if_needed(synonyms[key]._proxied_property.columns[0],
+                                         datum[key])
+            setattr(self, key, value)
         return self
 
-    @staticmethod
-    def _column_keys_from(column_keys: Set[str],
-                          data: dict,
-                          skipped_keys: Iterable[str]) -> Set[str]:
-        requested_columns_to_modify = set(data.keys())
-        allowed_columns_to_modify = requested_columns_to_modify - set(skipped_keys)
-        return column_keys.intersection(allowed_columns_to_modify)
 
     @classmethod
     def instance_from_primary_value(model, value):
@@ -175,23 +170,33 @@ class Modify(Delete, SoftDelete):
             errors.add_error('_filter_from', 'No __SEARCH_BY__ item inside datum')
             raise errors
 
-        search_by = datum['__SEARCH_BY__']
-        if not isinstance(search_by, list):
-            search_by = [search_by]
-
-        columns = model.__mapper__.columns
-        column_keys = list(model._column_keys_from(set(columns.keys()), datum, []))
+        search_by_keys = datum['__SEARCH_BY__']
+        if not isinstance(search_by_keys, list):
+            search_by_keys = [search_by_keys]
+        search_by_keys = set(search_by_keys)
 
         filter_dict = {}
+
+        columns = model.__mapper__.columns
+        column_keys = set(columns.keys()).intersection(search_by_keys)
         for key in column_keys:
             column = columns[key]
+            value = dehumanize_if_needed(column, datum.get(key))
+            filter_dict[key] = value
+
+        relationships = model.__mapper__.relationships
+        relationship_keys = set(relationships.keys()).intersection(search_by_keys)
+        for key in relationship_keys:
+            if key in search_by:
+                filter_dict[key] = datum.get(key)
+
+        synonyms = model.__mapper__.synonyms
+        synonym_keys = set(synonyms.keys()).intersection(search_by_keys)
+        for key in synonym_keys:
+            column = synonyms[key]._proxied_property.columns[0]
             if key in search_by:
                 value = dehumanize_if_needed(column, datum.get(key))
                 filter_dict[key] = value
-
-        for key in model.__mapper__.relationships.keys():
-            if key in search_by:
-                filter_dict[key] = datum.get(key)
 
         return filter_dict
 

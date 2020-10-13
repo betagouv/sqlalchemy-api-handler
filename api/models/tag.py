@@ -2,7 +2,7 @@ import enum
 from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy_api_handler import ApiHandler
 
-from tests.test_utils.db import Model
+from api.database import db
 
 
 class TagType(enum.Enum):
@@ -14,7 +14,7 @@ class TagType(enum.Enum):
 
 
 class Tag(ApiHandler,
-          Model):
+          db.Model):
 
     info = Column(Text())
 

@@ -1,17 +1,7 @@
 import inflect
-import inspect
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
 class Accessor():
-    @classmethod
-    def get_activity(cls):
-        return Accessor.activity_cls
-
-    @classmethod
-    def set_activity(cls, activity_cls):
-        Accessor.activity_cls = activity_cls
-
     @classmethod
     def get_db(cls):
         return Accessor.db
@@ -26,6 +16,12 @@ class Accessor():
             v for v in Accessor.get_db().Model._decl_class_registry.values()
             if hasattr(v, '__table__')
         ]
+
+    @classmethod
+    def model_from_name(cls, name):
+        for model in Accessor.models():
+            if model.__name__ == name:
+                return model
 
     @classmethod
     def model_from_table_name(cls, table_name):

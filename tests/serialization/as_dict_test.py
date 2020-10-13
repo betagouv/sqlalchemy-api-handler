@@ -1,17 +1,17 @@
 import pytest
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
-from tests.test_utils.models.offer import Offer
-from tests.test_utils.models.stock import Stock
-from tests.test_utils.models.user import User
+from sqlalchemy_api_handler.serialization import as_dict
+from api.models.offer import Offer
+from api.models.stock import Stock
+from api.models.user import User
 
 class AsDictTest:
     def test_simple_dictify(self, app):
         # given
         user_fields_dict = {
-            "email": "marx.foo@plop.fr",
-            "firstName" : "Marx",
-            "lastName": "Foo",
-            "publicName": "Marx Foo"
+            'email': 'marx.foo@plop.fr',
+            'firstName' : 'Marx',
+            'lastName': 'Foo',
+            'publicName': 'Marx Foo'
         }
         user = User(**user_fields_dict)
 
@@ -24,10 +24,10 @@ class AsDictTest:
     def test_dictify_with_removing_includes(self, app):
         # given
         user_fields_dict = {
-            "email": "marx.foo@plop.fr",
-            "firstName" : "Marx",
-            "lastName": "Foo",
-            "publicName": "Marx Foo"
+            'email': 'marx.foo@plop.fr',
+            'firstName' : 'Marx',
+            'lastName': 'Foo',
+            'publicName': 'Marx Foo'
         }
         user = User(**user_fields_dict)
 
@@ -58,11 +58,11 @@ class AsDictTest:
     def test_dictify_with_default_class_includes(self, app):
         # given
         user_fields_dict = {
-            "email": "marx.foo@plop.fr",
-            "firstName" : "Marx",
-            "lastName": "Foo",
-            "metier": "philosophe",
-            "publicName": "Marx Foo"
+            'email': 'marx.foo@plop.fr',
+            'firstName' : 'Marx',
+            'lastName': 'Foo',
+            'metier': 'philosophe',
+            'publicName': 'Marx Foo'
         }
         user = User(**user_fields_dict)
 

@@ -1,12 +1,14 @@
 import pytest
-from sqlalchemy_api_handler import ApiErrors, ApiHandler, humanize, get_result
+from sqlalchemy_api_handler import ApiErrors, ApiHandler
+from sqlalchemy_api_handler.serialization import get_result
+from sqlalchemy_api_handler.utils import humanize
 
-from tests.conftest import with_clean
-from tests.test_utils.models.offer import Offer
-from tests.test_utils.models.stock import Stock
+from tests.conftest import with_delete
+from api.models.offer import Offer
+from api.models.stock import Stock
 
 class GetResultTest:
-    @with_clean
+    @with_delete
     def test_return_only_not_soft_deleted_stocks(self, app):
         # Given
         offer = Offer(name="foo", type="ThingType.JEUX_ABO")
@@ -31,7 +33,7 @@ class GetResultTest:
         assert data[1]['id'] == humanize(stock3.id)
         assert data[2]['id'] == humanize(stock4.id)
 
-    @with_clean
+    @with_delete
     def test_check_order_by(self, app):
         # When
         with pytest.raises(ApiErrors) as e:
@@ -40,7 +42,7 @@ class GetResultTest:
         # Then
         assert 'order_by' in e.value.errors
 
-    @with_clean
+    @with_delete
     def test_returns_total_data_count_with_has_more(self, app):
         # Given
         offer = Offer(name="foo", type="ThingType.JEUX_ABO")
@@ -68,7 +70,7 @@ class GetResultTest:
         assert result['has_more'] == True
         assert result['total_data_count'] == prices_length
 
-    @with_clean
+    @with_delete
     def test_returns_total_data_count_with_has_more(self, app):
         # Given
         offer = Offer(name="foo", type="ThingType.JEUX_ABO")
@@ -92,6 +94,6 @@ class GetResultTest:
         )
 
         # Then
-        assert len(result['data']) == page * paginate - prices_length 
+        assert len(result['data']) == page * paginate - prices_length
         assert result['has_more'] == False
         assert result['total_data_count'] == prices_length

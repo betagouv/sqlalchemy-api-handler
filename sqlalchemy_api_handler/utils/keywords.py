@@ -38,10 +38,8 @@ def tokenize(string):
     return re.split('[^0-9a-zÀ-ÿ]+', string.lower())
 
 
-def get_ts_queries_from_keywords_string(
-    keywords_string,
-    stop_words=[]
-):
+def get_ts_queries_from_keywords_string(keywords_string,
+                                        stop_words=[]):
     keywords = tokenize(keywords_string)
     keywords_without_single_letter = remove_single_letters(keywords)
 
@@ -56,10 +54,8 @@ def get_ts_queries_from_keywords_string(
     return ts_queries
 
 
-def create_get_filter_matching_ts_query_in_any_model(
-    *models,
-    language=LANGUAGE
-):
+def create_get_filter_matching_ts_query_in_any_model(*models,
+                                                     language=LANGUAGE):
     def get_filter_matching_ts_query_in_any_model(ts_query):
         return or_(
             *[
@@ -75,11 +71,9 @@ def create_get_filter_matching_ts_query_in_any_model(
     return get_filter_matching_ts_query_in_any_model
 
 
-def keep_matching_keywords_on_model(
-    query,
-    keywords_string,
-    model
-):
+def keep_matching_keywords_on_model(query,
+                                    keywords_string,
+                                    model):
     text_search_filters_on_model = create_get_filter_matching_ts_query_in_any_model(model)
     model_keywords_filter = create_filter_matching_all_keywords_in_any_model(
         text_search_filters_on_model, keywords_string

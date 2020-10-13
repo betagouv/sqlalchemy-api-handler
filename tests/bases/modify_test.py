@@ -1,40 +1,29 @@
+import pytest
 import uuid
 from datetime import datetime
 from decimal import Decimal
-import pytest
-from sqlalchemy import BigInteger, Column, DateTime, Integer, Float
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, synonym
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 DecimalCastError, \
                                                 EmptyFilterError, \
                                                 ResourceNotFoundError, \
                                                 UuidCastError
-from sqlalchemy_api_handler.utils.human_ids import dehumanize, humanize, NonDehumanizableId
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
+from sqlalchemy_api_handler.utils import dehumanize, \
+                                         humanize, \
+                                         NonDehumanizableId
+from sqlalchemy_api_handler.serialization import as_dict
 
-from tests.conftest import with_clean
-from tests.test_utils.db import db, Model
-from tests.test_utils.models.offer import Offer
-from tests.test_utils.models.offerer import Offerer
-from tests.test_utils.models.scope import ScopeType
-from tests.test_utils.models.stock import Stock
-from tests.test_utils.models.tag import Tag, TagType
-from tests.test_utils.models.user import User
-from tests.test_utils.models.user_offerer import UserOfferer
-from tests.test_utils.models.time_interval import TimeInterval
+from tests.conftest import with_delete
+from api.models.foo import Foo
+from api.models.offer import Offer
+from api.models.offerer import Offerer
+from api.models.scope import ScopeType
+from api.models.stock import Stock
+from api.models.tag import Tag, TagType
+from api.models.user import User
+from api.models.user_offerer import UserOfferer
+from api.models.time_interval import TimeInterval
 
-
-class ModifyFoo(ApiHandler, Model):
-    date_attribute = Column(DateTime(), nullable=True)
-    entityId = Column(BigInteger(), nullable=True)
-    float_attribute = Column(Float(), nullable=True)
-    integer_attribute = Column(Integer(), nullable=True)
-    uuid_attribute = Column(UUID(as_uuid=True), nullable=True)
-    uuidId = Column(UUID(as_uuid=True), nullable=True)
-    bar_id = Column(BigInteger())
-    barId = synonym('bar_id')
 
 time_interval = TimeInterval()
 time_interval.start = datetime(2018, 1, 1, 10, 20, 30, 111000)
@@ -64,7 +53,7 @@ class ModifyTest:
 
     def test_for_sql_integer_value_with_string_raises_decimal_cast_error(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'integer_attribute': 'yolo'}
 
         # When
@@ -76,7 +65,7 @@ class ModifyTest:
 
     def test_for_sql_integer_value_with_str_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'integer_attribute': '12.9'}
 
         # When
@@ -87,7 +76,7 @@ class ModifyTest:
 
     def test_for_sql_float_value_with_str_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'float_attribute': '12.9'}
 
         # When
@@ -98,7 +87,7 @@ class ModifyTest:
 
     def test_for_sql_integer_value_with_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'integer_attribute': 12}
 
         # When
@@ -109,7 +98,7 @@ class ModifyTest:
 
     def test_for_sql_float_value_with_12dot9_sets_attribute_to_12dot9(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'float_attribute': 12.9}
 
         # When
@@ -120,7 +109,7 @@ class ModifyTest:
 
     def test_for_valid_sql_uuid_value(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         uuid_attribute = str(uuid.uuid4())
         data = {'uuid_attribute': uuid_attribute}
 
@@ -132,7 +121,7 @@ class ModifyTest:
 
     def test_for_valid_sql_uuid_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         uuid_id = str(uuid.uuid4())
         data = {'uuidId': uuid_id}
 
@@ -144,7 +133,7 @@ class ModifyTest:
 
     def test_for_valid_sql_humanize_id_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         humanized_entity_id = "AE"
         data = {'entityId': humanized_entity_id}
 
@@ -157,7 +146,7 @@ class ModifyTest:
 
     def test_for_valid_sql_humanize_id_synonym_value_with_key_finishing_by_Id(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         humanized_bar_id = "AE"
         dehumanized_bar_id = dehumanize(humanized_bar_id)
         data = {'barId': humanized_bar_id}
@@ -174,12 +163,12 @@ class ModifyTest:
         # Given
         test_object = Stock()
         offer_dict = {
-            "name": "foo",
-            "type": "bar"
+            'name': 'foo',
+            'type': 'bar'
         }
         stock_dict = {
-            "offer": offer_dict,
-            "price": 1
+            'offer': offer_dict,
+            'price': 1
         }
 
         # When
@@ -194,15 +183,15 @@ class ModifyTest:
         # Given
         test_object = Offer()
         stock_dict1 = {
-            "price": 1
+            'price': 1
         }
         stock_dict2 = {
-            "price": 1
+            'price': 1
         }
         offer_dict = {
-            "name": "foo",
-            "stocks": [stock_dict1, stock_dict2],
-            "type": "bar"
+            'name': 'foo',
+            'stocks': [stock_dict1, stock_dict2],
+            'type': 'bar'
         }
 
         # When
@@ -216,7 +205,7 @@ class ModifyTest:
 
     def test_for_sql_float_value_with_string_raises_decimal_cast_error(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'float_attribute': 'yolo'}
 
         # When
@@ -228,7 +217,7 @@ class ModifyTest:
 
     def test_for_sql_datetime_value_in_wrong_format_returns_400_and_affected_key_in_error(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'date_attribute': {'date_attribute': None}}
 
         # When
@@ -285,7 +274,7 @@ class ModifyTest:
 
     def test_raises_type_error_if_raw_uuid_is_invalid(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'uuidId': 'foo'}
 
         # When
@@ -298,14 +287,14 @@ class ModifyTest:
 
     def test_raises_type_error_if_raw_humanized_id_is_invalid(self):
         # Given
-        test_object = ModifyFoo()
+        test_object = Foo()
         data = {'entityId': '12R-..2foo'}
 
         # When
         with pytest.raises(NonDehumanizableId):
             test_object.modify(data)
 
-    @with_clean
+    @with_delete
     def test_find_raise_empty_filter_error(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -322,7 +311,7 @@ class ModifyTest:
         # Then
         assert errors.value.errors['_filter_from'] == ["None of filters found among: position"]
 
-    @with_clean
+    @with_delete
     def test_find_returns_none(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -338,7 +327,7 @@ class ModifyTest:
         # Then
         assert offer2 is None
 
-    @with_clean
+    @with_delete
     def test_find_returns_existing_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -355,7 +344,7 @@ class ModifyTest:
         assert offer2.name == offer1.name == 'foo'
         assert offer2.type == offer1.type == 'bar'
 
-    @with_clean
+    @with_delete
     def test_find_or_create_returns_existing_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -372,7 +361,7 @@ class ModifyTest:
         assert offer2.name == offer1.name == 'foo'
         assert offer2.type == offer1.type == 'bar'
 
-    @with_clean
+    @with_delete
     def test_find_or_create_returns_created_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -390,7 +379,7 @@ class ModifyTest:
         assert offer2.name == 'fee'
         assert offer2.type == 'gold'
 
-    @with_clean
+    @with_delete
     def test_find_and_modify_returns_modified_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -408,7 +397,7 @@ class ModifyTest:
         assert offer2.name == offer1.name == 'foo'
         assert offer2.type == 'bric'
 
-    @with_clean
+    @with_delete
     def test_find_and_modify_raises_ressource_not_found_error(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -425,7 +414,7 @@ class ModifyTest:
         # Then
         assert e.value.errors['find_and_modify'] == ['No ressource found with {"name": "fee"} ']
 
-    @with_clean
+    @with_delete
     def test_create_or_modify_returns_created_offer(self, app):
         # Given
         offer1 = Offer(name='foo', type='bar')
@@ -443,7 +432,7 @@ class ModifyTest:
         assert offer2.name == 'fee'
         assert offer2.type == 'bric'
 
-    @with_clean
+    @with_delete
     def test_create_or_modify_returns_modified_offer(self, app):
         # Given
         offer1 = Offer(name="foo", type="bar")
@@ -462,7 +451,7 @@ class ModifyTest:
         assert offer2.type == 'bric'
 
 
-    @with_clean
+    @with_delete
     def test_create_or_modify_returns_modified_offerer_search_by_id(self, app):
         # Given
         offerer1 = Offerer(name="foo")
@@ -480,7 +469,7 @@ class ModifyTest:
         assert offerer2.id == offerer1.id
         assert offerer2.name == "fee"
 
-    @with_clean
+    @with_delete
     def test_create_or_modify_returns_created_user_offerer_search_by_relationship_ids(self, app):
         # Given
         offerer = Offerer(name="foo")
@@ -501,7 +490,7 @@ class ModifyTest:
         assert user_offerer.userId == user.id
 
 
-    @with_clean
+    @with_delete
     def test_create_or_modify_returns_modified_user_offerer_search_by_relationship_ids(self, app):
         # Given
         offerer = Offerer(name="foo")
@@ -526,7 +515,7 @@ class ModifyTest:
         assert user_offerer.rights == 'editor'
         assert user_offerer.userId == user.id
 
-    @with_clean
+    @with_delete
     def test_create_or_modify_returns_created_tag_with_nested_scope(self, app):
         # Given
         tag = Tag.create_or_modify({
@@ -545,7 +534,7 @@ class ModifyTest:
         # Then
         assert tag.scopes[0].tagId == tag.id
 
-    @with_clean
+    @with_delete
     def test_create_or_modify_returns_modified_tag_with_nested_scope(self, app):
         # Given
         tag_dict = {
@@ -570,7 +559,7 @@ class ModifyTest:
         assert len(tag2.scopes) == 1
         assert tag2.scopes[0].tagId == tag2.id
 
-    @with_clean
+    @with_delete
     def test_foo(self, app):
         # Given
         TAGS = [

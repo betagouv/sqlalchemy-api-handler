@@ -18,11 +18,9 @@ def as_dict_for_intrumented_list(objs, column=None, includes: Iterable = None):
 
 
 @as_dict.register(ApiHandler)
-def as_dict_for_api_handler(
-    obj,
-    column=None,
-    includes: Iterable = None
-):
+def as_dict_for_api_handler(obj,
+                            column=None,
+                            includes: Iterable = None):
     result = OrderedDict()
 
     if includes is None and hasattr(obj, '__as_dict_includes__'):
@@ -53,10 +51,7 @@ def _joins_to_serialize(includes: Iterable = None) -> List[dict]:
     return list(dict_joins)
 
 
-def _keys_to_serialize(
-    obj,
-    includes: Iterable=None
-) -> Set[str]:
+def _keys_to_serialize(obj, includes: Iterable=None) -> Set[str]:
     all_keys = obj.__mapper__.columns.keys()
     return set(all_keys).union(_included_keys(includes)) - _excluded_keys(includes)
 
