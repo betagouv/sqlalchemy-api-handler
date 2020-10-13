@@ -1,7 +1,7 @@
 FROM python:3.7
 
 ENV PYTHONUNBUFFERED 1
-WORKDIR /opt/api
+WORKDIR /opt/apiweb
 
 COPY ./requirements.txt ./
 COPY ./test-requirements.txt ./

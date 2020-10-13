@@ -5,8 +5,8 @@ import traceback
 from flask import current_app as app
 from flask_script import Command
 
-import tests.test_utils.database
-from tests.test_utils.config import COMMAND_NAME
+import tests.api.database
+from tests.api.config import COMMAND_NAME
 
 
 @app.manager.add_command
@@ -18,7 +18,7 @@ class DatabaseCommand(Command):
 
     def run(self, args):
         try:
-            func = getattr(tests.test_utils.database, args[0])()
+            func = getattr(tests.api.database, args[0])()
         except Exception as e:
             print('ERROR: ' + str(e))
             traceback.print_tb(e.__traceback__)

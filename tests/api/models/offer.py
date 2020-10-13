@@ -10,8 +10,8 @@ from sqlalchemy_api_handler.mixins import HasActivitiesMixin
 from sqlalchemy_api_handler.serialization import as_dict
 from sqlalchemy_api_handler.utils.date import DateTimes
 
-from tests.test_utils.database import db
-from tests.test_utils.models.stock import Stock
+from tests.api.database import db
+from tests.api.models.stock import Stock
 
 
 class SearchableType(Enum):

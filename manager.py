@@ -2,7 +2,7 @@ from flask import Flask
 from flask_script import Manager
 
 from commands import import_commands
-from tests.test_utils.setup import setup
+from tests.api.setup import setup
 
 
 FLASK_APP = Flask(__name__)

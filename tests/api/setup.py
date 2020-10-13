@@ -1,8 +1,8 @@
 import os
 from flask_login import LoginManager
 from sqlalchemy_api_handler import ApiHandler
-from tests.test_utils.database import db
-from tests.test_utils.models import import_models
+from tests.api.database import db
+from tests.api.models import import_models
 
 
 def setup(flask_app):
@@ -26,4 +26,4 @@ def setup(flask_app):
         flask_app.config['REMEMBER_COOKIE_SECURE'] = True
     login_manager = LoginManager()
     login_manager.init_app(flask_app)
-    import tests.test_utils.login_manager
+    import tests.api.login_manager

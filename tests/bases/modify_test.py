@@ -14,15 +14,15 @@ from sqlalchemy_api_handler.utils import dehumanize, \
 from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
-from tests.test_utils.models.foo import Foo
-from tests.test_utils.models.offer import Offer
-from tests.test_utils.models.offerer import Offerer
-from tests.test_utils.models.scope import ScopeType
-from tests.test_utils.models.stock import Stock
-from tests.test_utils.models.tag import Tag, TagType
-from tests.test_utils.models.user import User
-from tests.test_utils.models.user_offerer import UserOfferer
-from tests.test_utils.models.time_interval import TimeInterval
+from tests.api.models.foo import Foo
+from tests.api.models.offer import Offer
+from tests.api.models.offerer import Offerer
+from tests.api.models.scope import ScopeType
+from tests.api.models.stock import Stock
+from tests.api.models.tag import Tag, TagType
+from tests.api.models.user import User
+from tests.api.models.user_offerer import UserOfferer
+from tests.api.models.time_interval import TimeInterval
 
 
 time_interval = TimeInterval()

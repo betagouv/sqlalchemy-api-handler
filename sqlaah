@@ -97,7 +97,7 @@ elif [[ "$CMD" == "database" ]]; then
   else
     check start apidb
     check start api
-    docker exec $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. python manager.py database $SUB_CMD"
+    docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python manager.py database $SUB_CMD"
   fi
   exit_with_success
 
@@ -114,7 +114,7 @@ elif [[ "$CMD" == "psql" ]]; then
 elif [[ "$CMD" == "prepublish" ]]; then
   VERSION=$(./$COMMAND_NAME version);
   check start api
-  docker exec -it $APP_NAME-api bash -c "cd /opt/api &&
+  docker exec -it $APP_NAME-apiweb bash -c "cd /opt/apiweb &&
     rm -rf build &&
     rm -rf dist &&
     PYTHONPATH=. python setup.py sdist bdist_wheel &&
@@ -127,7 +127,7 @@ elif [[ "$CMD" == "prepublish" ]]; then
 # Publish package to PyPi
 elif [[ "$CMD" == "publish" ]]; then
   check start api
-  docker exec -it $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. twine upload dist/*"
+  docker exec -it $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. twine upload dist/*"
   exit_with_success
 
 # Force docker-compose to build the docker images
@@ -169,14 +169,14 @@ elif [[ "$CMD" == "test" ]]; then
     PYTEST_ARGS=$*
   fi
   check start api
-  docker exec $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"
+  docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"
   exit_with_success
 
 
 # Get the last version of the library
 elif [[ "$CMD" == "version" ]]; then
   check start api
-  docker exec $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""
+  docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""
   exit_with_success
 
 
@@ -187,7 +187,7 @@ else
     INTERACTIVE_MODE='-it'
   fi
   check start api
-  docker exec $INTERACTIVE_MODE $APP_NAME-api bash -c "cd /opt/api && PYTHONPATH=. python manager.py $CMD $*"
+  docker exec $INTERACTIVE_MODE $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python manager.py $CMD $*"
   exit_with_success
 fi
 

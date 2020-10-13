@@ -2,8 +2,8 @@ from functools import wraps
 from flask import Flask
 import pytest
 
-from tests.test_utils.database import create, db, delete
-from tests.test_utils.setup import setup
+from tests.api.database import create, db, delete
+from tests.api.setup import setup
 
 
 @pytest.fixture(scope='session')

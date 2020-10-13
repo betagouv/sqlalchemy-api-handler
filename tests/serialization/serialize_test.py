@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 import pytest
 from sqlalchemy_api_handler.serialization import serialize
 
-from tests.test_utils.models.offer import Offer, ThingType
-from tests.test_utils.models.time_interval import TimeInterval
-from tests.test_utils.models.stock import Stock
+from tests.api.models.offer import Offer, ThingType
+from tests.api.models.time_interval import TimeInterval
+from tests.api.models.stock import Stock
 
 time_interval = TimeInterval()
 time_interval.start = datetime(2018, 1, 1, 10, 20, 30, 111000)

@@ -2,7 +2,7 @@ import enum
 from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy_api_handler import ApiHandler
 
-from tests.test_utils.database import db
+from tests.api.database import db
 
 
 class TagType(enum.Enum):

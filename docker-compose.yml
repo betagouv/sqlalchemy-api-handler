@@ -1,14 +1,14 @@
 version: "3.7"
 
 services:
-  api:
+  apiweb:
     build: .
     command: >
       bash -c "set -x;
-               cd /opt/api;
+               cd /opt/apiweb;
                pip install -r ./requirements.txt;
                sleep infinity;"
-    container_name: ${APP_NAME}-api
+    container_name: ${APP_NAME}-apiweb
     depends_on:
       - apidb
     env_file:
@@ -23,7 +23,7 @@ services:
       - db_nw
       - web_nw
     volumes:
-      - ./:/opt/api
+      - ./:/opt/apiweb
 
   apidb:
     command: postgres -c logging_collector=on -c log_destination=stderr -c log_min_duration_statement=0 -c log_statement=all -c log_duration=on

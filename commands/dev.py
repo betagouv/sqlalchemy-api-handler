@@ -3,7 +3,7 @@
 from flask import current_app as app
 from flask_script import Command
 
-from tests.test_utils.config import COMMAND_NAME
+from tests.api.config import COMMAND_NAME
 
 
 @app.manager.add_command
@@ -13,7 +13,7 @@ class DevCommand(Command):
     capture_all_args = True
 
     def run(self, args):
-        file_path = '{}{}'.format('/opt/api/', args[0])
+        file_path = '{}{}'.format('/opt/apiweb/', args[0])
         kwargs = {}
         if len(args) > 1:
             kwargs['argv'] = args[1:]

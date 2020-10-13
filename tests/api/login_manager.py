@@ -7,7 +7,7 @@ from flask_login import current_user, login_user
 from sqlalchemy_api_handler import ApiErrors, ApiHandler
 from sqlalchemy_api_handler.serialization import as_dict
 
-from tests.test_utils.models.user import User
+from tests.api.models.user import User
 
 
 def active_user_from_identifier(identifier):
