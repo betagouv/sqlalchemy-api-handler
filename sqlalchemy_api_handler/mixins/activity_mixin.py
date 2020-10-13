@@ -1,10 +1,9 @@
 import inflect
-from sqlalchemy import BigInteger, Column, ForeignKey
+from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship, synonym
 
-from sqlalchemy_api_handler.serialization.as_dict import as_dict
 from sqlalchemy_api_handler.utils.datum import dehumanize_ids_in, \
                                                humanize_ids_in, \
                                                relationships_in, \
@@ -16,6 +15,8 @@ inflect_engine = inflect.engine()
 
 
 class ActivityMixin(object):
+    uuid = Column(UUID(as_uuid=True))
+
     @declared_attr
     def dateCreated(cls):
         return synonym('issued_at')
@@ -23,20 +24,6 @@ class ActivityMixin(object):
     @declared_attr
     def tableName(cls):
         return synonym('table_name')
-
-
-    #@declared_attr
-    #def userId(cls):
-    #    return Column(BigInteger(),
-    #                  ForeignKey('user.user_id'))
-
-    #@declared_attr
-    #def user(cls):
-    #    return relationship('User',
-    #                        backref='activities',
-    #                        foreign_keys=[userId])
-
-    uuid = Column(UUID(as_uuid=True))
 
     @property
     def collectionName(self):
@@ -59,6 +46,8 @@ class ActivityMixin(object):
     @property
     def oldDatum(self):
         model = self.__class__.model_from_table_name(self.tableName)
+        if not self.old_data:
+            return None
         return relationships_in(synonyms_in(humanize_ids_in(self.old_data, model), model), model)
 
     @property

@@ -236,10 +236,6 @@ class Offer(ApiHandler,
                         nullable=False,
                         server_default=false())
 
-    mediaUrls = Column(ARRAY(String(220)),
-                       default=[],
-                       nullable=False)
-
     name = Column(String(140),
                   nullable=False)
 
@@ -250,7 +246,7 @@ class Offer(ApiHandler,
 
     url = Column(String(255), nullable=True)
 
-    
+
     @property
     def dateRange(self):
         if ProductType.is_thing(self.type) or not self.notDeletedStocks:
