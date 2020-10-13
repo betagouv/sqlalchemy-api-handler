@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship, synonym
 
+from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.utils.datum import dehumanize_ids_in, \
                                                humanize_ids_in, \
                                                relationships_in, \
@@ -31,6 +32,8 @@ class ActivityMixin(object):
 
     @property
     def datum(self):
+        if not self.data:
+            return None
         model = self.__class__.model_from_table_name(self.tableName)
         return relationships_in(synonyms_in(humanize_ids_in(self.data, model), model), model)
 
@@ -45,13 +48,15 @@ class ActivityMixin(object):
 
     @property
     def oldDatum(self):
-        model = self.__class__.model_from_table_name(self.tableName)
         if not self.old_data:
             return None
+        model = self.__class__.model_from_table_name(self.tableName)
         return relationships_in(synonyms_in(humanize_ids_in(self.old_data, model), model), model)
 
     @property
     def patch(self):
+        if not self.changed_data:
+            return None
         model = self.__class__.model_from_table_name(self.tableName)
         return relationships_in(synonyms_in(humanize_ids_in(self.changed_data, model), model), model)
 
@@ -60,23 +65,16 @@ class ActivityMixin(object):
                skipped_keys=[],
                with_add=False):
         dehumanized_datum = {**datum}
-
-        # if user is set to the instance, it will be automatically added in the session
-        # so we need to avoid that
-        if 'user' in dehumanized_datum:
-            dehumanized_datum['userId'] = humanize(dehumanized_datum['user'].id)
-            del dehumanized_datum['user']
-
         model = self.__class__.model_from_table_name(datum.get('tableName', self.tableName))
         for (humanized_key, dehumanized_key) in [('oldDatum', 'old_data'), ('patch', 'changed_data')]:
             if humanized_key in dehumanized_datum:
                 dehumanized_datum[dehumanized_key] = dehumanize_ids_in(dehumanized_datum[humanized_key],
                                                                        model)
                 del dehumanized_datum[humanized_key]
-        self.__class__.modify(self,
-                              dehumanized_datum,
-                              skipped_keys=skipped_keys,
-                              with_add=with_add)
+        ApiHandler.modify(self,
+                          dehumanized_datum,
+                          skipped_keys=skipped_keys,
+                          with_add=with_add)
 
 
     __as_dict_includes__ = [

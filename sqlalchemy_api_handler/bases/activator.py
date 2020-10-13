@@ -1,6 +1,7 @@
 import inflect
 from functools import reduce
 from itertools import groupby
+from sqlalchemy import BigInteger
 
 from sqlalchemy_api_handler.api_errors import ApiErrors
 from sqlalchemy_api_handler.bases.save import Save
@@ -23,11 +24,12 @@ class Activator(Save):
 
     @staticmethod
     def activate(*activities):
+        Activity = Activator.get_activity()
         for (uuid, grouped_activities) in groupby(activities, key=lambda activity: activity.uuid):
             grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
 
             table_name = grouped_activities[0].tableName
-            model = ApiHandler.model_from_table_name(table_name)
+            model = Save.model_from_table_name(table_name)
             if model is None:
                 errors = ApiErrors()
                 errors.add_error('activity', 'model from {} not found'.format(table_name))
@@ -43,22 +45,22 @@ class Activator(Save):
                 Save.save(entity)
                 insert_activity = Activity.query.filter(
                     (Activity.tableName == table_name) & \
-                    (Activity.data[id_key].astext.cast(Integer) == entity.id) & \
+                    (Activity.data[id_key].astext.cast(BigInteger) == entity.id) & \
                     (Activity.verb == 'insert')
                 ).one()
                 insert_activity.dateCreated = first_activity.dateCreated
                 insert_activity.uuid = uuid
-                ApiHandler.save(insert_activity)
+                Save.save(insert_activity)
                 for activity in grouped_activities[1:]:
                     activity.old_data = { id_key: entity.id }
-                activate(*grouped_activities[1:])
+                Activator.activate(*grouped_activities[1:])
                 continue
 
             min_date = min(map(lambda a: a.dateCreated, grouped_activities))
             already_activities_since_min_date = Activity.query \
                                                         .filter(
                                                             (Activity.tableName == table_name) & \
-                                                            (Activity.data[id_key].astext.cast(Integer) == entity_id) & \
+                                                            (Activity.data[id_key].astext.cast(BigInteger) == entity_id) & \
                                                             (Activity.dateCreated >= min_date)
                                                         ) \
                                                         .all()

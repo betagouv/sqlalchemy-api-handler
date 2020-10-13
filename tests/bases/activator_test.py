@@ -1,4 +1,6 @@
 import pytest
+from datetime import datetime
+from uuid import uuid4
 from flask_login import login_user
 from sqlalchemy import Integer
 from sqlalchemy_api_handler import ApiHandler, humanize
@@ -27,6 +29,8 @@ class ActivatorTest:
         assert activity.transaction == None
         assert offer_dict.items() <= activity.patch.items()
         assert offer_dict.items() <= activity.datum.items()
+        assert activity.datum['id'] == humanize(offer.id)
+        assert activity.patch['id'] == humanize(offer.id)
 
 
     @with_delete
@@ -66,6 +70,28 @@ class ActivatorTest:
         assert {**offer_dict, **modify_dict}.items() <= activity.datum.items()
         assert modify_dict.items() == activity.patch.items()
         assert offer_dict.items() <= activity.oldDatum.items()
+
+    @with_delete
+    def test_create_activity_offer_saves_an_insert_activity(self, app):
+        # Given
+        offer_uuid = uuid4()
+        patch = { 'name': 'bar', 'type': 'foo' }
+        activity = Activity(dateCreated=datetime.utcnow(),
+                            patch=patch,
+                            tableName='offer',
+                            uuid=offer_uuid)
+
+        # When
+        ApiHandler.activate(activity)
+
+        # Then
+        activity = Activity.query.filter_by(uuid=offer_uuid).one()
+        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+        assert activity.verb == 'insert'
+        assert patch.items() <= activity.datum.items()
+        assert patch.items() <= activity.patch.items()
+        assert activity.datum['id'] == humanize(offer.id)
+        assert activity.patch['id'] == humanize(offer.id)
 
     """
     user.modify({

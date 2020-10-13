@@ -12,16 +12,11 @@ from tests.test_utils.database import db
 versioning_manager.init(db.Model)
 
 
-class Activity(ApiHandler,
-               versioning_manager.activity_cls,
-               ActivityMixin):
+class Activity(ActivityMixin,
+               ApiHandler,
+               versioning_manager.activity_cls):
     __table_args__ = {'extend_existing': True}
 
     id = versioning_manager.activity_cls.id
 
-    #userId = Column(BigInteger(),
-    #                ForeignKey('user.user_id'))
-
-    #user = relationship('User',
-    #                    foreign_keys=[userId],
-    #                    backref='activities')
+ApiHandler.set_activity(Activity)
