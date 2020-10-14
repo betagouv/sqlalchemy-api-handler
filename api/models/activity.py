@@ -1,8 +1,4 @@
-from sqlalchemy import BigInteger, \
-                       Column, \
-                       ForeignKey
 from postgresql_audit.flask import versioning_manager
-from sqlalchemy.orm import relationship
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.mixins import ActivityMixin
 

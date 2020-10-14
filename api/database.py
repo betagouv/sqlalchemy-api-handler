@@ -1,6 +1,7 @@
 from sqlalchemy import orm
 from flask_sqlalchemy import SQLAlchemy
 
+from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.utils import logger
 
 
@@ -17,6 +18,7 @@ def delete():
 
 
 def create_activity_and_transaction_tables():
+    Activity = ApiHandler.get_activity()
     from api.models.activity import Activity, versioning_manager
     orm.configure_mappers()
     versioning_manager.transaction_cls.__table__.create(db.session.get_bind())
@@ -25,7 +27,6 @@ def create_activity_and_transaction_tables():
 
 def create():
     logger.info('Create all the database...')
-    from api.models.activity import Activity
     create_activity_and_transaction_tables()
     db.create_all()
     db.session.commit()
