@@ -32,7 +32,7 @@ services:
       - POSTGRES_DB=${APP_NAME}_api
       - POSTGRES_PASSWORD=${APP_NAME}_password
       - POSTGRES_USER=${APP_NAME}_user
-    image: postgres:10.1
+    image: postgres:12.2
     networks:
       - db_nw
     volumes:

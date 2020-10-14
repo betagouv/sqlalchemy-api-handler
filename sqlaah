@@ -101,6 +101,11 @@ elif [[ "$CMD" == "database" ]]; then
     check stop apidb
     check stop apiweb
     sudo rm -rf $ROOT_PATH/docker_data/apidb
+  elif [[ "$SUB_CMD" == "schema" ]]; then
+    check start apidb
+    FILE=schema_$(date +"%Y_%m_%d__%H_%M_%S").sql
+    docker exec $APP_NAME-apidb bash -c "PGPASSWORD='$APP_NAME'_password pg_dump -h localhost -d '$APP_NAME'_api -U '$APP_NAME'_user --no-comments --no-owner -N function_schema --no-privileges --schema-only --exclude-table alembic_version --exclude-schema topology --username '$APP_NAME'_user --format p > /var/lib/postgresql/$FILE"
+    sudo sed -i "s/SELECT pg_catalog.set_config('search_path', '', false);/SET search_path = public, pg_catalog;/g" $ROOT_PATH/docker_data/apidb/$FILE
   else
     check start apidb
     check start apiweb
@@ -140,6 +145,7 @@ elif [[ "$CMD" == "publish" ]]; then
 
 # Force docker-compose to build the docker images
 elif [[ "$CMD" == "rebuild" ]]; then
+  docker-compose -f docker-compose.yml pull apidb
   docker-compose build --no-cache $*
   exit_with_success
 
