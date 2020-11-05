@@ -71,3 +71,11 @@ def _excluded_keys(includes: Iterable = None):
     excluded_keys = filter(lambda string_include: string_include.startswith('-'), string_includes)
     cleaned_excluded_keys = map(lambda excluded_key: excluded_key[1:], excluded_keys)
     return set(cleaned_excluded_keys)
+
+
+def exclusive_includes_from(entity, includes):
+    exclusive_includes = includes.copy()
+    for column_key in entity.__mapper__.columns.keys():
+        if column_key not in includes:
+            exclusive_includes.append('-{}'.format(column_key))
+    return exclusive_includes
