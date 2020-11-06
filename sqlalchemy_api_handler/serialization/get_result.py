@@ -82,8 +82,9 @@ def check_order_by(order_by):
             check_single_order_by_string(part)
 
 
-def get_result(modelClass,
+def get_result(model,
                includes=None,
+               mode=None,
                order_by=None,
                paginate=None,
                page=None,
@@ -93,10 +94,10 @@ def get_result(modelClass,
                should_distinct=None,
                with_total_data_count=None):
     if query is None:
-        query = modelClass.query
+        query = model.query
 
-    if issubclass(modelClass, SoftDeletableMixin):
-        query = query.filter(modelClass.isSoftDeleted == False)
+    if issubclass(model, SoftDeletableMixin):
+        query = query.filter(model.isSoftDeleted == False)
 
     if refine:
         query = refine(query)
@@ -128,7 +129,7 @@ def get_result(modelClass,
 
         query = pagination.items
 
-    data = [as_dict(obj, includes=includes) for obj in query]
+    data = [as_dict(entity, includes=includes, mode=mode) for entity in query]
 
     if populate:
         objects = list(map(populate, objects))
