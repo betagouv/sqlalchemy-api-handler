@@ -16,21 +16,25 @@ def exclusive_includes_from(entity, includes):
 
 
 @singledispatch
-def as_dict(value, column=None, includes=None):
+def as_dict(value,
+            column=None):
     return serialize(value, column=column)
 
 
 @as_dict.register(InstrumentedList)
-def as_dict_for_intrumented_list(entities, column=None, includes: Iterable = None):
+def as_dict_for_intrumented_list(entities,
+                                 column=None,
+                                 includes: Iterable = None,
+                                 mode: str = 'columns-and-includes'):
     not_deleted_entities = filter(lambda x: not x.is_soft_deleted(), entities)
-    return [as_dict(entity, includes=includes) for entity in not_deleted_entities]
+    return [as_dict(entity, includes=includes, mode=mode) for entity in not_deleted_entities]
 
 
 @as_dict.register(ApiHandler)
 def as_dict_for_api_handler(entity,
                             column=None,
-                            includes: Iterable = None,
-                            mode: str = 'columns-and-includes'):
+                            includes: Iterable=None,
+                            mode: str='columns-and-includes'):
     result = OrderedDict()
 
     if includes is None and hasattr(entity, '__as_dict_includes__'):
