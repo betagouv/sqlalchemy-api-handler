@@ -17,7 +17,9 @@ def exclusive_includes_from(entity, includes):
 
 @singledispatch
 def as_dict(value,
-            column=None):
+            column=None,
+            includes=None,
+            mode=None):
     return serialize(value, column=column)
 
 
