@@ -72,3 +72,25 @@ class AsDictTest:
         # then
         assert 'metier' not in user_dict
         assert user_dict['job'] == user_fields_dict['metier']
+
+    def test_dictify_with_only_includes(self, app):
+        # given
+        user_fields_dict = {
+            'email': 'marx.foo@plop.fr',
+            'firstName' : 'Marx',
+            'lastName': 'Foo',
+            'metier': 'philosophe',
+            'publicName': 'Marx Foo'
+        }
+        user = User(**user_fields_dict)
+
+        # when
+        includes = ['email', 'metier']
+        user_dict = as_dict(user,
+                            includes=includes,
+                            mode='only-includes')
+
+        # then
+        assert len(user_dict) == len(includes)
+        assert set(user_dict.keys()) == set(includes)
+        assert set(user_dict.values()) == set(map(lambda key: user_fields_dict[key], includes))
