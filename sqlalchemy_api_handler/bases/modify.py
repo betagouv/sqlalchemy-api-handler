@@ -32,10 +32,6 @@ class Modify(Delete, SoftDelete):
     def __init__(self, **initial_datum):
         self.modify(initial_datum)
 
-    @property
-    def humanizedId(self):
-        return humanize(self.id)
-
     def modify(self,
                datum: dict,
                skipped_keys: List[str] = [],
