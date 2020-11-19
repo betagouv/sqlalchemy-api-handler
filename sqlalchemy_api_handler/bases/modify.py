@@ -187,14 +187,14 @@ class Modify(Delete, SoftDelete):
         relationships = model.__mapper__.relationships
         relationship_keys = set(relationships.keys()).intersection(search_by_keys)
         for key in relationship_keys:
-            if key in search_by:
+            if key in search_by_keys:
                 filter_dict[key] = datum.get(key)
 
         synonyms = model.__mapper__.synonyms
         synonym_keys = set(synonyms.keys()).intersection(search_by_keys)
         for key in synonym_keys:
             column = synonyms[key]._proxied_property.columns[0]
-            if key in search_by:
+            if key in search_by_keys:
                 value = dehumanize_if_needed(column, datum.get(key))
                 filter_dict[key] = value
 
