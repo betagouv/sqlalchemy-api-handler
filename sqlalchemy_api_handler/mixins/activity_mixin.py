@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship, synonym
 from sqlalchemy_api_handler.utils.datum import relationships_in, \
                                                synonyms_in
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
-from sqlalchemy_api_handler.utils.humanize import humanize_ids_in
+from sqlalchemy_api_handler.utils.humanize import humanize, humanize_ids_in
 
 
 inflect_engine = inflect.engine()
