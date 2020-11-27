@@ -29,7 +29,7 @@ class Activator(Save):
             grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
 
             first_activity = grouped_activities[0]
-            table_name = first_activity[0].tableName
+            table_name = first_activity.tableName
             model = Save.model_from_table_name(table_name)
             if model is None:
                 errors = ApiErrors()
