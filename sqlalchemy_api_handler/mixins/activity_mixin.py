@@ -73,12 +73,12 @@ class ActivityMixin(object):
         'collectionName',
         'dateCreated',
         'patch',
+        'tableName',
         '-changed_data',
         '-issued_at',
         '-native_transaction_id',
         '-old_data',
         '-schema_name',
-        '-table_name',
         '-transaction_id',
         '-verb'
     ]
