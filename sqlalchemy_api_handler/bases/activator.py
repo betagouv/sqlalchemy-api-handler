@@ -52,6 +52,8 @@ class Activator(Save):
                 insert_activity.uuid = uuid
                 Save.save(insert_activity)
                 first_activity.id = insert_activity.id
+                first_activity.changed_data = insert_activity.changed_data
+                first_activity.transaction = insert_activity.transaction
                 for activity in grouped_activities[1:]:
                     activity.old_data = { id_key: entity.id }
                 Activator.activate(*grouped_activities[1:])
