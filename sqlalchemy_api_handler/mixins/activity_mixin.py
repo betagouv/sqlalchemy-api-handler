@@ -78,6 +78,7 @@ class ActivityMixin(object):
         '-issued_at',
         '-native_transaction_id',
         '-old_data',
+        '-table_name',
         '-schema_name',
         '-transaction_id',
         '-verb'
