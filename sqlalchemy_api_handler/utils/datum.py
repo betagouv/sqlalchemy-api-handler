@@ -42,6 +42,6 @@ def relationships_in(datum, model):
         if uuid_key in relationed_datum:
             model = relationship.mapper.class_
             instance = model.query.filter_by(activityUuid=relationed_datum[uuid_key]) \
-                                  .one()
+                                  .first()
             relationed_datum[key] = instance
     return relationed_datum

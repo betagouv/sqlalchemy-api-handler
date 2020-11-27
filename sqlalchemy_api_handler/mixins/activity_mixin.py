@@ -36,13 +36,9 @@ class ActivityMixin(object):
         return relationships_in(synonyms_in(humanize_ids_in(self.data, model), model), model)
 
     @property
-    def object(self):
+    def entity(self):
         model = self.__class__.model_from_table_name(self.tableName)
-        datum_with_humanized_ids = {**self.data}
-        for (key, value) in self.data.items():
-            if key.endswith('id') or key.endswith('Id'):
-                datum_with_humanized_ids[key] = humanize(value)
-        return model(**datum_with_humanized_ids)
+        return model(**self.datum)
 
     @property
     def oldDatum(self):
@@ -73,14 +69,10 @@ class ActivityMixin(object):
                        skipped_keys=skipped_keys,
                        with_add=with_add)
 
-
     __as_dict_includes__ = [
         'collectionName',
         'dateCreated',
-        'datum',
-        'oldDatum',
         'patch',
-        'tableName',
         '-changed_data',
         '-issued_at',
         '-native_transaction_id',

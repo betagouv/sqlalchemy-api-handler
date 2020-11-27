@@ -28,14 +28,14 @@ class Activator(Save):
         for (uuid, grouped_activities) in groupby(activities, key=lambda activity: activity.uuid):
             grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
 
-            table_name = grouped_activities[0].tableName
+            first_activity = grouped_activities[0]
+            table_name = first_activity[0].tableName
             model = Save.model_from_table_name(table_name)
             if model is None:
                 errors = ApiErrors()
                 errors.add_error('activity', 'model from {} not found'.format(table_name))
                 raise errors
 
-            first_activity = grouped_activities[0]
             id_key = model.id.property.key
             entity_id = first_activity.old_data.get(id_key) \
                         if first_activity.old_data else None
@@ -51,6 +51,7 @@ class Activator(Save):
                 insert_activity.dateCreated = first_activity.dateCreated
                 insert_activity.uuid = uuid
                 Save.save(insert_activity)
+                first_activity.id = insert_activity.id
                 for activity in grouped_activities[1:]:
                     activity.old_data = { id_key: entity.id }
                 Activator.activate(*grouped_activities[1:])
