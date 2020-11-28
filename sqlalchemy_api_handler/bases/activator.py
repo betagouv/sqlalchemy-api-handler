@@ -3,7 +3,7 @@ from functools import reduce
 from itertools import groupby
 from sqlalchemy import BigInteger
 
-from sqlalchemy_api_handler.api_errors import ApiErrors
+from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.bases.save import Save
 
 
@@ -32,8 +32,8 @@ class Activator(Save):
             table_name = first_activity.tableName
             model = Save.model_from_table_name(table_name)
             if model is None:
-                errors = ApiErrors()
-                errors.add_error('activity', 'model from {} not found'.format(table_name))
+                errors = ActivityError()
+                errors.add_error('tableName', 'model from {} not found'.format(table_name))
                 raise errors
 
             id_key = model.id.property.key

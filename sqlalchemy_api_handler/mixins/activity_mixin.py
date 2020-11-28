@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship, synonym
 
+from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.utils.datum import relationships_in, \
                                                synonyms_in
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
@@ -59,12 +60,37 @@ class ActivityMixin(object):
                skipped_keys=[],
                with_add=False):
         dehumanized_datum = {**datum}
-        model = self.__class__.model_from_table_name(datum.get('tableName', self.tableName))
+        table_name = self.tableName
+
+        if 'collectionName' in datum:
+            collection_name = datum['collectionName']
+            singular_name = inflect_engine.singular_noun(collection_name)
+
+            if table_name:
+                if singular_name != table_name:
+                    errors = ActivityError()
+                    errors.add_error('collectionName',
+                                     f'self.tableName {table_name} and passed singular noun from collectionName {singular_name} don\'t match.')
+                    raise errors
+
+            if 'tableName' in datum:
+                table_name = datum['tableName']
+                if singular_name != table_name:
+                    errors = ActivityError()
+                    errors.add_error('collectionName',
+                                     f'Passed tableName {table_name} and singular noun from collectionName {singular_name} don\'t match.')
+                    raise errors
+            else:
+                dehumanized_datum['tableName'] = singular_name
+                table_name = singular_name
+
+        model = self.__class__.model_from_table_name(datum.get('tableName', table_name))
         for (humanized_key, dehumanized_key) in [('oldDatum', 'old_data'), ('patch', 'changed_data')]:
             if humanized_key in dehumanized_datum:
                 dehumanized_datum[dehumanized_key] = dehumanize_ids_in(dehumanized_datum[humanized_key],
                                                                        model)
                 del dehumanized_datum[humanized_key]
+
         super().modify(dehumanized_datum,
                        skipped_keys=skipped_keys,
                        with_add=with_add)

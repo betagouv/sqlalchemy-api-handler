@@ -33,7 +33,6 @@ class ActivatorTest:
         assert activity.datum['id'] == humanize(offer.id)
         assert activity.patch['id'] == humanize(offer.id)
 
-
     @with_delete
     def test_create_offer_with_login_user_saves_an_insert_activity_with_transaction(self, app):
         # Given
@@ -142,3 +141,26 @@ class ActivatorTest:
         offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
         stock = Stock.query.filter_by(activityUuid=stock_uuid).one()
         assert stock.offerId == offer.id
+
+    @with_delete
+    def test_create_activity_with_collection_name(self, app):
+        # Given
+        offer_uuid = uuid4()
+        patch = { 'name': 'bar', 'type': 'foo' }
+        activity = Activity(dateCreated=datetime.utcnow(),
+                            collectionName='offers',
+                            patch=patch,
+                            uuid=offer_uuid)
+
+        # When
+        ApiHandler.activate(activity)
+
+        # Then
+        activity = Activity.query.filter_by(uuid=offer_uuid).one()
+        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+        assert activity.tableName == 'offer'
+        assert activity.verb == 'insert'
+        assert patch.items() <= activity.datum.items()
+        assert patch.items() <= activity.patch.items()
+        assert activity.datum['id'] == humanize(offer.id)
+        assert activity.patch['id'] == humanize(offer.id)

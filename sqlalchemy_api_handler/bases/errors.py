@@ -102,6 +102,10 @@ class Errors():
         return api_errors
 
 
+class ActivityError(ApiErrors):
+    pass
+
+
 class DateTimeCastError(ApiErrors):
     pass
 
