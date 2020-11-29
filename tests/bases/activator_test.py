@@ -14,6 +14,20 @@ from api.models.user import User
 
 
 class ActivatorTest:
+    def test_models(self, app):
+        # When
+        models = ApiHandler.models()
+
+        # Then
+        assert Activity in models
+
+    def test_model_from_name(self, app):
+        # When
+        GotActivity = ApiHandler.model_from_name('Activity')
+
+        # Then
+        assert GotActivity == Activity
+
     @with_delete
     def test_create_offer_saves_an_insert_activity(self, app):
         # Given
@@ -164,3 +178,37 @@ class ActivatorTest:
         assert patch.items() <= activity.patch.items()
         assert activity.datum['id'] == humanize(offer.id)
         assert activity.patch['id'] == humanize(offer.id)
+
+    @with_delete
+    def test_modify_activity_with_a_second_via_same_uuid(self, app):
+        # Given
+        offer_uuid = uuid4()
+        offer_patch = { 'name': 'bar', 'type': 'foo' }
+        offer_activity1 = Activity(dateCreated=datetime.utcnow(),
+                                  patch=offer_patch,
+                                  tableName='offer',
+                                  uuid=offer_uuid)
+        ApiHandler.activate(offer_activity1)
+
+
+
+        stock_uuid = uuid4()
+        stock_patch = { 'offerActivityUuid': offer_uuid, 'price': 3 }
+        stock_activity = Activity(dateCreated=datetime.utcnow(),
+                                  patch=stock_patch,
+                                  tableName='stock',
+                                  uuid=stock_uuid)
+        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+        offer_patch = { 'name': 'bor', 'type': 'foo' }
+        offer_activity2 = Activity(dateCreated=datetime.utcnow(),
+                                   patch=offer_patch,
+                                   tableName='offer',
+                                   uuid=offer_uuid)
+
+        # When
+        ApiHandler.activate(stock_activity, offer_activity2)
+
+        # Then
+        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+        stock = Stock.query.filter_by(activityUuid=stock_uuid).one()
+        assert stock.offerId == offer.id

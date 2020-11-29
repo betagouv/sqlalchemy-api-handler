@@ -34,7 +34,7 @@ class ActivityMixin(object):
         if not self.data:
             return None
         model = self.__class__.model_from_table_name(self.tableName)
-        return relationships_in(synonyms_in(humanize_ids_in(self.data, model), model), model)
+        return synonyms_in(humanize_ids_in(self.data, model), model)
 
     @property
     def entity(self):
@@ -46,14 +46,14 @@ class ActivityMixin(object):
         if not self.old_data:
             return None
         model = self.__class__.model_from_table_name(self.tableName)
-        return relationships_in(synonyms_in(humanize_ids_in(self.old_data, model), model), model)
+        return synonyms_in(humanize_ids_in(self.old_data, model), model)
 
     @property
     def patch(self):
         if not self.changed_data:
             return None
         model = self.__class__.model_from_table_name(self.tableName)
-        return relationships_in(synonyms_in(humanize_ids_in(self.changed_data, model), model), model)
+        return synonyms_in(humanize_ids_in(self.changed_data, model), model)
 
     def modify(self,
                datum,
