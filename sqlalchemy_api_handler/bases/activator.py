@@ -1,4 +1,3 @@
-import inflect
 from functools import reduce
 from itertools import groupby
 from sqlalchemy import BigInteger
