@@ -1,3 +1,4 @@
+from uuid import uuid4
 from sqlalchemy import Column, \
                        desc
 from sqlalchemy.dialects.postgresql import UUID
@@ -8,7 +9,8 @@ from sqlalchemy.orm.collections import InstrumentedList
 class HasActivitiesMixin(object):
     __versioned__ = {}
 
-    activityUuid = Column(UUID(as_uuid=True))
+    activityUuid = Column(UUID(as_uuid=True),
+                          default=str(uuid4()))
 
     @property
     def activities(self):

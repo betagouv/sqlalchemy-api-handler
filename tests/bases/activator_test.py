@@ -39,6 +39,7 @@ class ActivatorTest:
 
         # Then
         activity = Activity.query.filter(Activity.changed_data['id'].astext.cast(Integer) == offer.id).one()
+        assert offer.activityUuid != activity.uuid
         assert activity.verb == 'insert'
         assert activity.oldDatum == None
         assert activity.transaction == None
@@ -61,10 +62,11 @@ class ActivatorTest:
 
         # Then
         activity = Activity.query.filter(Activity.changed_data['id'].astext.cast(Integer) == offer.id).one()
+        assert activity.verb == 'insert'
         assert activity.transaction.actor.id == user.id
 
     @with_delete
-    def test_create_offer_saves_an_insert_activity(self, app):
+    def test_modify_offer_saves_an_update_activity(self, app):
         # Given
         offer_dict = { 'name': 'bar', 'type': 'foo' }
         offer = Offer(**offer_dict)
@@ -81,6 +83,7 @@ class ActivatorTest:
             (Activity.verb == 'update') &
             (Activity.data['id'].astext.cast(Integer) == offer.id)
         ).one()
+        assert activity.verb == 'update'
         assert {**offer_dict, **modify_dict}.items() <= activity.datum.items()
         assert modify_dict.items() == activity.patch.items()
         assert offer_dict.items() <= activity.oldDatum.items()
