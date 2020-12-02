@@ -12,7 +12,8 @@ def delete():
     logger.info('Delete all the database...')
     for table in reversed(db.metadata.sorted_tables):
         print('Deleting table {table_name}...'.format(table_name=table))
-        db.session.execute(table.delete())    
+        db.session.execute(table.delete())
+    ApiHandler.get_activity().query.delete()
     db.session.commit()
     logger.info('Delete all the database...Done.')
 

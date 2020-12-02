@@ -112,7 +112,6 @@ class ActivatorTest:
         assert activity.datum['id'] == humanize(offer.id)
         assert activity.patch['id'] == humanize(offer.id)
 
-    '''
     @with_delete
     def test_create_activities_on_existing_offer_saves_none_activities_and_an_update_one(self, app):
         # Given
@@ -156,7 +155,6 @@ class ActivatorTest:
         assert activities[3].patch.items() == merged_patch.items()
         assert offer.name == 'bor'
         assert offer.type == 'fee'
-    '''
 
 
     @with_delete
