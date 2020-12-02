@@ -12,10 +12,7 @@ def delete():
     logger.info('Delete all the database...')
     for table in reversed(db.metadata.sorted_tables):
         print('Deleting table {table_name}...'.format(table_name=table))
-        try:
-            db.session.execute(table.delete())
-        except:
-            pass
+        db.session.execute(table.delete())    
     db.session.commit()
     logger.info('Delete all the database...Done.')
 
