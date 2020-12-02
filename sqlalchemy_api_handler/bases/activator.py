@@ -1,6 +1,6 @@
 from functools import reduce
 from itertools import groupby
-from sqlalchemy import BigInteger
+from sqlalchemy import BigInteger, desc
 
 from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
@@ -51,16 +51,10 @@ class Activator(Save):
             if not entity_id:
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityUuid = uuid
-                Save.save(entity)
-                insert_activity = Activity.query.filter(
-                    (Activity.tableName == table_name) & \
-                    (Activity.data[id_key].astext.cast(BigInteger) == entity.id) & \
-                    (Activity.verb == 'insert')
-                ).one()
+                Activator.save(entity)
+                insert_activity = entity.insertActivity
                 insert_activity.dateCreated = first_activity.dateCreated
-                insert_activity.uuid = uuid
                 Save.save(insert_activity)
-
                 # want to make as if first_activity was the inser_activity one
                 # for such route like operations
                 # '''
@@ -78,6 +72,8 @@ class Activator(Save):
                 Activator.activate(*grouped_activities[1:])
                 continue
 
+
+
             min_date = min(map(lambda a: a.dateCreated, grouped_activities))
             already_activities_since_min_date = Activity.query \
                                                         .filter(
@@ -86,7 +82,6 @@ class Activator(Save):
                                                             (Activity.dateCreated >= min_date)
                                                         ) \
                                                         .all()
-
             Save.save(*grouped_activities)
             all_activities_since_min_date = sorted(already_activities_since_min_date + grouped_activities,
                                                    key=lambda activity: activity.dateCreated)
@@ -98,7 +93,7 @@ class Activator(Save):
             datum['activityUuid'] = uuid
             entity = model.query.get(entity_id)
             entity.modify(datum)
-            Save.save(entity)
+            Activator.save(entity)
 
     @classmethod
     def models(cls):
@@ -107,3 +102,19 @@ class Activator(Save):
         if Activity:
             models += [Activity]
         return models
+
+    @classmethod
+    def save(cls, *entities):
+        Activity = Activator.get_activity()
+        Save.save(*entities)
+        activities = []
+        for entity in entities:
+            if hasattr(entity, 'activityUuid'):
+                id_key = entity.__class__.id.property.key
+                last_activity = Activity.query.filter(
+                    (Activity.tableName == entity.__tablename__) & \
+                    (Activity.data[id_key].astext.cast(BigInteger) == entity.id)
+                ).order_by(desc(Activity.dateCreated)).limit(1).first()
+                last_activity.uuid = entity.activityUuid
+                activities.append(last_activity)
+        Save.save(*activities)
