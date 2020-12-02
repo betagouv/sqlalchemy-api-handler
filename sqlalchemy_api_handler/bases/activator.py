@@ -125,6 +125,8 @@ class Activator(Save):
                     (Activity.tableName == entity.__tablename__) & \
                     (Activity.data[id_key].astext.cast(BigInteger) == entity.id)
                 ).order_by(desc(Activity.dateCreated)).limit(1).first()
+                if not last_activity:
+                    continue
                 last_activity.uuid = entity.activityUuid
                 activities.append(last_activity)
         Save.save(*activities)
