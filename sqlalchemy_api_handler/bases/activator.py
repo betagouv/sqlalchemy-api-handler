@@ -21,11 +21,13 @@ def merged_datum_from_activities(activities,
 class Activator(Save):
 
     def __getattr__(self, key):
+        print('LLLL', key)
         if key.endswith('ActivityUuid'):
             relationship_name = key.split('ActivityUuid')[0]
             relationship = getattr(self, relationship_name)
             if hasattr(relationship.__class__, '__versioned__'):
                 return relationship.activityUuid
+        print("LLLLL", Save.__getattr__)
         return Save.__getattr__(self, key)
 
     @classmethod
