@@ -21,11 +21,13 @@ def merged_datum_from_activities(activities,
 class Activator(Save):
 
     def __getattr__(self, key):
+        print('LLLL', key)
         if key.endswith('ActivityUuid'):
             relationship_name = key.split('ActivityUuid')[0]
             relationship = getattr(self, relationship_name)
             if hasattr(relationship.__class__, '__versioned__'):
                 return relationship.activityUuid
+        print("LLLLL", Save.__getattr__)
         return Save.__getattr__(self, key)
 
     @classmethod
@@ -125,15 +127,9 @@ class Activator(Save):
                     (Activity.tableName == entity.__tablename__) & \
                     (Activity.data[id_key].astext.cast(BigInteger) == entity.id)
                 ).order_by(desc(Activity.dateCreated)).limit(1).first()
-<<<<<<< HEAD
-                if not last_activity:
+                if not last_activity and entity.__class__.__name__ == 'User':
+                    logger.warning('last_activity is None because we could not make work activity with user now...')
                     continue
                 last_activity.uuid = entity.activityUuid
                 activities.append(last_activity)
-=======
-                print('last_activity', last_activity)
-                if last_activity:
-                    last_activity.uuid = entity.activityUuid
-                    activities.append(last_activity)
->>>>>>> 05004a8 (remove test)
         Save.save(*activities)
