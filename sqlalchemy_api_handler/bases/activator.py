@@ -6,6 +6,7 @@ from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.bases.save import Save
 from sqlalchemy_api_handler.utils.datum import relationships_in
+from sqlalchemy_api_handler.utils.logger import logger
 
 
 def merged_datum_from_activities(activities,

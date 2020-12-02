@@ -2,7 +2,7 @@
 # pylint: disable=W0641
 # pylint: disable=R0914
 
-from api.database import db
+from api.utils.database import db
 
 
 def import_models():

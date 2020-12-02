@@ -8,16 +8,18 @@ class SaveTest():
     @with_delete
     def test_save_user(self, app):
         # given
-        user = User(
-            firstName="Marx",
-            email="marx.foo@plop.fr",
-            lastName="Foo",
-            publicName="Marx Foo"
-        )
+        user_dict = {
+            'email': 'marx.foo@plop.fr',
+            'firstName': 'Marx',
+            'lastName': 'Foo',
+            'publicName': 'Marx Foo'
+        }
+        user = User(**user_dict)
 
         # when
         ApiHandler.save(user)
 
         # then
         saved_user = User.query.first()
-        assert saved_user.firstName == "Marx"
+        for (key, value) in user_dict.items():
+            assert getattr(saved_user, key) == value

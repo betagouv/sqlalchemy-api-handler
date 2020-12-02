@@ -3,7 +3,7 @@
 from flask import current_app as app
 from flask_script import Command
 
-from api.config import COMMAND_NAME
+from api.utils.config import COMMAND_NAME
 
 
 @app.manager.add_command

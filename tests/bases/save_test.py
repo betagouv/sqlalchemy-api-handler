@@ -17,7 +17,7 @@ class SaveTest:
     @with_delete
     def test_for_valid_one_to_many_relationship(self, app):
         # Given
-        offer = Offer(name="foo", type="bar")
+        offer = Offer(name='foo', type='bar')
         stock = Stock(offer=offer, price=1)
 
         # When
@@ -29,8 +29,8 @@ class SaveTest:
     @with_delete
     def test_for_valid_many_to_many_relationship(self, app):
         # Given
-        offerer = Offerer(name="foo", type="bar")
-        user = User(email="bar@gmare.com", publicName="bar")
+        offerer = Offerer(name='foo', type='bar')
+        user = User(email='bar@gmare.com', publicName='bar')
         ApiHandler.save(user, offerer)
         user_offerer = UserOfferer(offerer=offerer, user=user)
 
@@ -44,12 +44,10 @@ class SaveTest:
     @with_delete
     def test_for_valid_synonym(self, app):
         # Given
-        job = "foo"
-        user = User(
-            email="bar@gmare.com",
-            job=job,
-            publicName="bar"
-        )
+        job = 'foo'
+        user = User(email='bar@gmare.com',
+                    job=job,
+                    publicName='bar')
 
         # When
         ApiHandler.save(user)
@@ -61,10 +59,8 @@ class SaveTest:
     @with_delete
     def test_for_valid_id_humanized_synonym(self, app):
         # Given
-        user = User(
-            email="bar@gmare.com",
-            publicName="bar"
-        )
+        user = User(email='bar@gmare.com',
+                    publicName='bar')
 
         # When
         ApiHandler.save(user)
@@ -78,14 +74,14 @@ class SaveTest:
     def test_for_valid_relationship(self, app):
         # Given
         offer_dict = {
-            "name": "foo",
-            "type": "bar"
+            'name': 'foo',
+            'type': 'bar'
         }
         offer = Offer(**offer_dict)
         ApiHandler.save(offer)
         stock_dict = {
-            "offer": offer,
-            "price": 1
+            'offer': offer,
+            'price': 1
         }
         stock = Stock(**stock_dict)
 
@@ -101,17 +97,17 @@ class SaveTest:
     def test_for_valid_relationships(self, app):
         # Given
         stock_dict1 = {
-            "price": 1
+            'price': 1
         }
         stock1 = Stock(**stock_dict1)
         stock_dict2 = {
-            "price": 2
+            'price': 2
         }
         stock2 = Stock(**stock_dict2)
         offer_dict = {
-            "name": "foo",
-            "stocks": [stock1, stock2],
-            "type": "bar"
+            'name': 'foo',
+            'stocks': [stock1, stock2],
+            'type': 'bar'
         }
         offer = Offer(**offer_dict)
 
@@ -129,12 +125,12 @@ class SaveTest:
     def test_for_valid_relationship_dict_with_nested_creation(self, app):
         # Given
         offer_dict = {
-            "name": "foo",
-            "type": "bar"
+            'name': 'foo',
+            'type': 'bar'
         }
         stock_dict = {
-            "offer": offer_dict,
-            "price": 1
+            'offer': offer_dict,
+            'price': 1
         }
         stock = Stock(**stock_dict)
 
@@ -149,16 +145,16 @@ class SaveTest:
     def test_for_valid_relationship_dict_with_nested_modification(self, app):
         # Given
         offer_dict = {
-            "name": "foo",
-            "type": "bar"
+            'name': 'foo',
+            'type': 'bar'
         }
         offer = Offer(**offer_dict)
         ApiHandler.save(offer)
         offer_dict['id'] = humanize(offer.id)
-        offer_dict['name'] = "fooo"
+        offer_dict['name'] = 'fooo'
         stock_dict = {
-            "offer": offer_dict,
-            "price": 1
+            'offer': offer_dict,
+            'price': 1
         }
         stock = Stock(**stock_dict)
 
@@ -174,15 +170,15 @@ class SaveTest:
     def test_for_valid_relationship_dicts_with_nested_creations(self, app):
         # Given
         stock_dict1 = {
-            "price": 1
+            'price': 1
         }
         stock_dict2 = {
-            "price": 2
+            'price': 2
         }
         offer_dict = {
-            "name": "foo",
-            "stocks": [stock_dict1, stock_dict2],
-            "type": "bar"
+            'name': 'foo',
+            'stocks': [stock_dict1, stock_dict2],
+            'type': 'bar'
         }
         offer = Offer(**offer_dict)
 
@@ -197,21 +193,21 @@ class SaveTest:
     def test_for_valid_relationship_dicts_with_nested_modifications(self, app):
         # Given
         offer_dict = {
-            "name": "foo",
-            "type": "bar"
+            'name': 'foo',
+            'type': 'bar'
         }
         offer = Offer(**offer_dict)
         ApiHandler.save(offer)
         stock_dict1 = {
-            "offerId": humanize(offer.id),
-            "price": 1
+            'offerId': humanize(offer.id),
+            'price': 1
         }
         stock1 = Stock(**stock_dict1)
         ApiHandler.save(stock1)
         stock_dict1['id'] = humanize(stock1.id)
         stock_dict2 = {
-            "offerId": humanize(offer.id),
-            "price": 2
+            'offerId': humanize(offer.id),
+            'price': 2
         }
         stock2 = Stock(**stock_dict2)
         ApiHandler.save(stock2)

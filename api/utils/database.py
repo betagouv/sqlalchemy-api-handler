@@ -12,16 +12,18 @@ def delete():
     logger.info('Delete all the database...')
     for table in reversed(db.metadata.sorted_tables):
         print('Deleting table {table_name}...'.format(table_name=table))
-        db.session.execute(table.delete())
+        try:
+            db.session.execute(table.delete())
+        except:
+            pass
     db.session.commit()
     logger.info('Delete all the database...Done.')
 
 
 def create_activity_and_transaction_tables():
-    Activity = ApiHandler.get_activity()
-    from api.models.activity import Activity, versioning_manager
     orm.configure_mappers()
-    versioning_manager.transaction_cls.__table__.create(db.session.get_bind())
+    Activity = ApiHandler.get_activity()
+    Activity.transaction.mapper.class_.__table__.create(db.session.get_bind())
     Activity.__table__.create(db.session.get_bind())
 
 

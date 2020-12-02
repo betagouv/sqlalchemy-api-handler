@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime
 from uuid import uuid4
 from flask_login import login_user
-from sqlalchemy import Integer
+from sqlalchemy import desc, Integer
 from sqlalchemy_api_handler import ApiHandler, humanize
 from sqlalchemy_api_handler.serialization import as_dict
 
@@ -136,7 +136,9 @@ class ActivatorTest:
         ApiHandler.activate(first_activity, second_activity, third_activity)
 
         # Then
-        activities = Activity.query.filter_by(uuid=offer_uuid).all()
+        activities = Activity.query.filter_by(uuid=offer_uuid) \
+                                   .order_by(Activity.dateCreated) \
+                                   .all()
         offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
         assert len(activities) == 4
         assert activities[0].uuid == offer.activityUuid

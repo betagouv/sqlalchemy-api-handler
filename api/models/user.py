@@ -3,19 +3,19 @@ from sqlalchemy.orm import synonym
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.mixins import HasActivitiesMixin
 
-from api.database import db
+from api.utils.database import db
 
 
 class User(ApiHandler,
            db.Model,
            HasActivitiesMixin):
 
-    firstName = Column(String(128),
-                       nullable=True)
-
     email = Column(String(120),
                    nullable=False,
                    unique=True)
+
+    firstName = Column(String(128),
+                       nullable=True)
 
     lastName = Column(String(128),
                       nullable=True)

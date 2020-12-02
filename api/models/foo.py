@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import synonym
 from sqlalchemy_api_handler import ApiHandler
 
-from api.database import db
+from api.utils.database import db
 
 
 class Foo(ApiHandler,

@@ -2,14 +2,15 @@ from functools import wraps
 from flask import Flask
 import pytest
 
-from api.database import create, db, delete
-from api.setup import setup
+from api.utils.database import create, db, delete
+from api.utils.setup import setup
 
 
 @pytest.fixture(scope='session')
 def app():
     FLASK_APP = Flask(__name__)
-    setup(FLASK_APP)
+    setup(FLASK_APP,
+          with_login_manager=True)
     try:
         create()
     except Exception:
