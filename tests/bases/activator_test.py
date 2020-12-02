@@ -216,3 +216,16 @@ class ActivatorTest:
         assert offer.activityUuid == offer_activity2.uuid
         assert stock.activityUuid == stock_activity.uuid
         assert stock.offerId == offer.id
+
+    @with_delete
+    def test_get_activity_uuid_of_a_relationship(self, app):
+        # Given
+        offer = Offer(name='bar', type='foo')
+        stock = Stock(price=3, offer=offer)
+        ApiHandler.save(offer, stock)
+
+        # When
+        offer_activity_uuid = stock.offerActivityUuid
+
+        # Then
+        assert offer_activity_uuid == offer.activityUuid

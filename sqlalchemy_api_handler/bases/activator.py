@@ -18,6 +18,15 @@ def merged_datum_from_activities(activities,
 
 
 class Activator(Save):
+
+    def __getattr__(self, key):
+        if key.endswith('ActivityUuid'):
+            relationship_name = key.split('ActivityUuid')[0]
+            relationship = getattr(self, relationship_name)
+            if hasattr(relationship.__class__, '__versioned__'):
+                return relationship.activityUuid
+        return Save.__getattr__(self, key)
+
     @classmethod
     def get_activity(cls):
         return Activator.activity_cls
