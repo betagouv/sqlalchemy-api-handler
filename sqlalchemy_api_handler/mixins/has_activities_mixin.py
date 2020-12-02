@@ -10,7 +10,7 @@ class HasActivitiesMixin(object):
     __versioned__ = {}
 
     activityUuid = Column(UUID(as_uuid=True),
-                          default=str(uuid4()))
+                          default=uuid4)
 
     @property
     def activities(self):
