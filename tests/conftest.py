@@ -9,8 +9,7 @@ from api.utils.setup import setup
 @pytest.fixture(scope='session')
 def app():
     FLASK_APP = Flask(__name__)
-    setup(FLASK_APP,
-          with_login_manager=True)
+    setup(FLASK_APP)
     try:
         create()
     except Exception:
