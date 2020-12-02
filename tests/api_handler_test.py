@@ -2,25 +2,23 @@ import pytest
 
 from sqlalchemy_api_handler import ApiHandler
 from tests.conftest import with_delete
-from api.models.user import User
+from api.models.offer import Offer
 
 
 class SaveTest():
     @with_delete
-    def test_save_user(self, app):
+    def test_save_offer(self, app):
         # given
-        user_dict = {
-            'email': 'marx.foo@plop.fr',
-            'firstName': 'Marx',
-            'lastName': 'Foo',
-            'publicName': 'Marx Foo'
+        offer_dict = {
+            'name': 'bar',
+            'type': 'fee'
         }
-        user = User(**user_dict)
+        offer = Offer(**offer_dict)
 
         # when
-        ApiHandler.save(user)
+        ApiHandler.save(offer)
 
         # then
-        saved_user = User.query.first()
-        for (key, value) in user_dict.items():
-            assert getattr(saved_user, key) == value
+        saved_offer = Offer.query.first()
+        for (key, value) in offer_dict.items():
+            assert getattr(saved_offer, key) == value
