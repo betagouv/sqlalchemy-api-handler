@@ -3,7 +3,7 @@ from flask import Flask
 import pytest
 
 from api.utils.database import create, db, delete
-from api.setup import setup
+from api.utils.setup import setup
 
 
 @pytest.fixture(scope='session')
