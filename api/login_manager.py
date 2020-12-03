@@ -8,9 +8,9 @@ from sqlalchemy_api_handler import ApiErrors, ApiHandler
 from sqlalchemy_api_handler.serialization import as_dict
 
 
-
 def active_user_from_identifier(identifier):
-    return ApiHandler.model_from_name('User').query.filter_by(email=identifier).first()
+    User = ApiHandler.model_from_name('User')
+    return User.query.filter_by(email=identifier).first()
 
 
 def user_from_authbasic(identifier,
@@ -58,6 +58,7 @@ def get_user_with_id(user_id):
 
 @app.login_manager.request_loader
 def get_user_from_request(request_with_auth):
+    User = ApiHandler.model_from_name('User')
     auth = request_with_auth.authorization
     if not auth:
         return None
