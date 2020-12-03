@@ -24,7 +24,7 @@ class Activator(Save):
         if key.endswith('ActivityUuid'):
             relationship_name = key.split('ActivityUuid')[0]
             relationship = getattr(self, relationship_name)
-            if hasattr(relationship.__class__, '__versioned__'):
+            if hasattr(relationship, 'activityUuid'):
                 return relationship.activityUuid
         return Save.__getattr__(self, key)
 
