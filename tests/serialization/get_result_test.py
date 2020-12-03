@@ -11,7 +11,7 @@ class GetResultTest:
     @with_delete
     def test_return_only_not_soft_deleted_stocks(self, app):
         # Given
-        offer = Offer(name="foo", type="ThingType.JEUX_ABO")
+        offer = Offer(name='foo', type='ThingType.JEUX_ABO')
         ApiHandler.save(offer)
         stock1 = Stock(price=1)
         stock1.offer = offer
@@ -45,7 +45,7 @@ class GetResultTest:
     @with_delete
     def test_returns_total_data_count_with_has_more(self, app):
         # Given
-        offer = Offer(name="foo", type="ThingType.JEUX_ABO")
+        offer = Offer(name='foo', type='ThingType.JEUX_ABO')
         ApiHandler.save(offer)
         page = 2
         paginate = 10
@@ -73,7 +73,7 @@ class GetResultTest:
     @with_delete
     def test_returns_total_data_count_with_has_more(self, app):
         # Given
-        offer = Offer(name="foo", type="ThingType.JEUX_ABO")
+        offer = Offer(name='foo', type='ThingType.JEUX_ABO')
         ApiHandler.save(offer)
         page = 4
         paginate = 10
