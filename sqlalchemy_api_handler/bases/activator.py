@@ -26,6 +26,8 @@ class Activator(Save):
             relationship = getattr(self, relationship_name)
             if hasattr(relationship, 'activityUuid'):
                 return relationship.activityUuid
+            else:
+                return None
         return Save.__getattr__(self, key)
 
     @classmethod
