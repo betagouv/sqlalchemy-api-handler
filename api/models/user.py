@@ -10,12 +10,12 @@ class User(ApiHandler,
            db.Model,
            HasActivitiesMixin):
 
-    firstName = Column(String(128),
-                       nullable=True)
-
     email = Column(String(120),
                    nullable=False,
                    unique=True)
+
+    firstName = Column(String(128),
+                       nullable=True)
 
     lastName = Column(String(128),
                       nullable=True)
