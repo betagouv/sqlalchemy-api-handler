@@ -1,6 +1,6 @@
 from functools import reduce
 from itertools import groupby
-from sqlalchemy import BigInteger
+from sqlalchemy import BigInteger, desc
 
 from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
@@ -107,3 +107,21 @@ class Activator(Save):
         if Activity:
             models += [Activity]
         return models
+
+    @classmethod
+    def save(cls, *entities):
+        Activity = Activator.get_activity()
+        Save.save(*entities)
+        activities = []
+        for entity in entities:
+            if hasattr(entity, 'activityUuid'):
+                id_key = entity.__class__.id.property.key
+                last_activity = Activity.query.filter(
+                    (Activity.tableName == entity.__tablename__) & \
+                    (Activity.data[id_key].astext.cast(BigInteger) == entity.id)
+                ).order_by(desc(Activity.dateCreated)).limit(1).first()
+                if not last_activity:
+                    continue
+                last_activity.uuid = entity.activityUuid
+                activities.append(last_activity)
+        Save.save(*activities)

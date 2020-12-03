@@ -221,7 +221,6 @@ class ActivatorTest:
         #assert stock.activityUuid == stock_activity.uuid
         assert stock.offerId == offer.id
 
-    '''
     @with_delete
     def test_get_activity_uuid_of_a_relationship(self, app):
         # Given
@@ -234,4 +233,3 @@ class ActivatorTest:
 
         # Then
         assert offer_activity_uuid == offer.activityUuid
-    '''
