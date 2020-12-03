@@ -11,7 +11,6 @@ from sqlalchemy_api_handler.serialization import as_dict
 from sqlalchemy_api_handler.utils.date import DateTimes
 
 from api.utils.database import db
-from api.models.stock import Stock
 
 
 class SearchableType(Enum):

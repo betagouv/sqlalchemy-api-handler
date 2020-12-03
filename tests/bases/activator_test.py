@@ -9,7 +9,7 @@ from sqlalchemy_api_handler.serialization import as_dict
 from tests.conftest import with_delete
 from api.models.activity import Activity
 from api.models.offer import Offer
-from api.models.offer import Stock
+from api.models.stock import Stock
 from api.models.user import User
 
 
