@@ -39,7 +39,7 @@ class ActivatorTest:
 
         # Then
         activity = Activity.query.filter(Activity.changed_data['id'].astext.cast(Integer) == offer.id).one()
-        #assert offer.activityUuid == activity.uuid
+        assert offer.activityUuid == activity.uuid
         assert activity.oldDatum == None
         assert activity.transaction == None
         assert activity.verb == 'insert'
@@ -84,7 +84,7 @@ class ActivatorTest:
             (Activity.data['id'].astext.cast(Integer) == offer.id)
         ).one()
         assert activity.verb == 'update'
-        #assert activity.uuid == offer.activityUuid
+        assert activity.uuid == offer.activityUuid
         assert {**offer_dict, **modify_dict}.items() <= activity.datum.items()
         assert modify_dict.items() == activity.patch.items()
         assert offer_dict.items() <= activity.oldDatum.items()
@@ -105,14 +105,13 @@ class ActivatorTest:
         # Then
         activity = Activity.query.filter_by(uuid=offer_uuid).one()
         offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
-        #assert activity.uuid == offer.activityUuid
+        assert activity.uuid == offer.activityUuid
         assert activity.verb == 'insert'
         assert patch.items() <= activity.datum.items()
         assert patch.items() <= activity.patch.items()
         assert activity.datum['id'] == humanize(offer.id)
         assert activity.patch['id'] == humanize(offer.id)
 
-    '''
     @with_delete
     def test_create_activities_on_existing_offer_saves_none_activities_and_an_update_one(self, app):
         # Given
@@ -142,21 +141,20 @@ class ActivatorTest:
                                    .all()
         offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
         assert len(activities) == 4
-        #assert activities[0].uuid == offer.activityUuid
+        assert activities[0].uuid == offer.activityUuid
         assert activities[0].verb == 'insert'
-        #assert activities[1].uuid == offer.activityUuid
+        assert activities[1].uuid == offer.activityUuid
         assert activities[1].verb == None
         assert activities[1].patch.items() == second_patch.items()
-        #assert activities[2].uuid == offer.activityUuid
+        assert activities[2].uuid == offer.activityUuid
         assert activities[2].verb == None
         assert activities[2].patch.items() == third_patch.items()
-        #assert activities[3].uuid == offer.activityUuid
+        assert activities[3].uuid == offer.activityUuid
         assert activities[3].verb == 'update'
         merged_patch = { 'name': 'bor', 'type': 'fee' }
         assert activities[3].patch.items() == merged_patch.items()
         assert offer.name == 'bor'
         assert offer.type == 'fee'
-    '''
 
     @with_delete
     def test_create_activity_stock_binds_relationship_with_offer(self, app):
@@ -180,8 +178,8 @@ class ActivatorTest:
         # Then
         offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
         stock = Stock.query.filter_by(activityUuid=stock_uuid).one()
-        #assert offer.activityUuid == offer_activity.uuid
-        #assert stock.activityUuid == stock_activity.uuid
+        assert offer.activityUuid == offer_activity.uuid
+        assert stock.activityUuid == stock_activity.uuid
         assert stock.offerId == offer.id
 
     @with_delete
@@ -216,11 +214,10 @@ class ActivatorTest:
         # Then
         offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
         stock = Stock.query.filter_by(activityUuid=stock_uuid).one()
-        #assert offer.activityUuid == offer_activity2.uuid
-        #assert stock.activityUuid == stock_activity.uuid
+        assert offer.activityUuid == offer_activity2.uuid
+        assert stock.activityUuid == stock_activity.uuid
         assert stock.offerId == offer.id
 
-    '''
     @with_delete
     def test_get_activity_uuid_of_a_relationship(self, app):
         # Given
@@ -233,4 +230,3 @@ class ActivatorTest:
 
         # Then
         assert offer_activity_uuid == offer.activityUuid
-    '''
