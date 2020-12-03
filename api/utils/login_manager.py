@@ -7,10 +7,9 @@ from flask_login import current_user, login_user
 from sqlalchemy_api_handler import ApiErrors, ApiHandler
 from sqlalchemy_api_handler.serialization import as_dict
 
-from api.models.user import User
-
 
 def active_user_from_identifier(identifier):
+    from api.models.user import User
     return User.query.filter_by(email=identifier).first()
 
 
@@ -50,6 +49,7 @@ def _(local_proxy, column=None, includes=None):
 
 @app.login_manager.user_loader
 def get_user_with_id(user_id):
+    from api.models.user import User
     session.permanent = True
     session_uuid = session.get('session_uuid')
     if existing_user_session(user_id, session_uuid):
