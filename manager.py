@@ -7,8 +7,7 @@ from api.utils.setup import setup
 
 FLASK_APP = Flask(__name__)
 
-setup(FLASK_APP,
-      with_login_manager=True)
+setup(FLASK_APP)
 
 def create_app(env=None):
     FLASK_APP.env = env
