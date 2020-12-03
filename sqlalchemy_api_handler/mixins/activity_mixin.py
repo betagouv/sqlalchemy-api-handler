@@ -3,6 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship, synonym
 
+from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.utils.datum import relationships_in, \
                                                synonyms_in
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
@@ -24,26 +25,34 @@ class ActivityMixin(object):
     def datum(self):
         if not self.data:
             return None
-        model = self.__class__.model_from_table_name(self.tableName)
-        return synonyms_in(humanize_ids_in(self.data, model), model)
+        model = self.model
+        return synonyms_in(humanize_ids_in(self.data, self.model), model)
+
+    @property
+    def model(self):
+        return self.__class__.model_from_table_name(self.table_name)
+
+    @property
+    def modelName(self):
+        return self.model.__name__
 
     @property
     def entity(self):
-        model = self.__class__.model_from_table_name(self.tableName)
+        model = self.model
         return model(**self.datum)
 
     @property
     def oldDatum(self):
         if not self.old_data:
             return None
-        model = self.__class__.model_from_table_name(self.tableName)
+        model = self.model
         return synonyms_in(humanize_ids_in(self.old_data, model), model)
 
     @property
     def patch(self):
         if not self.changed_data:
             return None
-        model = self.__class__.model_from_table_name(self.tableName)
+        model = self.model
         return synonyms_in(humanize_ids_in(self.changed_data, model), model)
 
     def modify(self,
@@ -51,9 +60,19 @@ class ActivityMixin(object):
                skipped_keys=[],
                with_add=False):
         dehumanized_datum = {**datum}
-        table_name = datum.get('tableName', self.tableName)
 
-        model = self.__class__.model_from_table_name(datum.get('tableName', table_name))
+        if 'modelName' in datum:
+            model = self.__class__.model_from_name(datum['modelName'])
+            if 'tableName' in datum:
+                if datum['tableName'] != model.__tablename__:
+                    errors = ActivityError()
+                    errors.add_error('modelName', '{} different from {}'.format(model.__tablename__,
+                                                                                datum['tableName']))
+                    raise errors
+            self.table_name = model.__tablename__
+
+        table_name = datum.get('tableName', self.tableName)
+        model = self.__class__.model_from_table_name(table_name)
         for (humanized_key, dehumanized_key) in [('oldDatum', 'old_data'), ('patch', 'changed_data')]:
             if humanized_key in dehumanized_datum:
                 dehumanized_datum[dehumanized_key] = dehumanize_ids_in(dehumanized_datum[humanized_key],
@@ -66,8 +85,8 @@ class ActivityMixin(object):
 
     __as_dict_includes__ = [
         'dateCreated',
+        'modelName',
         'patch',
-        'tableName',
         '-changed_data',
         '-issued_at',
         '-native_transaction_id',

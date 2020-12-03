@@ -229,4 +229,28 @@ class ActivatorTest:
         offer_activity_uuid = stock.offerActivityUuid
 
         # Then
+        assert offer.stocksCount() == 1
         assert offer_activity_uuid == offer.activityUuid
+
+    @with_delete
+    def test_create_activity_on_not_existing_offer_with_model_name(self, app):
+        # Given
+        offer_uuid = uuid4()
+        patch = { 'name': 'bar', 'type': 'foo' }
+        activity = Activity(dateCreated=datetime.utcnow(),
+                            modelName='Offer',
+                            patch=patch,
+                            uuid=offer_uuid)
+
+        # When
+        ApiHandler.activate(activity)
+
+        # Then
+        activity = Activity.query.filter_by(uuid=offer_uuid).one()
+        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+        assert activity.uuid == offer.activityUuid
+        assert activity.verb == 'insert'
+        assert patch.items() <= activity.datum.items()
+        assert patch.items() <= activity.patch.items()
+        assert activity.datum['id'] == humanize(offer.id)
+        assert activity.patch['id'] == humanize(offer.id)

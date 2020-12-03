@@ -260,3 +260,6 @@ class Offer(ApiHandler,
     @property
     def notDeletedStocks(self):
         return [stock for stock in self.stocks if not stock.isSoftDeleted]
+
+    def stocksCount(self, foo=None):
+        return len(self.stocks)

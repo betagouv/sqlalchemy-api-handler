@@ -82,8 +82,6 @@ class Activator(Save):
                 Activator.activate(*grouped_activities[1:])
                 continue
 
-
-
             min_date = min(map(lambda a: a.dateCreated, grouped_activities))
             already_activities_since_min_date = Activity.query \
                                                         .filter(
