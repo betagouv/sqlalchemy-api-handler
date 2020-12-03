@@ -10,7 +10,7 @@ from sqlalchemy_api_handler.mixins import HasActivitiesMixin
 from sqlalchemy_api_handler.serialization import as_dict
 from sqlalchemy_api_handler.utils.date import DateTimes
 
-from api.database import db
+from api.utils.database import db
 from api.models.stock import Stock
 
 

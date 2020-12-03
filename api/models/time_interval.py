@@ -1,7 +1,7 @@
 from sqlalchemy import Column, DateTime
 from sqlalchemy_api_handler import ApiHandler
 
-from api.database import db
+from api.utils.database import db
 
 
 class TimeInterval(ApiHandler,

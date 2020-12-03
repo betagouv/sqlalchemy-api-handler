@@ -2,7 +2,7 @@ from postgresql_audit.flask import versioning_manager
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.mixins import ActivityMixin
 
-from api.database import db
+from api.utils.database import db
 
 
 versioning_manager.init(db.Model)

@@ -1,7 +1,7 @@
 import os
 from flask_login import LoginManager
 from sqlalchemy_api_handler import ApiHandler
-from api.database import db
+from api.utils.database import db
 from api.models import import_models
 
 
