@@ -7,11 +7,10 @@ from flask_login import current_user, login_user
 from sqlalchemy_api_handler import ApiErrors, ApiHandler
 from sqlalchemy_api_handler.serialization import as_dict
 
-from api.models.user import User
 
 
 def active_user_from_identifier(identifier):
-    return User.query.filter_by(email=identifier).first()
+    return ApiHandler.model_from_name('User').query.filter_by(email=identifier).first()
 
 
 def user_from_authbasic(identifier,

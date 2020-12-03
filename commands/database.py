@@ -6,7 +6,7 @@ from flask import current_app as app
 from flask_script import Command
 
 import api.database
-from api.config import COMMAND_NAME
+from api.utils import COMMAND_NAME
 
 
 @app.manager.add_command
