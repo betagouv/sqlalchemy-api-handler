@@ -49,6 +49,7 @@ def _(local_proxy, column=None, includes=None):
 
 @app.login_manager.user_loader
 def get_user_with_id(user_id):
+    User = ApiHandler.model_from_name('User')
     session.permanent = True
     session_uuid = session.get('session_uuid')
     if existing_user_session(user_id, session_uuid):
@@ -58,7 +59,6 @@ def get_user_with_id(user_id):
 
 @app.login_manager.request_loader
 def get_user_from_request(request_with_auth):
-    User = ApiHandler.model_from_name('User')
     auth = request_with_auth.authorization
     if not auth:
         return None
