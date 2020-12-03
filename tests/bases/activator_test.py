@@ -9,7 +9,7 @@ from sqlalchemy_api_handler.serialization import as_dict
 from tests.conftest import with_delete
 from api.models.activity import Activity
 from api.models.offer import Offer
-from api.models.offer import Stock
+from api.models.stock import Stock
 from api.models.user import User
 
 
@@ -219,7 +219,7 @@ class ActivatorTest:
         assert stock.activityUuid == stock_activity.uuid
         assert stock.offerId == offer.id
 
-    @with_delete	
+    @with_delete
     def test_get_activity_uuid_of_a_relationship(self, app):
         # Given
         offer = Offer(name='bar', type='foo')
