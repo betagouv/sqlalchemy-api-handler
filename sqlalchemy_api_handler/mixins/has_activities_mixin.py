@@ -10,13 +10,22 @@ class HasActivitiesMixin(object):
     __versioned__ = {}
 
     activityUuid = Column(UUID(as_uuid=True),
-                          default=str(uuid4()))
+                          default=uuid4)
 
     @property
     def activities(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (Activity.uuid == self.activityUuid)
+                       (Activity.uuid == self.activityUuid) & \
+                       (Activity.verb != None)
         return InstrumentedList(Activity.query.filter(query_filter) \
                                               .order_by(desc(Activity.id)) \
                                               .all())
+
+    @property
+    def insertActivity(self):
+        Activity = Activator.get_activity()
+        query_filter = (Activity.table_name == self.__tablename__) & \
+                       (Activity.uuid == self.activityUuid) & \
+                       (Activity.verb == 'insert')
+        return Activity.query.filter(query_filter).one()
