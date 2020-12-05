@@ -64,7 +64,10 @@ class Activator(Save):
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityIdentifier = entity_identifier
                 Activator.save(entity)
-                insert_activity = entity.insertActivity
+                query_filter = (Activity.table_name == model.__tablename__) & \
+                               (Activity.entityIdentifier == entity_identifier) & \
+                               (Activity.verb == 'insert')
+                insert_activity = Activity.query.filter(query_filter).one()
                 insert_activity.dateCreated = first_activity.dateCreated
                 Save.save(insert_activity)
                 # want to make as if first_activity was the inser_activity one

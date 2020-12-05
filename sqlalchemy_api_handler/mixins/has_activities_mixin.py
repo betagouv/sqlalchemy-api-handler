@@ -13,7 +13,7 @@ class HasActivitiesMixin(object):
                                      default=uuid4)
 
     @property
-    def activities(self):
+    def __activities__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
                        (Activity.entityIdentifier == self.activityIdentifier) & \
@@ -23,7 +23,7 @@ class HasActivitiesMixin(object):
                                               .all())
 
     @property
-    def insertActivity(self):
+    def __insertActivity__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
                        (Activity.entityIdentifier == self.activityIdentifier) & \
