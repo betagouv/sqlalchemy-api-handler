@@ -21,11 +21,11 @@ def merged_datum_from_activities(activities,
 class Activator(Save):
 
     def __getattr__(self, key):
-        if key.endswith('ActivityUuid'):
-            relationship_name = key.split('ActivityUuid')[0]
+        if key.endswith('ActivityIdentifier'):
+            relationship_name = key.split('ActivityIdentifier')[0]
             relationship = getattr(self, relationship_name)
-            if hasattr(relationship, 'activityUuid'):
-                return relationship.activityUuid
+            if hasattr(relationship, 'activityIdentifier'):
+                return relationship.activityIdentifier
             else:
                 return None
         return Save.__getattr__(self, key)
@@ -41,7 +41,7 @@ class Activator(Save):
     @staticmethod
     def activate(*activities):
         Activity = Activator.get_activity()
-        for (uuid, grouped_activities) in groupby(activities, key=lambda activity: activity.uuid):
+        for (entity_identifier, grouped_activities) in groupby(activities, key=lambda activity: activity.entityIdentifier):
             grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
 
             first_activity = grouped_activities[0]
@@ -57,12 +57,12 @@ class Activator(Save):
                         if first_activity.old_data else None
 
             if not entity_id:
-                entity = model.query.filter_by(activityUuid=uuid).first()
+                entity = model.query.filter_by(activityIdentifier=entity_identifier).first()
                 entity_id = entity.id if entity else None
 
             if not entity_id:
                 entity = model(**relationships_in(first_activity.patch, model))
-                entity.activityUuid = uuid
+                entity.activityIdentifier = entity_identifier
                 Activator.save(entity)
                 insert_activity = entity.insertActivity
                 insert_activity.dateCreated = first_activity.dateCreated
@@ -100,7 +100,7 @@ class Activator(Save):
                                                  initial=all_activities_since_min_date[0].datum)
             if model.id.key in datum:
                 del datum[model.id.key]
-            datum['activityUuid'] = uuid
+            datum['activityIdentifier'] = entity_identifier
             entity = model.query.get(entity_id)
             entity.modify(datum)
             Activator.save(entity)
@@ -119,7 +119,7 @@ class Activator(Save):
         Save.save(*entities)
         activities = []
         for entity in entities:
-            if hasattr(entity, 'activityUuid'):
+            if hasattr(entity, 'activityIdentifier'):
                 id_key = entity.__class__.id.property.key
                 last_activity = Activity.query.filter(
                     (Activity.tableName == entity.__tablename__) & \
@@ -128,6 +128,6 @@ class Activator(Save):
                 if not last_activity:
                     logger.debug('last_activity not found for {} {}...'.format(entity.__class__.__name__, entity.id))
                     continue
-                last_activity.uuid = entity.activityUuid
+                last_activity.entityIdentifier = entity.activityIdentifier
                 activities.append(last_activity)
         Save.save(*activities)
