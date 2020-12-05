@@ -28,7 +28,10 @@ class Activator(Save):
                 return relationship.activityIdentifier
             else:
                 return None
-        return Save.__getattr__(self, key)
+        try:
+            return Save.__getattr__(self, key)
+        except AttributeError as error:
+            logger.warning(f'{key} not found in {self}')
 
     @classmethod
     def get_activity(cls):
