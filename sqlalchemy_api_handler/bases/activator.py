@@ -20,18 +20,18 @@ def merged_datum_from_activities(activities,
 
 class Activator(Save):
 
-    def __getattr__(self, key):
-        if key.endswith('ActivityIdentifier'):
-            relationship_name = key.split('ActivityIdentifier')[0]
-            relationship = getattr(self, relationship_name)
-            if hasattr(relationship, 'activityIdentifier'):
-                return relationship.activityIdentifier
-            else:
-                return None
-        try:
-            return Save.__getattr__(self, key)
-        except AttributeError as error:
-            logger.warning(f'{key} not found in {self}')
+    has_set_relationship_activity_identifier_property = False
+
+    def __init__(self, **initial_datum):
+        for key in self.__mapper__.relationships.keys():
+            def get_relationship_activity_identifier(entity):
+                relationship = getattr(entity, key)
+                if hasattr(relationship, 'activityIdentifier'):
+                    return relationship.activityIdentifier
+                else:
+                    return None
+            setattr(self.__class__, f'{key}ActivityIdentifier', property(get_relationship_activity_identifier))
+        Save.__init__(self, **initial_datum)
 
     @classmethod
     def get_activity(cls):
