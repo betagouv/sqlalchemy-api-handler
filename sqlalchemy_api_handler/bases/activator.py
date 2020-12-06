@@ -41,7 +41,12 @@ class Activator(Save):
                 return relationship.activityIdentifier
             else:
                 return None
-        return Save.__getattribute__(self, key)
+        # __getattr__ means we are here because this key
+        # was not yet found by the classic way. So
+        # Activator.__getattribute__ is going here to necessary fail
+        # but through calling the proper AttributeError method associated
+        # to this class
+        return Activator.__getattribute__(self, key)
 
     @classmethod
     def get_activity(cls):
