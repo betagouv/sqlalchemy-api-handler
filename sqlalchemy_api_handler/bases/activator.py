@@ -23,6 +23,7 @@ class Activator(Save):
     has_set_relationship_activity_identifier_property = False
 
     def __init__(self, **initial_datum):
+        Save.__init__(self, **initial_datum)
         for key in self.__mapper__.relationships.keys():
             def get_relationship_activity_identifier(entity):
                 relationship = getattr(entity, key)
@@ -31,8 +32,7 @@ class Activator(Save):
                 else:
                     return None
             setattr(self.__class__, f'{key}ActivityIdentifier', property(get_relationship_activity_identifier))
-        Save.__init__(self, **initial_datum)
-
+        
     @classmethod
     def get_activity(cls):
         return Activator.activity_cls
