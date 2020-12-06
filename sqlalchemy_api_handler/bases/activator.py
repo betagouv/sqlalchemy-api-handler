@@ -1,8 +1,6 @@
 from functools import reduce
 from itertools import groupby
 from sqlalchemy import BigInteger, desc
-from sqlalchemy.orm import reconstructor
-from sqlalchemy.orm.collections import InstrumentedList
 
 from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
@@ -25,27 +23,25 @@ def set_joined_relationship_activity_identifiers(self):
            or isinstance(getattr(self, key), InstrumentedList):
             return
         relationship_activity_identifier_key =  f'{key}ActivityIdentifier'
-        if not hasattr(self, relationship_activity_identifier_key):
-            def get_relationship_activity_identifier(entity):
-                relationship = getattr(entity, key)
-                return relationship.activityIdentifier if hasattr(relationship, 'activityIdentifier') \
-                                                          else None
-            setattr(self.__class__,
-                    relationship_activity_identifier_key,
-                    property(get_relationship_activity_identifier))
+        relationship = getattr(self, key)
+        relationship_activity_identifier = relationship.activityIdentifier if hasattr(relationship, 'activityIdentifier') \
+                                                                           else None
+        setattr(self,
+                relationship_activity_identifier_key,
+                relationship_activity_identifier)
 
 
 class Activator(Save):
 
-    has_set_relationship_activity_identifier_property = False
-
-    def __init__(self, **initial_datum):
-        set_joined_relationship_activity_identifiers(self)
-        Save.__init__(self, **initial_datum)
-
-    @reconstructor
-    def init_on_load(self):
-        set_joined_relationship_activity_identifiers(self)
+    def __getattr__(self, key):
+        if self.__class__.__name__ != 'Activity' and key.endswith('ActivityIdentifier'):
+            relationship_name = key.split('ActivityIdentifier')[0]
+            relationship = getattr(self, relationship_name)
+            if hasattr(relationship, 'activityIdentifier'):
+                return relationship.activityIdentifier
+            else:
+                return None
+        return Save.__getattribute__(self, key)
 
     @classmethod
     def get_activity(cls):
