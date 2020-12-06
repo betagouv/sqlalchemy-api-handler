@@ -1,6 +1,8 @@
 from functools import reduce
 from itertools import groupby
 from sqlalchemy import BigInteger, desc
+from sqlalchemy.orm import reconstructor
+from sqlalchemy.orm.collections import InstrumentedList
 
 from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
@@ -17,22 +19,34 @@ def merged_datum_from_activities(activities,
                   relationships_in(initial, model) if initial else {})
 
 
+def set_joined_relationship_activity_identifiers(self):
+    for key in self.__mapper__.relationships.keys():
+        if key == 'transaction' \
+           or isinstance(getattr(self, key), InstrumentedList):
+            return
+        relationship_activity_identifier_key =  f'{key}ActivityIdentifier'
+        if not hasattr(self, relationship_activity_identifier_key):
+            def get_relationship_activity_identifier(entity):
+                relationship = getattr(entity, key)
+                return relationship.activityIdentifier if hasattr(relationship, 'activityIdentifier') \
+                                                          else None
+            setattr(self.__class__,
+                    relationship_activity_identifier_key,
+                    property(get_relationship_activity_identifier))
+
 
 class Activator(Save):
 
     has_set_relationship_activity_identifier_property = False
 
     def __init__(self, **initial_datum):
+        set_joined_relationship_activity_identifiers(self)
         Save.__init__(self, **initial_datum)
-        for key in self.__mapper__.relationships.keys():
-            def get_relationship_activity_identifier(entity):
-                relationship = getattr(entity, key)
-                if hasattr(relationship, 'activityIdentifier'):
-                    return relationship.activityIdentifier
-                else:
-                    return None
-            setattr(self.__class__, f'{key}ActivityIdentifier', property(get_relationship_activity_identifier))
-        
+
+    @reconstructor
+    def init_on_load(self):
+        set_joined_relationship_activity_identifiers(self)
+
     @classmethod
     def get_activity(cls):
         return Activator.activity_cls

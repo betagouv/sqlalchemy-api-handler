@@ -233,6 +233,7 @@ class ActivatorTest:
         # Then
         assert offer.stocksCount() == 1
         assert offer_activity_identifier == offer.activityIdentifier
+        assert 2 == 3
 
     @with_delete
     def test_create_activity_on_not_existing_offer_with_model_name(self, app):
