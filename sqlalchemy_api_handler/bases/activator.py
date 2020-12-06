@@ -17,20 +17,6 @@ def merged_datum_from_activities(activities,
                   relationships_in(initial, model) if initial else {})
 
 
-def set_joined_relationship_activity_identifiers(self):
-    for key in self.__mapper__.relationships.keys():
-        if key == 'transaction' \
-           or isinstance(getattr(self, key), InstrumentedList):
-            return
-        relationship_activity_identifier_key =  f'{key}ActivityIdentifier'
-        relationship = getattr(self, key)
-        relationship_activity_identifier = relationship.activityIdentifier if hasattr(relationship, 'activityIdentifier') \
-                                                                           else None
-        setattr(self,
-                relationship_activity_identifier_key,
-                relationship_activity_identifier)
-
-
 class Activator(Save):
 
     def __getattr__(self, key):
@@ -41,12 +27,9 @@ class Activator(Save):
                 return relationship.activityIdentifier
             else:
                 return None
-        # __getattr__ means we are here because this key
-        # was not yet found by the classic way. So
-        # Activator.__getattribute__ is going here to necessary fail
-        # but through calling the proper AttributeError method associated
-        # to this class
-        return Activator.__getattribute__(self, key)
+        if hasattr(Save, '__getattr__'):
+            return Save.__getattr__(self, key)
+        raise AttributeError(f'\'{self.__class__.__name__}\' object has no attribute \'{key}\'')
 
     @classmethod
     def get_activity(cls):
@@ -65,12 +48,38 @@ class Activator(Save):
             first_activity = grouped_activities[0]
             table_name = first_activity.tableName
             model = Save.model_from_table_name(table_name)
+            id_key = model.id.property.key
+
+            if first_activity.verb == 'delete':
+                query = model.query.filter_by(activityIdentifier=entity_identifier)
+                entity_id = query.one().id
+                query.delete()
+                Activator.get_db().session.commit()
+                # want to make as if first_activity was the delete_activity one
+                # for such route like operations
+                # '''
+                #    ApiHandler.activate(**activities)
+                #    return jsonify([as_dict(activity) for activity in activities])
+                # '''
+                query_filter = (Activity.table_name == model.__tablename__) & \
+                               (Activity.data[id_key].astext.cast(BigInteger) == entity_id) & \
+                               (Activity.verb == 'delete')
+                delete_activity = Activity.query.filter(query_filter).one()
+                delete_activity.dateCreated = first_activity.dateCreated
+                delete_activity.entityIdentifier = entity_identifier
+                first_activity.id = delete_activity.id
+                Save.save(delete_activity)
+                if delete_activity.transaction:
+                    first_activity.transaction = Activity.transaction.mapper.class_()
+                    first_activity.transaction.actor  = delete_activity.transaction.actor
+                Activator.activate(*grouped_activities[1:])
+                continue
+
             if model is None:
                 errors = ActivityError()
                 errors.add_error('tableName', 'model from {} not found'.format(table_name))
                 raise errors
 
-            id_key = model.id.property.key
             entity_id = first_activity.old_data.get(id_key) \
                         if first_activity.old_data else None
 
@@ -88,7 +97,7 @@ class Activator(Save):
                 insert_activity = Activity.query.filter(query_filter).one()
                 insert_activity.dateCreated = first_activity.dateCreated
                 Save.save(insert_activity)
-                # want to make as if first_activity was the inser_activity one
+                # want to make as if first_activity was the insert_activity one
                 # for such route like operations
                 # '''
                 #    ApiHandler.activate(**activities)

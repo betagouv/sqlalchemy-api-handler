@@ -195,8 +195,6 @@ class ActivatorTest:
                                    tableName='offer')
         ApiHandler.activate(offer_activity1)
 
-
-
         stock_activity_identifier = uuid4()
         stock_patch = { 'offerActivityIdentifier': offer_activity_identifier, 'price': 3 }
         stock_activity = Activity(dateCreated=datetime.utcnow(),
@@ -256,3 +254,24 @@ class ActivatorTest:
         assert patch.items() <= activity.patch.items()
         assert activity.datum['id'] == humanize(offer.id)
         assert activity.patch['id'] == humanize(offer.id)
+
+    @with_delete
+    def test_create_delete_activity(self, app):
+        # Given
+        offer = Offer(name='bar', type='foo')
+        ApiHandler.save(offer)
+        activity = Activity(dateCreated=datetime.utcnow(),
+                            entityIdentifier=offer.activityIdentifier,
+                            modelName='Offer',
+                            verb='delete')
+
+        # When
+        ApiHandler.activate(activity)
+
+        # Then
+        query_filter = (Activity.data['id'].astext.cast(Integer) == offer.id) & \
+                       (Activity.verb == 'delete')
+        activity = Activity.query.filter(query_filter).one()
+        offers = Offer.query.all()
+        assert len(offers) == 0
+        assert activity.entityIdentifier == offer.activityIdentifier
