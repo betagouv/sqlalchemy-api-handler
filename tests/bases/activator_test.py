@@ -38,8 +38,9 @@ class ActivatorTest:
         ApiHandler.save(offer)
 
         # Then
-        activity = Activity.query.filter(Activity.changed_data['id'].astext.cast(Integer) == offer.id).one()
-        assert offer.activityUuid == activity.uuid
+        query_filter = Activity.changed_data['id'].astext.cast(Integer) == offer.id
+        activity = Activity.query.filter(query_filter).one()
+        assert offer.activityIdentifier == activity.entityIdentifier
         assert activity.oldDatum == None
         assert activity.transaction == None
         assert activity.verb == 'insert'
@@ -61,7 +62,8 @@ class ActivatorTest:
         ApiHandler.save(offer)
 
         # Then
-        activity = Activity.query.filter(Activity.changed_data['id'].astext.cast(Integer) == offer.id).one()
+        query_filter = Activity.changed_data['id'].astext.cast(Integer) == offer.id
+        activity = Activity.query.filter(query_filter).one()
         assert activity.transaction.actor.id == user.id
         assert activity.verb == 'insert'
 
@@ -84,7 +86,7 @@ class ActivatorTest:
             (Activity.data['id'].astext.cast(Integer) == offer.id)
         ).one()
         assert activity.verb == 'update'
-        assert activity.uuid == offer.activityUuid
+        assert activity.entityIdentifier == offer.activityIdentifier
         assert {**offer_dict, **modify_dict}.items() <= activity.datum.items()
         assert modify_dict.items() == activity.patch.items()
         assert offer_dict.items() <= activity.oldDatum.items()
@@ -92,20 +94,20 @@ class ActivatorTest:
     @with_delete
     def test_create_activity_on_not_existing_offer_saves_an_insert_activity(self, app):
         # Given
-        offer_uuid = uuid4()
+        offer_activity_identifier = uuid4()
         patch = { 'name': 'bar', 'type': 'foo' }
         activity = Activity(dateCreated=datetime.utcnow(),
+                            entityIdentifier=offer_activity_identifier,
                             patch=patch,
-                            tableName='offer',
-                            uuid=offer_uuid)
+                            tableName='offer')
 
         # When
         ApiHandler.activate(activity)
 
         # Then
-        activity = Activity.query.filter_by(uuid=offer_uuid).one()
-        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
-        assert activity.uuid == offer.activityUuid
+        activity = Activity.query.filter_by(entityIdentifier=offer_activity_identifier).one()
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        assert activity.entityIdentifier == offer.activityIdentifier
         assert activity.verb == 'insert'
         assert patch.items() <= activity.datum.items()
         assert patch.items() <= activity.patch.items()
@@ -115,41 +117,41 @@ class ActivatorTest:
     @with_delete
     def test_create_activities_on_existing_offer_saves_none_activities_and_an_update_one(self, app):
         # Given
-        offer_uuid = uuid4()
+        offer_activity_identifier = uuid4()
         first_patch = { 'name': 'bar', 'type': 'foo' }
         first_activity = Activity(dateCreated=datetime.utcnow(),
+                                  entityIdentifier=offer_activity_identifier,
                                   patch=first_patch,
-                                  tableName='offer',
-                                  uuid=offer_uuid)
+                                  tableName='offer')
         second_patch = { 'name': 'bor' }
         second_activity = Activity(dateCreated=datetime.utcnow(),
+                                   entityIdentifier=offer_activity_identifier,
                                    patch=second_patch,
-                                   tableName='offer',
-                                   uuid=offer_uuid)
+                                   tableName='offer')
         third_patch = { 'type': 'fee' }
         third_activity = Activity(dateCreated=datetime.utcnow(),
+                                  entityIdentifier=offer_activity_identifier,
                                   patch=third_patch,
-                                  tableName='offer',
-                                  uuid=offer_uuid)
+                                  tableName='offer')
 
         # When
         ApiHandler.activate(first_activity, second_activity, third_activity)
 
         # Then
-        activities = Activity.query.filter_by(uuid=offer_uuid) \
+        activities = Activity.query.filter_by(entityIdentifier=offer_activity_identifier) \
                                    .order_by(Activity.dateCreated) \
                                    .all()
-        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         assert len(activities) == 4
-        assert activities[0].uuid == offer.activityUuid
+        assert activities[0].entityIdentifier == offer.activityIdentifier
         assert activities[0].verb == 'insert'
-        assert activities[1].uuid == offer.activityUuid
+        assert activities[1].entityIdentifier == offer.activityIdentifier
         assert activities[1].verb == None
         assert activities[1].patch.items() == second_patch.items()
-        assert activities[2].uuid == offer.activityUuid
+        assert activities[2].entityIdentifier == offer.activityIdentifier
         assert activities[2].verb == None
         assert activities[2].patch.items() == third_patch.items()
-        assert activities[3].uuid == offer.activityUuid
+        assert activities[3].entityIdentifier == offer.activityIdentifier
         assert activities[3].verb == 'update'
         merged_patch = { 'name': 'bor', 'type': 'fee' }
         assert activities[3].patch.items() == merged_patch.items()
@@ -159,98 +161,117 @@ class ActivatorTest:
     @with_delete
     def test_create_activity_stock_binds_relationship_with_offer(self, app):
         # Given
-        offer_uuid = uuid4()
+        offer_activity_identifier = uuid4()
         offer_patch = { 'name': 'bar', 'type': 'foo' }
         offer_activity = Activity(dateCreated=datetime.utcnow(),
+                                  entityIdentifier=offer_activity_identifier,
                                   patch=offer_patch,
-                                  tableName='offer',
-                                  uuid=offer_uuid)
-        stock_uuid = uuid4()
-        stock_patch = { 'offerActivityUuid': offer_uuid, 'price': 3 }
+                                  tableName='offer')
+        stock_activity_identifier = uuid4()
+        stock_patch = { 'offerActivityIdentifier': offer_activity_identifier, 'price': 3 }
         stock_activity = Activity(dateCreated=datetime.utcnow(),
+                                  entityIdentifier=stock_activity_identifier,
                                   patch=stock_patch,
-                                  tableName='stock',
-                                  uuid=stock_uuid)
+                                  tableName='stock')
 
         # When
         ApiHandler.activate(offer_activity, stock_activity)
 
         # Then
-        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
-        stock = Stock.query.filter_by(activityUuid=stock_uuid).one()
-        assert offer.activityUuid == offer_activity.uuid
-        assert stock.activityUuid == stock_activity.uuid
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        stock = Stock.query.filter_by(activityIdentifier=stock_activity_identifier).one()
+        assert offer.activityIdentifier == offer_activity.entityIdentifier
+        assert stock.activityIdentifier == stock_activity.entityIdentifier
         assert stock.offerId == offer.id
 
     @with_delete
-    def test_modify_activity_with_a_second_one_via_same_uuid(self, app):
+    def test_modify_activity_with_a_second_one_via_same_activity_identifier(self, app):
         # Given
-        offer_uuid = uuid4()
+        offer_activity_identifier = uuid4()
         offer_patch = { 'name': 'bar', 'type': 'foo' }
         offer_activity1 = Activity(dateCreated=datetime.utcnow(),
+                                   entityIdentifier=offer_activity_identifier,
                                    patch=offer_patch,
-                                   tableName='offer',
-                                   uuid=offer_uuid)
+                                   tableName='offer')
         ApiHandler.activate(offer_activity1)
 
-
-
-        stock_uuid = uuid4()
-        stock_patch = { 'offerActivityUuid': offer_uuid, 'price': 3 }
+        stock_activity_identifier = uuid4()
+        stock_patch = { 'offerActivityIdentifier': offer_activity_identifier, 'price': 3 }
         stock_activity = Activity(dateCreated=datetime.utcnow(),
+                                  entityIdentifier=stock_activity_identifier,
                                   patch=stock_patch,
-                                  tableName='stock',
-                                  uuid=stock_uuid)
-        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
+                                  tableName='stock')
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         offer_patch = { 'name': 'bor', 'type': 'foo' }
         offer_activity2 = Activity(dateCreated=datetime.utcnow(),
+                                   entityIdentifier=offer_activity_identifier,
                                    patch=offer_patch,
-                                   tableName='offer',
-                                   uuid=offer_uuid)
+                                   tableName='offer')
 
         # When
         ApiHandler.activate(stock_activity, offer_activity2)
 
         # Then
-        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
-        stock = Stock.query.filter_by(activityUuid=stock_uuid).one()
-        assert offer.activityUuid == offer_activity2.uuid
-        assert stock.activityUuid == stock_activity.uuid
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        stock = Stock.query.filter_by(activityIdentifier=stock_activity_identifier).one()
+        assert offer.activityIdentifier == offer_activity2.entityIdentifier
+        assert stock.activityIdentifier == stock_activity.entityIdentifier
         assert stock.offerId == offer.id
 
     @with_delete
-    def test_get_activity_uuid_of_a_relationship(self, app):
+    def test_get_activity_identifier_of_a_relationship(self, app):
         # Given
         offer = Offer(name='bar', type='foo')
         stock = Stock(price=3, offer=offer)
         ApiHandler.save(offer, stock)
 
         # When
-        offer_activity_uuid = stock.offerActivityUuid
+        offer_activity_identifier = stock.offerActivityIdentifier
 
         # Then
         assert offer.stocksCount() == 1
-        assert offer_activity_uuid == offer.activityUuid
+        assert offer_activity_identifier == offer.activityIdentifier
 
     @with_delete
     def test_create_activity_on_not_existing_offer_with_model_name(self, app):
         # Given
-        offer_uuid = uuid4()
+        offer_activity_identifier = uuid4()
         patch = { 'name': 'bar', 'type': 'foo' }
         activity = Activity(dateCreated=datetime.utcnow(),
+                            entityIdentifier=offer_activity_identifier,
                             modelName='Offer',
-                            patch=patch,
-                            uuid=offer_uuid)
+                            patch=patch)
 
         # When
         ApiHandler.activate(activity)
 
         # Then
-        activity = Activity.query.filter_by(uuid=offer_uuid).one()
-        offer = Offer.query.filter_by(activityUuid=offer_uuid).one()
-        assert activity.uuid == offer.activityUuid
+        activity = Activity.query.filter_by(entityIdentifier=offer_activity_identifier).one()
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        assert activity.entityIdentifier == offer.activityIdentifier
         assert activity.verb == 'insert'
         assert patch.items() <= activity.datum.items()
         assert patch.items() <= activity.patch.items()
         assert activity.datum['id'] == humanize(offer.id)
         assert activity.patch['id'] == humanize(offer.id)
+
+    @with_delete
+    def test_create_delete_activity(self, app):
+        # Given
+        offer = Offer(name='bar', type='foo')
+        ApiHandler.save(offer)
+        activity = Activity(dateCreated=datetime.utcnow(),
+                            entityIdentifier=offer.activityIdentifier,
+                            modelName='Offer',
+                            verb='delete')
+
+        # When
+        ApiHandler.activate(activity)
+
+        # Then
+        query_filter = (Activity.data['id'].astext.cast(Integer) == offer.id) & \
+                       (Activity.verb == 'delete')
+        activity = Activity.query.filter(query_filter).one()
+        offers = Offer.query.all()
+        assert len(offers) == 0
+        assert activity.entityIdentifier == offer.activityIdentifier

@@ -38,10 +38,10 @@ def synonyms_in(datum, model):
 def relationships_in(datum, model):
     relationed_datum = {**datum}
     for (key, relationship) in model.__mapper__.relationships.items():
-        uuid_key = '{}ActivityUuid'.format(key)
-        if uuid_key in relationed_datum:
+        activity_identifier_key = '{}ActivityIdentifier'.format(key)
+        if activity_identifier_key in relationed_datum:
             model = relationship.mapper.class_
-            instance = model.query.filter_by(activityUuid=relationed_datum[uuid_key]) \
+            instance = model.query.filter_by(activityIdentifier=relationed_datum[activity_identifier_key]) \
                                   .one()
             relationed_datum[key] = instance
     return relationed_datum

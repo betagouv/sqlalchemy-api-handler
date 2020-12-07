@@ -11,7 +11,7 @@ from sqlalchemy_api_handler.utils.humanize import humanize, humanize_ids_in
 
 
 class ActivityMixin(object):
-    uuid = Column(UUID(as_uuid=True))
+    entityIdentifier = Column(UUID(as_uuid=True))
 
     @declared_attr
     def dateCreated(cls):
@@ -87,12 +87,12 @@ class ActivityMixin(object):
         'dateCreated',
         'modelName',
         'patch',
+        'verb',
         '-changed_data',
         '-issued_at',
         '-native_transaction_id',
         '-old_data',
         '-table_name',
         '-schema_name',
-        '-transaction_id',
-        '-verb'
+        '-transaction_id'
     ]
