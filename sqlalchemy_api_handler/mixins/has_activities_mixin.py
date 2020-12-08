@@ -10,7 +10,8 @@ class HasActivitiesMixin(object):
     __versioned__ = {}
 
     activityIdentifier = Column(UUID(as_uuid=True),
-                                     default=uuid4)
+                                     default=uuid4,
+                                     index=True)
 
     @property
     def __activities__(self):
