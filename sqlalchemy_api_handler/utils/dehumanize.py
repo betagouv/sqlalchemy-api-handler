@@ -31,7 +31,7 @@ def int_from_bytes(xbytes):
 
 
 def dehumanize_ids_in(datum, model):
-    if not datum:
+    if datum is None:
         return None
     dehumanized_datum = {**datum}
     for (key, value) in datum.items():

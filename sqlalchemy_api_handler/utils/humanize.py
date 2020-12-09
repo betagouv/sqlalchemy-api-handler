@@ -25,7 +25,7 @@ def int_to_bytes(x):
 
 
 def humanize_ids_in(datum, model):
-    if not datum:
+    if datum is None:
         return None
     humanized_datum = {**datum}
     for (key, value) in datum.items():
