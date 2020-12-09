@@ -19,6 +19,7 @@ def merged_datum_from_activities(activities,
 
 class Activator(Save):
 
+    """
     def __getattr__(self, key):
         if self.__class__.__name__ != 'Activity' and key.endswith('ActivityIdentifier'):
             relationship_name = key.split('ActivityIdentifier')[0]
@@ -30,6 +31,7 @@ class Activator(Save):
         if hasattr(Save, '__getattr__'):
             return Save.__getattr__(self, key)
         raise AttributeError(f'\'{self.__class__.__name__}\' object has no attribute \'{key}\'')
+    """
 
     @classmethod
     def get_activity(cls):
@@ -92,10 +94,13 @@ class Activator(Save):
                 entity.activityIdentifier = entity_identifier
                 Activator.save(entity)
                 query_filter = (Activity.table_name == model.__tablename__) & \
-                               (Activity.entityIdentifier == entity_identifier) & \
+                               (Activity.data[id_key].astext.cast(BigInteger) == entity.id) & \
                                (Activity.verb == 'insert')
                 insert_activity = Activity.query.filter(query_filter).one()
                 insert_activity.dateCreated = first_activity.dateCreated
+                print('LAAAAA?', insert_activity, entity_identifier)
+                insert_activity.entityIdentifier = entity_identifier
+                print('ICI', insert_activity.entityIdentifier, entity.activityIdentifier)
                 Save.save(insert_activity)
                 # want to make as if first_activity was the insert_activity one
                 # for such route like operations
@@ -104,6 +109,7 @@ class Activator(Save):
                 #    return jsonify([as_dict(activity) for activity in activities])
                 # '''
                 first_activity.id = insert_activity.id
+                first_activity.entityIdentifier = entity_identifier
                 first_activity.changed_data = {**insert_activity.changed_data}
                 if insert_activity.transaction:
                     first_activity.transaction = Activity.transaction.mapper.class_()
@@ -143,6 +149,7 @@ class Activator(Save):
             models += [Activity]
         return models
 
+    """
     @classmethod
     def save(cls, *entities):
         Activity = Activator.get_activity()
@@ -161,3 +168,4 @@ class Activator(Save):
                 last_activity.entityIdentifier = entity.activityIdentifier
                 activities.append(last_activity)
         Save.save(*activities)
+    """
