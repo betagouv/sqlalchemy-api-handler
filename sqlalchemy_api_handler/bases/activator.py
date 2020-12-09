@@ -136,7 +136,7 @@ class Activator(Save):
                                                  initial=all_activities_since_min_date[0].datum)
             if model.id.key in datum:
                 del datum[model.id.key]
-            datum['activityIdentifier'] = entity_identifier
+            #datum['activityIdentifier'] = entity_identifier
             entity = model.query.get(entity_id)
             entity.modify(datum)
             Activator.save(entity)

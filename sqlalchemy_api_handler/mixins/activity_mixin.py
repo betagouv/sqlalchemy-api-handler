@@ -60,10 +60,15 @@ class ActivityMixin(object):
 
     @entityIdentifier.setter
     def entityIdentifier(self, value):
-        self.changed_data = {
-            **(self.changed_data or {}),
-            'activityIdentifier': str(value)
-        }
+        """
+        print(self.data.get('activityIdentifier'), value)
+        if self.data.get('activityIdentifier') != value:
+            print('ON SET WHY', self.data.get('activityIdentifier'), value)
+            self.changed_data = {
+                **(self.changed_data or {}),
+                'activityIdentifier': str(value)
+            }
+        """
         self._entityIdentifier = value
 
 

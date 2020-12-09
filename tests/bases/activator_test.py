@@ -158,6 +158,7 @@ class ActivatorTest:
                                   tableName='offer')
 
         # When
+        print('ON ACTIVATE')
         ApiHandler.activate(first_activity, second_activity, third_activity)
 
         # Then
@@ -180,7 +181,7 @@ class ActivatorTest:
         assert all_activities[2].patch.items() == third_patch.items()
         assert all_activities[3].entityIdentifier == offer.activityIdentifier
         assert all_activities[3].verb == 'update'
-        assert all_activities[1].id == offer_activities[1].id
+        assert all_activities[3].id == offer_activities[1].id
         merged_patch = { 'name': 'bor', 'type': 'fee' }
         assert all_activities[3].patch.items() == merged_patch.items()
         assert offer.name == 'bor'
