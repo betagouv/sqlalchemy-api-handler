@@ -24,7 +24,7 @@ class ActivityMixin(object):
 
     @property
     def datum(self):
-        if not self.data:
+        if self.data is None:
             return None
         model = self.model
         return synonyms_in(humanize_ids_in(self.data, self.model), model)
@@ -44,14 +44,14 @@ class ActivityMixin(object):
 
     @property
     def oldDatum(self):
-        if not self.old_data:
+        if self.old_data is None:
             return None
         model = self.model
         return synonyms_in(humanize_ids_in(self.old_data, model), model)
 
     @property
     def patch(self):
-        if not self.changed_data:
+        if self.changed_data is None:
             return None
         model = self.model
         return synonyms_in(humanize_ids_in(self.changed_data, model), model)
