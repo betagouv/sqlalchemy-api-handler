@@ -150,22 +150,21 @@ class ActivatorTest:
         offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         all_activities = Activity.query.all()
         offer_activities = offer.__activities__
-        assert len(all_activities) == 4
-        assert len(offer_activities) == 2
-        assert all_activities[0].entityIdentifier == offer.activityIdentifier
-        assert all_activities[0].verb == 'insert'
-        assert all_activities[0].id == offer_activities[0].id
-        assert all_activities[1].entityIdentifier == offer.activityIdentifier
-        assert all_activities[1].verb == None
-        assert all_activities[1].patch.items() == second_patch.items()
-        assert all_activities[2].entityIdentifier == offer.activityIdentifier
-        assert all_activities[2].verb == None
-        assert all_activities[2].patch.items() == third_patch.items()
-        assert all_activities[3].entityIdentifier == offer.activityIdentifier
-        assert all_activities[3].verb == 'update'
-        assert all_activities[3].id == offer_activities[1].id
         merged_patch = { 'name': 'bor', 'type': 'fee' }
-        assert all_activities[3].patch.items() == merged_patch.items()
+        assert len(all_activities) == 4
+        assert len(offer_activities) == 4
+        assert offer_activities[0].entityIdentifier == offer.activityIdentifier
+        assert offer_activities[0].verb == 'insert'
+        assert offer_activities[0].id == offer_activities[0].id
+        assert offer_activities[1].entityIdentifier == offer.activityIdentifier
+        assert offer_activities[1].verb == None
+        assert offer_activities[1].patch.items() == second_patch.items()
+        assert offer_activities[2].entityIdentifier == offer.activityIdentifier
+        assert offer_activities[2].verb == None
+        assert offer_activities[2].patch.items() == third_patch.items()
+        assert offer_activities[3].entityIdentifier == offer.activityIdentifier
+        assert offer_activities[3].verb == 'update'
+        assert offer_activities[3].patch.items() == merged_patch.items()
         assert offer.name == 'bor'
         assert offer.type == 'fee'
 
@@ -229,21 +228,6 @@ class ActivatorTest:
         assert stock.activityIdentifier == stock_activity.entityIdentifier
         assert stock.offerId == offer.id
 
-    """
-    @with_delete
-    def test_get_activity_identifier_of_a_relationship(self, app):
-        # Given
-        offer = Offer(name='bar', type='foo')
-        stock = Stock(price=3, offer=offer)
-        ApiHandler.save(offer, stock)
-
-        # When
-        offer_activity_identifier = stock.offerActivityIdentifier
-
-        # Then
-        assert offer.stocksCount() == 1
-        assert offer_activity_identifier == offer.activityIdentifier
-    """
 
     @with_delete
     def test_create_activity_on_not_existing_offer_with_model_name(self, app):

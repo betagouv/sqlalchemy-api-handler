@@ -23,10 +23,10 @@ class HasActivitiesMixin(object):
     def __activities__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (self._get_activity_join_filter()) & \
-                       (Activity.verb != None)
+                       (self._get_activity_join_filter())
         return InstrumentedList(Activity.query.filter(query_filter) \
                                               .order_by(Activity.dateCreated) \
+                                              .order_by(Activity.id) \
                                               .all())
 
     @property

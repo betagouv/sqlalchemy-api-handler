@@ -30,14 +30,12 @@ class Activator(Save):
     @staticmethod
     def activate(*activities):
 
-        print([a.data for a in activities])
-
         Activity = Activator.get_activity()
         for (entity_identifier, grouped_activities) in groupby(activities, key=lambda activity: activity.entityIdentifier):
             grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
 
             first_activity = grouped_activities[0]
-            table_name = first_activity.tableName
+            table_name = first_activity.table_name
             model = Save.model_from_table_name(table_name)
             id_key = model.id.property.key
 
@@ -49,7 +47,6 @@ class Activator(Save):
                 Activator.get_db().session.commit()
                 delete_activity = entity.__deleteActivity__
                 delete_activity.dateCreated = first_activity.dateCreated
-                #delete_activity.entityIdentifier = entity_identifier
                 Save.save(delete_activity)
 
                 # want to make as if first_activity was the delete_activity one
@@ -70,10 +67,6 @@ class Activator(Save):
                 errors.add_error('tableName', 'model from {} not found'.format(table_name))
                 raise errors
 
-            #entity_id = first_activity.old_data.get(id_key) \
-            #            if first_activity.old_data else None
-
-            #if not entity_id:
             entity = model.query.filter_by(activityIdentifier=entity_identifier).first()
             entity_id = entity.id if entity else None
             if not entity_id:
@@ -85,7 +78,6 @@ class Activator(Save):
 
             if not entity_id:
                 insert_activity.dateCreated = first_activity.dateCreated
-                #insert_activity.entityIdentifier = entity_identifier
                 Save.save(insert_activity)
                 # want to make as if first_activity was the insert_activity one
                 # for such route like operations
@@ -94,7 +86,6 @@ class Activator(Save):
                 #    return jsonify([as_dict(activity) for activity in activities])
                 # '''
                 first_activity.id = insert_activity.id
-                #first_activity.entityIdentifier = entity_identifier
                 first_activity.changed_data = {**insert_activity.changed_data}
                 if insert_activity.transaction:
                     first_activity.transaction = Activity.transaction.mapper.class_()
@@ -126,9 +117,6 @@ class Activator(Save):
 
             Save.save(*grouped_activities, entity)
 
-            #update_activity = entity.__lastActivity__
-            #update_activity.entityIdentifier = entity_identifier
-            #ApiHandler.save(activity)
 
     @classmethod
     def models(cls):

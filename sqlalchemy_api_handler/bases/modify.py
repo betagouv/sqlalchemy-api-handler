@@ -89,8 +89,14 @@ class Modify(Delete, SoftDelete):
                                 - relationship_keys_to_modify \
                                 - synonym_keys_to_modify
         for key in other_keys_to_modify:
-            value_type = getattr(self.__class__, key)
-            if isinstance(value_type, property) or hasattr(value_type, 'property'):
+            is_hybrid_property = False
+            is_property = False
+            if hasattr(self.__class__, key):
+                value_type = getattr(self.__class__, key)
+                is_property = isinstance(value_type, property)
+            else:
+                is_hybrid_property = hasattr(value_type, 'property')
+            if is_property or is_hybrid_property:
                 setattr(self, key, datum[key])
         return self
 
