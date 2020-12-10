@@ -35,12 +35,14 @@ class Modify(Delete, SoftDelete):
     def modify(self,
                datum: dict,
                skipped_keys: List[str] = [],
-               with_add=False):
+               with_add=False,
+               with_check_not_soft_deleted=True):
 
         if with_add:
             Modify.add(self)
 
-        self.check_not_soft_deleted()
+        if with_check_not_soft_deleted:
+            self.check_not_soft_deleted()
 
         datum_keys_with_skipped_keys = set(datum.keys()) - set(skipped_keys)
 
