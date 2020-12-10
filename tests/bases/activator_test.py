@@ -41,7 +41,7 @@ class ActivatorTest:
         query_filter = Activity.changed_data['id'].astext.cast(Integer) == offer.id
         activity = Activity.query.filter(query_filter).one()
         assert offer.activityIdentifier == activity.entityIdentifier
-        assert activity.oldDatum == None
+        assert activity.oldDatum == {}
         assert activity.transaction == None
         assert activity.verb == 'insert'
         assert offer_dict.items() <= activity.patch.items()
