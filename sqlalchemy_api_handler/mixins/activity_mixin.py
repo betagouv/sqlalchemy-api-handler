@@ -13,8 +13,7 @@ from sqlalchemy_api_handler.utils.humanize import humanize, humanize_ids_in
 
 
 class ActivityMixin(object):
-    _entityIdentifier = Column(UUID(as_uuid=True),
-                               index=True)
+    _entityIdentifier = None
 
     @declared_attr
     def dateCreated(cls):
@@ -31,24 +30,7 @@ class ActivityMixin(object):
         model = self.model
         return synonyms_in(humanize_ids_in(self.data, self.model), model)
 
-    """
     @property
-    def entityIdentifier(self):
-        activity_identifier = self.data.get('activityIdentifier',
-                                            self.changed_data.get('activityIdentifier'))
-        if activity_identifier:
-            return uuid.UUID(activity_identifier).hex
-
-    @entityIdentifier.setter
-    def entityIdentifier(self, value):
-        self.changed_data = {
-            **(self.changed_data or {}),
-            'activityIdentifier': value
-        }
-    """
-
-
-    @hybrid_property
     def entityIdentifier(self):
         if self._entityIdentifier:
             return self._entityIdentifier
@@ -60,17 +42,7 @@ class ActivityMixin(object):
 
     @entityIdentifier.setter
     def entityIdentifier(self, value):
-        """
-        print(self.data.get('activityIdentifier'), value)
-        if self.data.get('activityIdentifier') != value:
-            print('ON SET WHY', self.data.get('activityIdentifier'), value)
-            self.changed_data = {
-                **(self.changed_data or {}),
-                'activityIdentifier': str(value)
-            }
-        """
         self._entityIdentifier = value
-
 
     @property
     def model(self):
@@ -116,8 +88,6 @@ class ActivityMixin(object):
 
 
     def modify(self, datum, **kwargs):
-        #dehumanized_datum = {**datum}
-
         if 'modelName' in datum and 'tableName' in datum:
             model = self.__class__.model_from_name(datum['modelName'])
             if datum['tableName'] != model.__tablename__:
@@ -126,33 +96,11 @@ class ActivityMixin(object):
                                                                             datum['tableName']))
                 raise errors
 
-        """
-        if 'tableName' in datum:
-            self.table_name = datum['tableName']
-            del dehumanized_datum['tableName']
-        elif 'modelName' in datum:
-            self.modelName = datum['modelName']
-            del dehumanized_datum['modelName']
-
-
-        #table_name = datum.get('tableName', self.tableName)
-        model = self.__class__.model_from_table_name(self.table_name)
-        for (humanized_key, dehumanized_key) in [('oldDatum', 'old_data'), ('patch', 'changed_data')]:
-            if humanized_key in dehumanized_datum:
-                dehumanized_datum[dehumanized_key] = dehumanize_ids_in(dehumanized_datum[humanized_key],
-                                                                       model)
-                del dehumanized_datum[humanized_key]
-        """
-
-        """
-        super().modify(dehumanized_datum,
-                       skipped_keys=skipped_keys,
-                       with_add=with_add)
-        """
         super().modify(datum, **kwargs)
 
     __as_dict_includes__ = [
         'dateCreated',
+        'entityIdentifier',
         'modelName',
         'patch',
         'verb',

@@ -38,16 +38,13 @@ class ActivatorTest:
         ApiHandler.save(offer)
 
         # Then
-        #query_filter = Activity.changed_data['id'].astext.cast(Integer) == offer.id
-        #query_filter = Activity.entityIdentifier == offer.activityIdentifier
-        #activity = Activity.query.filter(query_filter).one()
         all_activities = Activity.query.all()
         offer_activities = offer.__activities__
         insert_offer_activity = offer_activities[0]
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
         assert offer.activityIdentifier == insert_offer_activity.entityIdentifier
-        assert insert_offer_activity.oldDatum == None
+        assert insert_offer_activity.oldDatum == {}
         assert insert_offer_activity.transaction == None
         assert insert_offer_activity.verb == 'insert'
         assert offer_dict.items() <= insert_offer_activity.patch.items()
@@ -68,15 +65,12 @@ class ActivatorTest:
         ApiHandler.save(offer)
 
         # Then
-        #query_filter = Activity.changed_data['id'].astext.cast(Integer) == offer.id
-        #activity = Activity.query.filter(query_filter).one()
         all_activities = Activity.query.all()
         offer_activities = offer.__activities__
         insert_offer_activity = offer_activities[0]
-        assert len(all_activities) == 2
+        assert len(all_activities) == 1
         assert len(offer_activities) == 1
-        assert activity.transaction.actor.id == user.id
-        assert insert_offer_activity.verb == 'insert'
+        assert insert_offer_activity.transaction.actor.id == user.id
 
     @with_delete
     def test_modify_offer_saves_an_update_activity(self, app):
@@ -91,19 +85,14 @@ class ActivatorTest:
         ApiHandler.save(offer)
 
         # Then
-        #activity = Activity.query.filter(
-        #    (Activity.tableName == 'offer') &
-        #    (Activity.verb == 'update') &
-        #    (Activity.data['id'].astext.cast(Integer) == offer.id)
-        #).one()
         all_activities = Activity.query.all()
         offer_activities = offer.__activities__
-        update_offer_activity = offer_activities[0]
+        update_offer_activity = offer_activities[1]
         assert len(all_activities) == 2
         assert len(offer_activities) == 2
         assert update_offer_activity.entityIdentifier == offer.activityIdentifier
         assert update_offer_activity.verb == 'update'
-        assert {**offer_dict, **modify_dict}.items() <= activity.datum.items()
+        assert {**offer_dict, **modify_dict}.items() <= update_offer_activity.datum.items()
         assert modify_dict.items() == update_offer_activity.patch.items()
         assert offer_dict.items() <= update_offer_activity.oldDatum.items()
 
@@ -118,16 +107,13 @@ class ActivatorTest:
                             tableName='offer')
 
         # When
-        #print('KKKKKK', activity.entityIdentifier)
         ApiHandler.activate(activity)
 
         # Then
-        #activity = Activity.query.filter_by(entityIdentifier=offer_activity_identifier).one()
-        all_activities = Activities.query.all()
+        all_activities = Activity.query.all()
         offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         offer_activities = offer.__activities__
-        #activities = Activity.query.all()
-        insert_offer_activity = activities[0]
+        insert_offer_activity = offer_activities[0]
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
         assert insert_offer_activity.entityIdentifier == offer.activityIdentifier
@@ -158,13 +144,9 @@ class ActivatorTest:
                                   tableName='offer')
 
         # When
-        print('ON ACTIVATE')
         ApiHandler.activate(first_activity, second_activity, third_activity)
 
         # Then
-        #activities = Activity.query.filter_by(entityIdentifier=offer_activity_identifier) \
-        #                           .order_by(Activity.dateCreated) \
-        #                           .all()
         offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         all_activities = Activity.query.all()
         offer_activities = offer.__activities__

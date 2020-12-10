@@ -14,57 +14,44 @@ class HasActivitiesMixin(object):
                                      default=uuid4,
                                      index=True)
 
-    """
-    @property
-    def __activities__(self):
+    def _get_activity_join_filter(self):
         Activity = Activator.get_activity()
-        query_filter = (Activity.table_name == self.__tablename__) & \
-                       (Activity.entityIdentifier == self.activityIdentifier) & \
-                       (Activity.verb != None)
-        return InstrumentedList(Activity.query.filter(query_filter) \
-                                              .order_by(desc(Activity.id)) \
-                                              .all())
-
-    @property
-    def __insertActivity__(self):
-        Activity = Activator.get_activity()
-        query_filter = (Activity.table_name == self.__tablename__) & \
-                       (Activity.entityIdentifier == self.activityIdentifier) & \
-                       (Activity.verb == 'insert')
-        return Activity.query.filter(query_filter).one()
-    """
-
+        id_key = self.__class__.id.property.key
+        return Activity.data[id_key].astext.cast(BigInteger) == getattr(self, id_key)
 
     @property
     def __activities__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (Activity.data['id'].astext.cast(BigInteger) == self.id) & \
+                       (self._get_activity_join_filter()) & \
                        (Activity.verb != None)
         return InstrumentedList(Activity.query.filter(query_filter) \
-                                              #.order_by(desc(Activity.id)) \
                                               .order_by(Activity.dateCreated) \
                                               .all())
 
     @property
+    def __deleteActivity__(self):
+        Activity = Activator.get_activity()
+        query_filter = (Activity.table_name == model.__tablename__) & \
+                       (self._get_activity_join_filter()) & \
+                       (Activity.verb == 'delete')
+        return Activity.query.filter(query_filter).one()
+
+    @property
     def __insertActivity__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (Activity.data['id'].astext.cast(BigInteger) == self.id)  & \
+                       (self._get_activity_join_filter()) & \
                        (Activity.verb == 'insert')
         return Activity.query.filter(query_filter).one()
 
-    """
     @property
-    def __activity_identifiers__(self):
-
-        for relationship in self.__mapper__.relationships:
-
-        #if self.__class__.__name__ != 'Activity' and key.endswith('ActivityIdentifier'):
-            relationship_name = key.split('ActivityIdentifier')[0]
-            relationship = getattr(self, relationship_name)
-            if hasattr(relationship, 'activityIdentifier'):
-                return relationship.activityIdentifier
-            else:
-                return None
-    """
+    def __lastActivity__(self):
+        Activity = Activator.get_activity()
+        query_filter = (Activity.table_name == model.__tablename__) & \
+                       (self._get_activity_join_filter()) & \
+                       (Activity.verb == 'update')
+        return Activity.query.filter(query_filter) \
+                             .order_by(desc(Activity.dateCreated)) \
+                             .limit(1) \
+                             .one()

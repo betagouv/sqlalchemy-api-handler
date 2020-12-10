@@ -19,20 +19,6 @@ def merged_datum_from_activities(activities,
 
 class Activator(Save):
 
-    """
-    def __getattr__(self, key):
-        if self.__class__.__name__ != 'Activity' and key.endswith('ActivityIdentifier'):
-            relationship_name = key.split('ActivityIdentifier')[0]
-            relationship = getattr(self, relationship_name)
-            if hasattr(relationship, 'activityIdentifier'):
-                return relationship.activityIdentifier
-            else:
-                return None
-        if hasattr(Save, '__getattr__'):
-            return Save.__getattr__(self, key)
-        raise AttributeError(f'\'{self.__class__.__name__}\' object has no attribute \'{key}\'')
-    """
-
     @classmethod
     def get_activity(cls):
         return Activator.activity_cls
@@ -43,6 +29,9 @@ class Activator(Save):
 
     @staticmethod
     def activate(*activities):
+
+        print([a.data for a in activities])
+
         Activity = Activator.get_activity()
         for (entity_identifier, grouped_activities) in groupby(activities, key=lambda activity: activity.entityIdentifier):
             grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
@@ -54,23 +43,22 @@ class Activator(Save):
 
             if first_activity.verb == 'delete':
                 query = model.query.filter_by(activityIdentifier=entity_identifier)
-                entity_id = query.one().id
+                entity = query.one()
+                entity_id = entity.id
                 query.delete()
                 Activator.get_db().session.commit()
+                delete_activity = entity.__deleteActivity__
+                delete_activity.dateCreated = first_activity.dateCreated
+                #delete_activity.entityIdentifier = entity_identifier
+                Save.save(delete_activity)
+
                 # want to make as if first_activity was the delete_activity one
                 # for such route like operations
                 # '''
                 #    ApiHandler.activate(**activities)
                 #    return jsonify([as_dict(activity) for activity in activities])
                 # '''
-                query_filter = (Activity.table_name == model.__tablename__) & \
-                               (Activity.data[id_key].astext.cast(BigInteger) == entity_id) & \
-                               (Activity.verb == 'delete')
-                delete_activity = Activity.query.filter(query_filter).one()
-                delete_activity.dateCreated = first_activity.dateCreated
-                delete_activity.entityIdentifier = entity_identifier
                 first_activity.id = delete_activity.id
-                Save.save(delete_activity)
                 if delete_activity.transaction:
                     first_activity.transaction = Activity.transaction.mapper.class_()
                     first_activity.transaction.actor  = delete_activity.transaction.actor
@@ -82,25 +70,22 @@ class Activator(Save):
                 errors.add_error('tableName', 'model from {} not found'.format(table_name))
                 raise errors
 
-            entity_id = first_activity.old_data.get(id_key) \
-                        if first_activity.old_data else None
+            #entity_id = first_activity.old_data.get(id_key) \
+            #            if first_activity.old_data else None
 
-            if not entity_id:
-                entity = model.query.filter_by(activityIdentifier=entity_identifier).first()
-                entity_id = entity.id if entity else None
-
+            #if not entity_id:
+            entity = model.query.filter_by(activityIdentifier=entity_identifier).first()
+            entity_id = entity.id if entity else None
             if not entity_id:
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityIdentifier = entity_identifier
                 Activator.save(entity)
-                query_filter = (Activity.table_name == model.__tablename__) & \
-                               (Activity.data[id_key].astext.cast(BigInteger) == entity.id) & \
-                               (Activity.verb == 'insert')
-                insert_activity = Activity.query.filter(query_filter).one()
+
+            insert_activity = entity.__insertActivity__
+
+            if not entity_id:
                 insert_activity.dateCreated = first_activity.dateCreated
-                print('LAAAAA?', insert_activity, entity_identifier)
-                insert_activity.entityIdentifier = entity_identifier
-                print('ICI', insert_activity.entityIdentifier, entity.activityIdentifier)
+                #insert_activity.entityIdentifier = entity_identifier
                 Save.save(insert_activity)
                 # want to make as if first_activity was the insert_activity one
                 # for such route like operations
@@ -109,7 +94,7 @@ class Activator(Save):
                 #    return jsonify([as_dict(activity) for activity in activities])
                 # '''
                 first_activity.id = insert_activity.id
-                first_activity.entityIdentifier = entity_identifier
+                #first_activity.entityIdentifier = entity_identifier
                 first_activity.changed_data = {**insert_activity.changed_data}
                 if insert_activity.transaction:
                     first_activity.transaction = Activity.transaction.mapper.class_()
@@ -128,7 +113,7 @@ class Activator(Save):
                                                             (Activity.dateCreated >= min_date)
                                                         ) \
                                                         .all()
-            Save.save(*grouped_activities)
+
             all_activities_since_min_date = sorted(already_activities_since_min_date + grouped_activities,
                                                    key=lambda activity: activity.dateCreated)
             datum = merged_datum_from_activities(all_activities_since_min_date,
@@ -136,10 +121,14 @@ class Activator(Save):
                                                  initial=all_activities_since_min_date[0].datum)
             if model.id.key in datum:
                 del datum[model.id.key]
-            #datum['activityIdentifier'] = entity_identifier
             entity = model.query.get(entity_id)
             entity.modify(datum)
-            Activator.save(entity)
+
+            Save.save(*grouped_activities, entity)
+
+            #update_activity = entity.__lastActivity__
+            #update_activity.entityIdentifier = entity_identifier
+            #ApiHandler.save(activity)
 
     @classmethod
     def models(cls):
@@ -148,24 +137,3 @@ class Activator(Save):
         if Activity:
             models += [Activity]
         return models
-
-    """
-    @classmethod
-    def save(cls, *entities):
-        Activity = Activator.get_activity()
-        Save.save(*entities)
-        activities = []
-        for entity in entities:
-            if hasattr(entity, 'activityIdentifier'):
-                id_key = entity.__class__.id.property.key
-                last_activity = Activity.query.filter(
-                    (Activity.tableName == entity.__tablename__) & \
-                    (Activity.data[id_key].astext.cast(BigInteger) == entity.id)
-                ).order_by(desc(Activity.dateCreated)).limit(1).first()
-                if not last_activity:
-                    logger.debug('last_activity not found for {} {}...'.format(entity.__class__.__name__, entity.id))
-                    continue
-                last_activity.entityIdentifier = entity.activityIdentifier
-                activities.append(last_activity)
-        Save.save(*activities)
-    """

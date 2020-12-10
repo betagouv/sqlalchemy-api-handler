@@ -1,14 +1,12 @@
 from sqlalchemy import BigInteger, Column, Text, String
 from sqlalchemy.orm import synonym
 from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.mixins import HasActivitiesMixin
 
 from api.utils.database import db
 
 
 class User(ApiHandler,
-           db.Model,
-           HasActivitiesMixin):
+           db.Model):
 
     email = Column(String(120),
                    nullable=False,
