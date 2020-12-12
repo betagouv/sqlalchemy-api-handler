@@ -2,6 +2,7 @@ import uuid
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, synonym
 
 from sqlalchemy_api_handler.bases.errors import ActivityError
@@ -29,12 +30,13 @@ class ActivityMixin(object):
         model = self.model
         return synonyms_in(humanize_ids_in(self.data, self.model), model)
 
-    @property
+
+
+    @hybrid_property
     def entityIdentifier(self):
         if self._entityIdentifier:
             return self._entityIdentifier
-        activity_identifier = self.data.get('activityIdentifier',
-                                            self.changed_data.get('activityIdentifier'))
+        activity_identifier = self.data.get('activityIdentifier')
         if activity_identifier:
             self._entityIdentifier = uuid.UUID(activity_identifier)
             return self._entityIdentifier
@@ -64,7 +66,10 @@ class ActivityMixin(object):
     @property
     def entity(self):
         model = self.model
-        return model(**self.datum)
+        activity_identifier = self.data.get('activityIdentifier',
+                                            self._entityIdentifier)
+        if activity_identifier:
+            return model.query.filter_by(activityIdentifier=activity_identifier).one()
 
     @property
     def oldDatum(self):
