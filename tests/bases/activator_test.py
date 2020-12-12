@@ -243,14 +243,14 @@ class ActivatorTest:
         ApiHandler.activate(activity)
 
         # Then
-        activity = Activity.query.filter_by(entityIdentifier=offer_activity_identifier).one()
         offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
-        assert activity.entityIdentifier == offer.activityIdentifier
-        assert activity.verb == 'insert'
-        assert patch.items() <= activity.datum.items()
-        assert patch.items() <= activity.patch.items()
-        assert activity.datum['id'] == humanize(offer.id)
-        assert activity.patch['id'] == humanize(offer.id)
+        insert_offer_activity = offer.__activities__[0]
+        assert insert_offer_activity.entityIdentifier == offer.activityIdentifier
+        assert insert_offer_activity.verb == 'insert'
+        assert patch.items() <= insert_offer_activity.datum.items()
+        assert patch.items() <= insert_offer_activity.patch.items()
+        assert insert_offer_activity.datum['id'] == humanize(offer.id)
+        assert insert_offer_activity.patch['id'] == humanize(offer.id)
 
     @with_delete
     def test_create_delete_activity(self, app):

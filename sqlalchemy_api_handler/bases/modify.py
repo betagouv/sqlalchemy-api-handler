@@ -94,7 +94,6 @@ class Modify(Delete, SoftDelete):
             if hasattr(self.__class__, key):
                 value_type = getattr(self.__class__, key)
                 is_property = isinstance(value_type, property)
-            else:
                 is_hybrid_property = hasattr(value_type, 'property')
             if is_property or is_hybrid_property:
                 setattr(self, key, datum[key])

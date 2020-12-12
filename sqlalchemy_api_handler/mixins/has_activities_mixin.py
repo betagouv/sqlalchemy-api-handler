@@ -32,7 +32,7 @@ class HasActivitiesMixin(object):
     @property
     def __deleteActivity__(self):
         Activity = Activator.get_activity()
-        query_filter = (Activity.table_name == model.__tablename__) & \
+        query_filter = (Activity.table_name == self.__tablename__) & \
                        (self._get_activity_join_filter()) & \
                        (Activity.verb == 'delete')
         return Activity.query.filter(query_filter).one()
@@ -48,7 +48,7 @@ class HasActivitiesMixin(object):
     @property
     def __lastActivity__(self):
         Activity = Activator.get_activity()
-        query_filter = (Activity.table_name == model.__tablename__) & \
+        query_filter = (Activity.table_name == self.__tablename__) & \
                        (self._get_activity_join_filter()) & \
                        (Activity.verb == 'update')
         return Activity.query.filter(query_filter) \
