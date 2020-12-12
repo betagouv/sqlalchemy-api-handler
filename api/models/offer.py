@@ -137,8 +137,8 @@ class ThingType(SearchableType):
         'isActive': True
     }
     OEUVRE_ART = {
-        'proLabel': 'Vente d'œuvres d'art',
-        'appLabel': 'Achat d'œuvres d’art',
+        'proLabel': 'Vente d\'œuvres d\'art',
+        'appLabel': 'Achat d\'œuvres d\’art',
         'offlineOnly': False,
         'onlineOnly': False,
         'sublabel': 'Regarder',
