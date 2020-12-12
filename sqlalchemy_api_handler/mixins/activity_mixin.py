@@ -2,7 +2,6 @@ import uuid
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, synonym
 
 from sqlalchemy_api_handler.bases.errors import ActivityError
