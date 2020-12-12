@@ -12,6 +12,7 @@ from sqlalchemy import BigInteger, \
                        Numeric, \
                        String
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.schema import Sequence
 from typing import List, Any, Iterable, Set
 
@@ -82,8 +83,21 @@ class Modify(Delete, SoftDelete):
             value = dehumanize_if_needed(synonyms[key]._proxied_property.columns[0],
                                          datum[key])
             setattr(self, key, value)
-        return self
 
+        other_keys_to_modify = datum_keys_with_skipped_keys \
+                                - column_keys_to_modify \
+                                - relationship_keys_to_modify \
+                                - synonym_keys_to_modify
+        for key in other_keys_to_modify:
+            is_hybrid_property = False
+            is_property = False
+            if hasattr(self.__class__, key):
+                value_type = getattr(self.__class__, key)
+                is_property = isinstance(value_type, property)
+                is_hybrid_property = hasattr(value_type, 'property')
+            if is_property or is_hybrid_property:
+                setattr(self, key, datum[key])
+        return self
 
     @classmethod
     def instance_from_primary_value(model, value):

@@ -1,5 +1,6 @@
 from uuid import uuid4
-from sqlalchemy import Column, \
+from sqlalchemy import BigInteger, \
+                       Column, \
                        desc
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy_api_handler.bases.activator import Activator
@@ -13,20 +14,44 @@ class HasActivitiesMixin(object):
                                      default=uuid4,
                                      index=True)
 
+    def _get_activity_join_filter(self):
+        Activity = Activator.get_activity()
+        id_key = self.__class__.id.property.key
+        return Activity.data[id_key].astext.cast(BigInteger) == getattr(self, id_key)
+
     @property
     def __activities__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (Activity.entityIdentifier == self.activityIdentifier) & \
-                       (Activity.verb != None)
+                       (self._get_activity_join_filter())
         return InstrumentedList(Activity.query.filter(query_filter) \
-                                              .order_by(desc(Activity.id)) \
+                                              .order_by(Activity.dateCreated) \
+                                              .order_by(Activity.id) \
                                               .all())
+
+    @property
+    def __deleteActivity__(self):
+        Activity = Activator.get_activity()
+        query_filter = (Activity.table_name == self.__tablename__) & \
+                       (self._get_activity_join_filter()) & \
+                       (Activity.verb == 'delete')
+        return Activity.query.filter(query_filter).one()
 
     @property
     def __insertActivity__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (Activity.entityIdentifier == self.activityIdentifier) & \
+                       (self._get_activity_join_filter()) & \
                        (Activity.verb == 'insert')
         return Activity.query.filter(query_filter).one()
+
+    @property
+    def __lastActivity__(self):
+        Activity = Activator.get_activity()
+        query_filter = (Activity.table_name == self.__tablename__) & \
+                       (self._get_activity_join_filter()) & \
+                       (Activity.verb == 'update')
+        return Activity.query.filter(query_filter) \
+                             .order_by(desc(Activity.dateCreated)) \
+                             .limit(1) \
+                             .one()
