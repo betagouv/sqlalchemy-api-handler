@@ -29,7 +29,6 @@ class Activator(Save):
 
     @staticmethod
     def activate(*activities):
-
         Activity = Activator.get_activity()
         for (entity_identifier, grouped_activities) in groupby(activities, key=lambda activity: activity.entityIdentifier):
             grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
@@ -72,6 +71,7 @@ class Activator(Save):
             if not entity_id:
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityIdentifier = entity_identifier
+                print('entity_identifier', entity_identifier)
                 Activator.save(entity)
 
             insert_activity = entity.__insertActivity__

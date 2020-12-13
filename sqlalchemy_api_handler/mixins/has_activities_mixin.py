@@ -14,7 +14,7 @@ class HasActivitiesMixin(object):
                                      default=uuid4,
                                      index=True)
 
-    def _get_activity_join_filter(self):
+    def _get_activity_join_by_entity_id_filter(self):
         Activity = Activator.get_activity()
         id_key = self.__class__.id.property.key
         return Activity.data[id_key].astext.cast(BigInteger) == getattr(self, id_key)
@@ -23,7 +23,7 @@ class HasActivitiesMixin(object):
     def __activities__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (self._get_activity_join_filter())
+                       (self._get_activity_join_by_entity_id_filter())
         return InstrumentedList(Activity.query.filter(query_filter) \
                                               .order_by(Activity.dateCreated) \
                                               .order_by(Activity.id) \
@@ -33,7 +33,7 @@ class HasActivitiesMixin(object):
     def __deleteActivity__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (self._get_activity_join_filter()) & \
+                       (self._get_activity_join_by_entity_id_filter()) & \
                        (Activity.verb == 'delete')
         return Activity.query.filter(query_filter).one()
 
@@ -41,7 +41,7 @@ class HasActivitiesMixin(object):
     def __insertActivity__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (self._get_activity_join_filter()) & \
+                       (self._get_activity_join_by_entity_id_filter()) & \
                        (Activity.verb == 'insert')
         return Activity.query.filter(query_filter).one()
 
@@ -49,7 +49,7 @@ class HasActivitiesMixin(object):
     def __lastActivity__(self):
         Activity = Activator.get_activity()
         query_filter = (Activity.table_name == self.__tablename__) & \
-                       (self._get_activity_join_filter()) & \
+                       (self._get_activity_join_by_entity_id_filter()) & \
                        (Activity.verb == 'update')
         return Activity.query.filter(query_filter) \
                              .order_by(desc(Activity.dateCreated)) \

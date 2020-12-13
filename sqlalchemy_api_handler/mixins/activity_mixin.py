@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column
+from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -30,16 +30,18 @@ class ActivityMixin(object):
         model = self.model
         return synonyms_in(humanize_ids_in(self.data, self.model), model)
 
-
-
     @hybrid_property
     def entityIdentifier(self):
         if self._entityIdentifier:
             return self._entityIdentifier
         activity_identifier = self.data.get('activityIdentifier')
         if activity_identifier:
-            self._entityIdentifier = uuid.UUID(activity_identifier)
-            return self._entityIdentifier
+            self._entityIdentifier = activity_identifier
+            return uuid.UUID(self._entityIdentifier)
+
+    @entityIdentifier.expression
+    def entityIdentifier(cls):
+        return cls.data['activityIdentifier'].astext.cast(UUID(as_uuid=True))
 
     @entityIdentifier.setter
     def entityIdentifier(self, value):

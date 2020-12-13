@@ -41,8 +41,12 @@ class ActivatorTest:
         all_activities = Activity.query.all()
         offer_activities = offer.__activities__
         insert_offer_activity = offer_activities[0]
+        insert_offer_activity_from_query = Activity.query \
+            .filter_by(entityIdentifier=offer.activityIdentifier) \
+            .one()
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
+        assert insert_offer_activity_from_query == insert_offer_activity
         assert offer.activityIdentifier == insert_offer_activity.entityIdentifier
         assert insert_offer_activity.oldDatum == {}
         assert insert_offer_activity.transaction == None
