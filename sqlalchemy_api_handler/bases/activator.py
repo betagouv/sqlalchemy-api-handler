@@ -71,12 +71,8 @@ class Activator(Save):
             if not entity_id:
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityIdentifier = entity_identifier
-                print('entity_identifier', entity_identifier)
                 Activator.save(entity)
-
-            insert_activity = entity.__insertActivity__
-
-            if not entity_id:
+                insert_activity = entity.__insertActivity__
                 insert_activity.dateCreated = first_activity.dateCreated
                 Save.save(insert_activity)
                 # want to make as if first_activity was the insert_activity one
@@ -99,8 +95,7 @@ class Activator(Save):
             min_date = min(map(lambda a: a.dateCreated, grouped_activities))
             already_activities_since_min_date = Activity.query \
                                                         .filter(
-                                                            (Activity.tableName == table_name) & \
-                                                            (Activity.data[id_key].astext.cast(BigInteger) == entity_id) & \
+                                                            (entity._get_activity_join_filter()) & \
                                                             (Activity.dateCreated >= min_date)
                                                         ) \
                                                         .all()
