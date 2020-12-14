@@ -601,3 +601,13 @@ class ModifyTest:
 
         assert '/'.join([str(tag.id) for tag in tags1]) == '/'.join([str(tag.id) for tag in tags2])
         assert '/'.join([str(tag.scopes[0].id) for tag in tags1]) == '/'.join([str(tag.scopes[0].id) for tag in tags2])
+
+
+    @with_delete
+    def test_modify_a_property_with_no_fset(self, app):
+        # When
+        stock = Stock()
+        offer = Offer(name="foo", notDeletedStocks=[stock], ype="bar")
+
+        # Then
+        assert offer.notDeletedStocks == []

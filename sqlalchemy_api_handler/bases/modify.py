@@ -89,6 +89,10 @@ class Modify(Delete, SoftDelete):
                                 - relationship_keys_to_modify \
                                 - synonym_keys_to_modify
         for key in other_keys_to_modify:
+            if hasattr(self.__class__, key):
+                value_type = getattr(self.__class__, key)
+                if isinstance(value_type, property) and value_type.fset is None:
+                    return
             setattr(self, key, datum[key])
 
         return self
