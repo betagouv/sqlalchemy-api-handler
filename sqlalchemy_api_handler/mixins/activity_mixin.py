@@ -101,13 +101,14 @@ class ActivityMixin(object):
                                                                             datum['tableName']))
                 raise errors
 
-        print('AVANT', self.table_name, datum.get('tableName'), datum.get('modelName'))
-
         if self.table_name is None:
-            if 'tableName' in datum:
-                self.table_name = datum['tableName']
-            elif 'modelName' in datum:
-                self.table_name = datum['modelName']
+            table_name = datum.get('tableName')
+            if table_name:
+                self.table_name = table_name
+            else:
+                model_name = datum.get('modelName')
+                if model_name:
+                    self.modelName = datum['modelName']
 
         print('APRES', self.table_name)
 

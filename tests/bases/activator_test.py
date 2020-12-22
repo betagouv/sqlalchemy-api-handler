@@ -28,6 +28,23 @@ class ActivatorTest:
         # Then
         assert GotActivity == Activity
 
+
+    def test_instance_an_activity(self, app):
+        # Given
+        offer_dict = { 'name': 'bar', 'type': 'foo' }
+        offer = Offer(**offer_dict)
+        ApiHandler.save(offer)
+        stock_activity_identifier = uuid4()
+
+        # When
+        activity = Activity(dateCreated=datetime.utcnow(),
+                            entityIdentifier=stock_activity_identifier,
+                            modelName='Stock',
+                            patch={ 'offerId': offer.humanizedId })
+
+        # Then
+        assert activity.patch['offerId'] == offer.humanizedId
+
     @with_delete
     def test_create_offer_saves_an_insert_activity(self, app):
         # Given
