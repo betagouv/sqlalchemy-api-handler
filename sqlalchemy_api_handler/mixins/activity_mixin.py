@@ -54,7 +54,6 @@ class ActivityMixin(object):
     @model.setter
     def model(self, value):
         self.table_name = value.__tablename__
-        return self.model
 
     @property
     def modelName(self):
@@ -101,6 +100,9 @@ class ActivityMixin(object):
                 errors.add_error('modelName', '{} different from {}'.format(model.__tablename__,
                                                                             datum['tableName']))
                 raise errors
+
+        if 'tableName' in datum and self.table_name is None:
+            self.table_name = datum['tableName']
 
         super().modify(datum, **kwargs)
 
