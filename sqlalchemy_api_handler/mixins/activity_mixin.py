@@ -100,7 +100,6 @@ class ActivityMixin(object):
                 errors.add_error('modelName', '{} different from {}'.format(model.__tablename__,
                                                                             datum['tableName']))
                 raise errors
-
         if self.table_name is None:
             table_name = datum.get('tableName')
             if table_name:
@@ -109,9 +108,6 @@ class ActivityMixin(object):
                 model_name = datum.get('modelName')
                 if model_name:
                     self.modelName = datum['modelName']
-
-        print('APRES', self.table_name)
-
         super().modify(datum, **kwargs)
 
     __as_dict_includes__ = [
