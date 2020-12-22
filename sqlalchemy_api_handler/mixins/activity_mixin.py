@@ -101,8 +101,11 @@ class ActivityMixin(object):
                                                                             datum['tableName']))
                 raise errors
 
-        if 'tableName' in datum and self.table_name is None:
-            self.table_name = datum['tableName']
+        if self.table_name is None:
+            if 'tableName' in datum:
+                self.table_name = datum['tableName']
+            elif 'modelName' in datum:
+                self.table_name = datum['modelName']
 
         super().modify(datum, **kwargs)
 
