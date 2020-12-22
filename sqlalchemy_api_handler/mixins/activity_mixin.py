@@ -101,11 +101,15 @@ class ActivityMixin(object):
                                                                             datum['tableName']))
                 raise errors
 
+        print('AVANT', self.table_name, datum.get('tableName'), datum.get('modelName'))
+
         if self.table_name is None:
             if 'tableName' in datum:
                 self.table_name = datum['tableName']
             elif 'modelName' in datum:
                 self.table_name = datum['modelName']
+
+        print('APRES', self.table_name)
 
         super().modify(datum, **kwargs)
 
