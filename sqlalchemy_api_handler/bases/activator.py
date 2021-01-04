@@ -28,7 +28,8 @@ class Activator(Save):
         Activator.activity_cls = activity_cls
 
     @staticmethod
-    def activate(*activities):
+    def activate(*activities,
+                 with_check_not_soft_deleted=True):
         Activity = Activator.get_activity()
         for (entity_identifier, grouped_activities) in groupby(activities, key=lambda activity: activity.entityIdentifier):
             grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
@@ -76,7 +77,7 @@ class Activator(Save):
                 insert_activity.dateCreated = first_activity.dateCreated
                 Save.save(insert_activity)
                 # want to make as if first_activity was the insert_activity one
-                # for such route like operations
+                # very useful for the routes operation
                 # '''
                 #    ApiHandler.activate(**activities)
                 #    return jsonify([as_dict(activity) for activity in activities])
@@ -108,7 +109,8 @@ class Activator(Save):
             if model.id.key in datum:
                 del datum[model.id.key]
             entity = model.query.get(entity_id)
-            entity.modify(datum)
+            entity.modify(datum,
+                          with_check_not_soft_deleted=with_check_not_soft_deleted)
 
             Save.save(*grouped_activities, entity)
 
