@@ -91,7 +91,8 @@ class Activator(Save):
 
                 for activity in grouped_activities[1:]:
                     activity.old_data = { id_key: entity.id }
-                Activator.activate(*grouped_activities[1:])
+                Activator.activate(*grouped_activities[1:],
+                                   with_check_not_soft_deleted=with_check_not_soft_deleted)
                 continue
 
             min_date = min(map(lambda a: a.dateCreated, grouped_activities))
