@@ -59,7 +59,8 @@ class Activator(Save):
                 if delete_activity.transaction:
                     first_activity.transaction = Activity.transaction.mapper.class_()
                     first_activity.transaction.actor  = delete_activity.transaction.actor
-                Activator.activate(*grouped_activities[1:])
+                Activator.activate(*grouped_activities[1:],
+                                   with_check_not_soft_deleted=with_check_not_soft_deleted)
                 continue
 
             if model is None:
