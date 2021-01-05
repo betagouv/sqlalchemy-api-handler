@@ -114,7 +114,7 @@ class Activator(Save):
             entity.modify(datum,
                           with_check_not_soft_deleted=with_check_not_soft_deleted)
 
-            Save.save(*grouped_activities, entity)
+            Save.save(entity, *grouped_activities)
 
 
     @classmethod

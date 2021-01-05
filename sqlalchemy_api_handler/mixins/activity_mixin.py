@@ -6,10 +6,12 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, synonym
 
 from sqlalchemy_api_handler.bases.errors import ActivityError
-from sqlalchemy_api_handler.utils.datum import relationships_in, \
+from sqlalchemy_api_handler.utils.datum import columns_in, \
+                                               relationships_in, \
                                                synonyms_in
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
-from sqlalchemy_api_handler.utils.humanize import humanize, humanize_ids_in
+from sqlalchemy_api_handler.utils.humanize import humanize, \
+                                                  humanize_ids_in
 
 
 class ActivityMixin(object):
@@ -89,8 +91,7 @@ class ActivityMixin(object):
     @patch.setter
     def patch(self, value):
         model = self.model
-        self.changed_data = dehumanize_ids_in(value, model)
-
+        self.changed_data = columns_in(dehumanize_ids_in(value, model), model)
 
     def modify(self, datum, **kwargs):
         if 'modelName' in datum and 'tableName' in datum:

@@ -35,6 +35,16 @@ def synonyms_in(datum, model):
     return synonymized_datum
 
 
+def columns_in(datum, model):
+    columnized_datum = {**datum}
+    for synonym in model.__mapper__.synonyms:
+        column_key = synonym._proxied_property.columns[0].key
+        if synonym.key in columnized_datum:
+            columnized_datum[column_key] = columnized_datum[synonym.key]
+            del columnized_datum[synonym.key]
+    return columnized_datum
+
+
 def relationships_in(datum, model):
     relationed_datum = {**datum}
     for (key, relationship) in model.__mapper__.relationships.items():
