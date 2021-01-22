@@ -1,11 +1,17 @@
+import os
 from sqlalchemy import orm
 from flask_sqlalchemy import SQLAlchemy
-
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.utils import logger
 
+from api.utils.config import APP_NAME
+
+
+LOCALHOST_POSTGRES_URL = f'postgresql://{APP_NAME}_user:{APP_NAME}_password@apipostgresdb/{APP_NAME}_apipostgres'
+POSTGRES_URL = os.environ.get('POSTGRES_URL', LOCALHOST_POSTGRES_URL)
 
 db = SQLAlchemy()
+ApiHandler.set_db(db)
 
 
 def delete():

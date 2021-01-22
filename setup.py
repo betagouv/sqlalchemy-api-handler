@@ -7,8 +7,8 @@ from setuptools import setup
 
 
 HERE = pathlib.Path(__file__).parent
-INSTALL_REQUIRES = (HERE / 'requirements.txt').read_text().splitlines()
-TESTS_REQUIRE = (HERE / 'requirements-test.txt').read_text().splitlines()[1:]
+INSTALL_REQUIRES = (HERE / 'api' / 'requirements.txt').read_text().splitlines()
+TESTS_REQUIRE = (HERE / 'api' / 'requirements-test.txt').read_text().splitlines()[1:]
 
 with io.open('README.md', 'rt', encoding='utf8') as f:
     readme = f.read()

@@ -98,27 +98,27 @@ elif [[ "$CMD" == "database" ]]; then
   SUB_CMD=$1
   shift
   if [[ "$SUB_CMD" == "rm" ]]; then
-    check stop apidb
+    check stop apipostgresdb
     check stop apiweb
-    sudo rm -rf $ROOT_PATH/docker_data/apidb
+    sudo rm -rf $ROOT_PATH/docker_data/apipostgresdb
   elif [[ "$SUB_CMD" == "schema" ]]; then
-    check start apidb
+    check start apipostgresdb
     FILE=schema_$(date +"%Y_%m_%d__%H_%M_%S").sql
-    docker exec $APP_NAME-apidb bash -c "PGPASSWORD='$APP_NAME'_password pg_dump -h localhost -d '$APP_NAME'_api -U '$APP_NAME'_user --no-comments --no-owner -N function_schema --no-privileges --schema-only --exclude-table alembic_version --exclude-schema topology --username '$APP_NAME'_user --format p > /var/lib/postgresql/$FILE"
-    sudo sed -i "s/SELECT pg_catalog.set_config('search_path', '', false);/SET search_path = public, pg_catalog;/g" $ROOT_PATH/docker_data/apidb/$FILE
+    docker exec $APP_NAME-apipostgresdb bash -c "PGPASSWORD='$APP_NAME'_password pg_dump -h localhost -d '$APP_NAME'_api -U '$APP_NAME'_user --no-comments --no-owner -N function_schema --no-privileges --schema-only --exclude-table alembic_version --exclude-schema topology --username '$APP_NAME'_user --format p > /var/lib/postgresql/$FILE"
+    sudo sed -i "s/SELECT pg_catalog.set_config('search_path', '', false);/SET search_path = public, pg_catalog;/g" $ROOT_PATH/docker_data/apipostgresdb/$FILE
   else
-    check start apidb
+    check start apipostgresdb
     check start apiweb
-    docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python manager.py database $SUB_CMD"
+    docker exec $APP_NAME-apiweb bash -c "cd /opt/api && PYTHONPATH=. python manager.py database $SUB_CMD"
   fi
   exit_with_success
 
 
 # Connect to Postgresql database in command line using psql
 elif [[ "$CMD" == "psql" ]]; then
-  check start apidb
+  check start apipostgresdb
 	COLUMNS=${COLUMNS:-''};
-	docker exec -it $APP_NAME-apidb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '${APP_NAME}_api' $*"
+	docker exec -it $APP_NAME-apipostgresdb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '${APP_NAME}_api' $*"
   exit_with_success
 
 
@@ -127,7 +127,7 @@ elif [[ "$CMD" == "prepublish" ]]; then
   VERSION=$(./$COMMAND_NAME version)
   VERSION=$(echo $VERSION  | cut -d' ' -f1)
   check start apiweb
-  docker exec -it $APP_NAME-apiweb bash -c "cd /opt/apiweb &&
+  docker exec -it $APP_NAME-apiweb bash -c "cd /opt/api &&
     rm -rf build &&
     rm -rf dist &&
     PYTHONPATH=. python setup.py sdist bdist_wheel &&
@@ -140,12 +140,12 @@ elif [[ "$CMD" == "prepublish" ]]; then
 # Publish package to PyPi
 elif [[ "$CMD" == "publish" ]]; then
   check start apiweb
-  docker exec -it $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. twine upload dist/*"
+  docker exec -it $APP_NAME-apiweb bash -c "cd /opt/api && PYTHONPATH=. twine upload dist/*"
   exit_with_success
 
 # Force docker-compose to build the docker images
 elif [[ "$CMD" == "rebuild" ]]; then
-  docker-compose -f docker-compose.yml pull apidb
+  docker-compose -f docker-compose.yml pull apipostgresdb
   docker-compose build --no-cache $*
   exit_with_success
 
@@ -183,14 +183,14 @@ elif [[ "$CMD" == "test" ]]; then
     PYTEST_ARGS=$*
   fi
   check start apiweb
-  docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"
+  docker exec $APP_NAME-apiweb bash -c "cd /opt/api && PYTHONPATH=. pytest --color=yes -rsx -v $PYTEST_ARGS"
   exit_with_success
 
 
 # Get the last version of the library
 elif [[ "$CMD" == "version" ]]; then
   check start apiweb
-  docker exec $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""
+  docker exec $APP_NAME-apiweb bash -c "cd /opt/api && PYTHONPATH=. python -c \"import $MODULE_NAME; print($MODULE_NAME.__version__)\""
   exit_with_success
 
 else
@@ -200,7 +200,7 @@ else
     INTERACTIVE_MODE='-it'
   fi
   check start apiweb
-  docker exec $INTERACTIVE_MODE $APP_NAME-apiweb bash -c "cd /opt/apiweb && PYTHONPATH=. python manager.py $CMD $*"
+  docker exec $INTERACTIVE_MODE $APP_NAME-apiweb bash -c "cd /opt/api && PYTHONPATH=. python manager.py $CMD $*"
   exit_with_success
 fi
 
