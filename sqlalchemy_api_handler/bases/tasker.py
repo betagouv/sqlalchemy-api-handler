@@ -1,6 +1,10 @@
 import sys
 from datetime import datetime
 from traceback import format_exception
+import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import JSON, UUID
+from sqlalchemy.sql import func
+
 
 from sqlalchemy_api_handler.bases.activator import Activator
 from sqlalchemy_api_handler.mixins.task_mixin import TaskState
@@ -131,3 +135,53 @@ class Tasker(Activator):
                     db.session.remove()
 
         celery_app.Task = AppTask
+
+    def downgrade(op):
+        op.drop_table('task')
+        task_state = sa.Enum(name='taskstate')
+        task_state.drop(op.get_bind())
+
+    def upgrade(op):
+        task_state = sa.Enum('CREATED',
+                             'FAILED',
+                             'PUBLISHED',
+                             'RECEIVED',
+                             'RERUNNED',
+                             'STARTED',
+                             'STOPPED',
+                             'SUCCEED',
+                              name='taskstate')
+        op.create_table('task',
+                        sa.Column('args', JSON()),
+                        sa.Column('celeryUuid',
+                                  UUID(as_uuid=True),
+                                  index=True,
+                                  nullable=False),
+                        sa.Column('creationTime',
+                                  sa.DateTime(),
+                                  nullable=False,
+                                  server_default=func.now()),
+                        sa.Column('hostname',
+                                  sa.String(64)),
+                        sa.Column('isEager',
+                                  sa.Boolean()),
+                        sa.Column('kwargs',
+                                  JSON()),
+                        sa.Column('name',
+                                  sa.String(256),
+                                  nullable=False),
+                        sa.Column('queue',
+                                  sa.String(64)),
+                        sa.Column('planificationTime',
+                                  sa.DateTime()),
+                        sa.Column('result',
+                                  JSON()),
+                        sa.Column('state',
+                                  sa.Enum(TaskState),
+                                  nullable=False),
+                        sa.Column('startTime',
+                                  sa.DateTime()),
+                        sa.Column('stopTime',
+                                  sa.DateTime()),
+                        sa.Column('traceback',
+                                  sa.Text()))

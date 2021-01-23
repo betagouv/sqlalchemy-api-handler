@@ -2,6 +2,7 @@
 *.pyc
 *.pyo
 *.egg-info/
+celerybeat-schedule
 dist/
 docker_data/
 build/

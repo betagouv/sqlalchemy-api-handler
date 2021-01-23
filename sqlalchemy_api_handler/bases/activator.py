@@ -1,6 +1,7 @@
 from functools import reduce
 from itertools import groupby
 from sqlalchemy import BigInteger, desc
+from postgresql_audit.flask import versioning_manager
 
 from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
@@ -124,3 +125,33 @@ class Activator(Save):
         if Activity:
             models += [Activity]
         return models
+
+
+    def downgrade(op):
+        op.drop_table('activity')
+        op.drop_table('transaction')
+        op.execute(
+        '''
+            DROP FUNCTION audit_table(regclass);
+            DROP FUNCTION audit_table(regclass, text[]);
+            DROP FUNCTION create_activity();
+            DROP FUNCTION jsonb_subtract(jsonb, jsonb) CASCADE;
+            DROP FUNCTION jsonb_change_key_name(jsonb, text, text);
+        '''
+        )
+
+    def upgrade(op):
+        from sqlalchemy_api_handler.mixins.activity_mixin import ActivityMixin
+        db = Activator.get_db()
+        versioning_manager.init(db.Model)
+        versioning_manager.transaction_cls.__table__.create(op.get_bind())
+        class Activity(ActivityMixin,
+                       Activator,
+                       versioning_manager.activity_cls):
+            __table_args__ = {'extend_existing': True}
+
+            id = versioning_manager.activity_cls.id
+        Activity.__table__.create(op.get_bind())
+        op.add_column('transaction',
+                      sa.Column('actor_id',
+                                sa.BigInteger()))
