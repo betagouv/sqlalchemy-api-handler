@@ -231,6 +231,12 @@ print(as_dict(venue, includes=['__activities__']))
 ```
 
 
+Celery
+-----
+Sometimes it's hard to track celery tasks from the celery cli itself.
+And you may not want use flower when you have one exposed port by application, like in scalingo classic services. Therefore, ApiHandler can also synchronise the tasks to be stored in your postgres db, then you can build your Tasks Manager Dashboard front easy as you want, querying from classic postgres api routes. See how the example is build in the api folder.
+```
+
 
 Links
 -----
