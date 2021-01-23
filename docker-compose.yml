@@ -1,47 +1,142 @@
 version: "3.7"
 
 services:
-  apiweb:
+  apidefaultworker:
     build: .
     command: >
       bash -c "set -x;
-               cd /opt/apiweb;
+              cd /opt/api;
+              python checkhealth.py;
+              watchmedo auto-restart --directory=./ \
+                                     --pattern=*.py \
+                                     --recursive \
+                                     -- \
+              celery --app=worker worker \
+                     --concurrency=1 \
+                     --gid=nogroup \
+                     --loglevel=INFO \
+                     -n=worker@%h \
+                     -Q default \
+                     --uid=nobody;"
+    container_name: ${APP_NAME}-apidefaultworker
+    depends_on:
+      - apipostgresdb
+      - apiredisdb
+      - apiweb
+    environment: &api_env
+      - APP_NAME=$APP_NAME
+      - COMMAND_NAME=$COMMAND_NAME
+      - GITHUB_NAME=${GITHUB_NAME}
+      - MACHINE_ENV=development
+      - MODULE_NAME=${MODULE_NAME}
+      - PIP_NAME=${PIP_NAME}
+    image: &api_image ${APP_NAME}-api
+    networks:
+      - apipostgresdb_nw
+      - apiredisdb_nw
+    volumes:
+      - ./:/opt/api
+
+  apiweb:
+    command: >
+      bash -c "set -x;
+               cd /opt/api;
+               PYTHONPATH=. python checkhealth.py;
                pip install -r ./requirements.txt;
                sleep infinity;"
     container_name: ${APP_NAME}-apiweb
     depends_on:
-      - apidb
-    env_file:
-      - ./.env
-    environment:
-      - GITHUB_NAME=${GITHUB_NAME}
-      - MODULE_NAME=${MODULE_NAME}
-      - ENV=${ENV:-development}
-      - PIP_NAME=${PIP_NAME}
-      - POSTGRES_URL=postgresql://${APP_NAME}_user:${APP_NAME}_password@apidb/${APP_NAME}_api
+      - apiredisdb
+      - apipostgresdb
+    environment: *api_env
+    image: *api_image
     networks:
-      - db_nw
-      - web_nw
+      - apiredisdb_nw
+      - apipostgresdb_nw
     volumes:
-      - ./:/opt/apiweb
+      - ./:/opt/api
 
-  apidb:
+  apipostgresdb:
     command: postgres -c logging_collector=on -c log_destination=stderr -c log_min_duration_statement=0 -c log_statement=all -c log_duration=on
-    container_name: ${APP_NAME}-apidb
+    container_name: ${APP_NAME}-apipostgresdb
     environment:
-      - POSTGRES_DB=${APP_NAME}_api
+      - POSTGRES_DB=${APP_NAME}_apipostgres
       - POSTGRES_PASSWORD=${APP_NAME}_password
       - POSTGRES_USER=${APP_NAME}_user
     image: postgres:12.2
     networks:
-      - db_nw
+      - apiredisdb_nw
+      - apipostgresdb_nw
     volumes:
-      - ./docker_data/apidb:/var/lib/postgresql
+      - ./docker_data/apipostgresdb:/var/lib/postgresql
+
+  apischeduler:
+    command: >
+      bash -c "set -x;
+              cd /opt/api;
+              PYTHONPATH=. python checkhealth.py;
+              watchmedo auto-restart --directory=./ \
+                                     --pattern=*.py \
+                                     --recursive \
+                                     -- \
+              celery --app=scheduler beat \
+                     --loglevel=INFO;"
+    container_name: ${APP_NAME}-apischeduler
+    depends_on:
+      - apipostgresdb
+      - apiredisdb
+      - apiweb
+    environment: *api_env
+    image: *api_image
+    networks:
+      - apipostgresdb_nw
+      - apiredisdb_nw
+    volumes:
+      - ./:/opt/api
+
+  apislowworker:
+    command: >
+      bash -c "set -x;
+              cd /opt/api;
+              PYTHONPATH=. python checkhealth.py;
+              watchmedo auto-restart --directory=./ \
+                                     --pattern=*.py \
+                                     --recursive \
+                                     -- \
+              celery --app=worker worker \
+                     --concurrency=1 \
+                     --gid=nogroup \
+                     --loglevel=INFO \
+                     -n=worker@%h \
+                     -Q slow \
+                     --uid=nobody;"
+    container_name: ${APP_NAME}-apislowworker
+    depends_on:
+      - apipostgresdb
+      - apiredisdb
+      - apiweb
+    environment: *api_env
+    image: *api_image
+    networks:
+      - apipostgresdb_nw
+      - apiredisdb_nw
+    volumes:
+      - ./:/opt/api
+
+  apiredisdb:
+    container_name: ${APP_NAME}-apiredisdb
+    image: redis:6.0.8
+    networks:
+      - apiredisdb_nw
+    ports:
+      - 6379
+    volumes:
+      - ./docker_data/apiredisdb:/var/lib/redis/data
 
 networks:
-  db_nw:
+  apipostgresdb_nw:
     driver: bridge
-  web_nw:
+  apiredisdb_nw:
     driver: bridge
 
 volumes:

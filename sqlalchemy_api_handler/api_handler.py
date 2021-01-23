@@ -2,11 +2,11 @@ from pprint import pprint
 from sqlalchemy import BigInteger,\
                        Column
 
-from sqlalchemy_api_handler.bases.activator import Activator
+from sqlalchemy_api_handler.bases.tasker import Tasker
 from sqlalchemy_api_handler.utils.humanize import humanize
 
 
-class ApiHandler(Activator):
+class ApiHandler(Tasker):
 
     id = Column(BigInteger,
                 primary_key=True,

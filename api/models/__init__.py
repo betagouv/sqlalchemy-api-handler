@@ -13,6 +13,7 @@ def import_models():
     from api.models.scope import Scope
     from api.models.stock import Stock
     from api.models.tag import Tag
+    from api.models.task import Task
     from api.models.time_interval import TimeInterval
     from api.models.user import User
     from api.models.user_offerer import UserOfferer
