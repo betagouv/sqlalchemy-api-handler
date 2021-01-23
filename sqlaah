@@ -93,6 +93,19 @@ elif [[ "$CMD" == "build" ]]; then
   exit_with_success
 
 
+# Run celery, ex ./$COMMAND_NAME celery upgrade HEAD
+elif [[ "$CMD" == "celery" ]]; then
+  SUB_COMMANDS=$*
+  check start apipostgresdb
+  check start apiredisdb
+  check start apischeduler
+  check start apiweb
+  check start apidefaultworker
+  check start apislowworker
+  docker exec ${APP_NAME}-apidefaultworker-$COMPOSITION bash -c "cd /opt/api && celery $SUB_COMMANDS"
+  exit_with_success
+
+
 # Apply sub command to the databases from tar db files
 elif [[ "$CMD" == "database" ]]; then
   SUB_CMD=$1
