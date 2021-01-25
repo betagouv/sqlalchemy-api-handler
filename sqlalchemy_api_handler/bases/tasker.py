@@ -68,7 +68,10 @@ class Tasker(Activator):
             def modify_task_to_received_state(request, sender, **kwargs):
                 task_entity = task_db_session.query(Task) \
                                              .filter_by(celeryUuid=request.id) \
-                                             .one()
+                                             .first()
+                if not task_entity:
+                    task_entity = Task(celeryUuid=request.id,
+                                       name=request.task.name)
                 task_entity.hostname = sender.hostname
                 task_entity.state = TaskState.RECEIVED
                 task_db_session.add(task_entity)
