@@ -7,7 +7,8 @@ services:
       bash -c "set -x;
               cd /opt/api;
               python checkhealth.py;
-              watchmedo auto-restart --directory=./ \
+              watchmedo auto-restart --directory=./api \
+                                     --directory=./sqlalchemy_api_handler \
                                      --pattern=*.py \
                                      --recursive \
                                      -- \
@@ -75,7 +76,8 @@ services:
       bash -c "set -x;
               cd /opt/api;
               PYTHONPATH=. python checkhealth.py;
-              watchmedo auto-restart --directory=./ \
+              watchmedo auto-restart --directory=./api \
+                                     --directory=./sqlalchemy_api_handler \
                                      --pattern=*.py \
                                      --recursive \
                                      -- \
@@ -99,7 +101,8 @@ services:
       bash -c "set -x;
               cd /opt/api;
               PYTHONPATH=. python checkhealth.py;
-              watchmedo auto-restart --directory=./ \
+              watchmedo auto-restart --directory=./api \
+                                     --directory=./sqlalchemy_api_handler \
                                      --pattern=*.py \
                                      --recursive \
                                      -- \
