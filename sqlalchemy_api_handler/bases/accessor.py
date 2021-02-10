@@ -2,6 +2,23 @@ import inflect
 
 
 class Accessor():
+
+    def get(self, path):
+        if '.' in path:
+            chunks = path.split('.')
+            key = chunks[0]
+            value = getattr(self, key)
+            if chunks[1].isdigit():
+                value = value[int(chunks[1])]
+                if len(chunks) == 2:
+                    return value
+                else:
+                    next_path = '.'.join(chunks[2:])
+            else:
+                next_path = '.'.join(chunks[1:])
+            return value.get(next_path)
+        return getattr(self, path)
+
     @classmethod
     def get_db(cls):
         return Accessor.db
