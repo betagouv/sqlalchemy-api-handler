@@ -95,28 +95,26 @@ elif [[ "$CMD" == "build" ]]; then
 
 # Run celery, ex ./$COMMAND_NAME celery upgrade HEAD
 elif [[ "$CMD" == "celery" ]]; then
-  QUEUE=$1
-  shift
   SUB_COMMANDS=$*
   check start apipostgresdb
   check start apiredisdb
   check start apischeduler
   check start apiweb
-  check start api${QUEUE}worker
+  check start apidefaultworker
   check start apislowworker
-  docker exec ${APP_NAME}-api${QUEUE}worker bash -c "cd /opt/api && celery $SUB_COMMANDS"
+  docker exec ${APP_NAME}-apidefaultworker-$COMPOSITION bash -c "cd /opt/api && celery $SUB_COMMANDS"
   exit_with_success
 
 
 # Apply sub command to the databases from tar db files
 elif [[ "$CMD" == "database" ]]; then
-  SUB_COMMAND=$1
+  SUB_CMD=$1
   shift
-  if [[ "$SUB_COMMAND" == "rm" ]]; then
+  if [[ "$SUB_CMD" == "rm" ]]; then
     check stop apipostgresdb
     check stop apiweb
     sudo rm -rf $ROOT_PATH/docker_data/apipostgresdb
-  elif [[ "$SUB_COMMAND" == "schema" ]]; then
+  elif [[ "$SUB_CMD" == "schema" ]]; then
     check start apipostgresdb
     FILE=schema_$(date +"%Y_%m_%d__%H_%M_%S").sql
     docker exec $APP_NAME-apipostgresdb bash -c "PGPASSWORD='$APP_NAME'_password pg_dump -h localhost -d '$APP_NAME'_api -U '$APP_NAME'_user --no-comments --no-owner -N function_schema --no-privileges --schema-only --exclude-table alembic_version --exclude-schema topology --username '$APP_NAME'_user --format p > /var/lib/postgresql/$FILE"
@@ -124,7 +122,7 @@ elif [[ "$CMD" == "database" ]]; then
   else
     check start apipostgresdb
     check start apiweb
-    docker exec $APP_NAME-apiweb bash -c "cd /opt/api && PYTHONPATH=. python manager.py database $SUB_COMMAND"
+    docker exec $APP_NAME-apiweb bash -c "cd /opt/api && PYTHONPATH=. python manager.py database $SUB_CMD"
   fi
   exit_with_success
 

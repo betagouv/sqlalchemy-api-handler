@@ -5,6 +5,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.sql import func
 
+
 from sqlalchemy_api_handler.bases.activator import Activator
 from sqlalchemy_api_handler.mixins.task_mixin import TaskState
 from sqlalchemy_api_handler.utils.date import strptime
@@ -37,9 +38,7 @@ class Tasker(Activator):
             @module.before_task_publish.connect
             def create_task(body, headers, routing_key, **kwargs):
                 celeryUuid = headers['id']
-                task_entity = task_db_session.query(Task) \
-                                             .filter_by(celeryUuid=celeryUuid) \
-                                             .first()
+                task_entity = Task.query.filter_by(celeryUuid=celeryUuid).first()
                 if task_entity:
                     task_entity.state = TaskState.RERUNNED
                 else:
