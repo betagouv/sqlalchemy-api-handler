@@ -51,22 +51,7 @@ class Modify(Delete, SoftDelete):
         column_keys_to_modify = set(columns.keys()).intersection(datum_keys_with_skipped_keys)
         for key in column_keys_to_modify:
             column = columns[key]
-            value = dehumanize_if_needed(column, datum.get(key))
-            if isinstance(value, str):
-                if isinstance(column.type, Integer):
-                    self._try_to_set_attribute_with_decimal_value(column, key, value, 'integer')
-                elif isinstance(column.type, (Float, Numeric)):
-                    self._try_to_set_attribute_with_decimal_value(column, key, value, 'float')
-                elif isinstance(column.type, String):
-                    setattr(self, key, value.strip() if value else value)
-                elif isinstance(column.type, DateTime):
-                    self._try_to_set_attribute_with_deserialized_datetime(column, key, value)
-                elif isinstance(column.type, UUID):
-                    self._try_to_set_attribute_with_uuid(column, key, value)
-            elif not isinstance(value, datetime) and isinstance(column.type, DateTime):
-                self._try_to_set_attribute_with_deserialized_datetime(column, key, value)
-            else:
-                setattr(self, key, value)
+            self._try_to_set_attribute(column, key, datum.get(key))
 
         relationships = self.__mapper__.relationships
         relationship_keys_to_modify = set(relationships.keys()).intersection(datum_keys_with_skipped_keys)
@@ -80,9 +65,7 @@ class Modify(Delete, SoftDelete):
         synonyms = self.__mapper__.synonyms
         synonym_keys_to_modify = set(synonyms.keys()).intersection(datum_keys_with_skipped_keys)
         for key in synonym_keys_to_modify:
-            value = dehumanize_if_needed(synonyms[key]._proxied_property.columns[0],
-                                         datum[key])
-            setattr(self, key, value)
+            self._try_to_set_attribute(synonyms[key]._proxied_property.columns[0], key, datum[key])
 
         other_keys_to_modify = datum_keys_with_skipped_keys \
                                 - column_keys_to_modify \
@@ -150,6 +133,24 @@ class Modify(Delete, SoftDelete):
                     for obj in value
                 ]
         return value
+
+    def _try_to_set_attribute(self, column, key, value):
+        value = dehumanize_if_needed(column, value)
+        if isinstance(value, str):
+            if isinstance(column.type, Integer):
+                self._try_to_set_attribute_with_decimal_value(column, key, value, 'integer')
+            elif isinstance(column.type, (Float, Numeric)):
+                self._try_to_set_attribute_with_decimal_value(column, key, value, 'float')
+            elif isinstance(column.type, String):
+                setattr(self, key, value.strip() if value else value)
+            elif isinstance(column.type, DateTime):
+                self._try_to_set_attribute_with_deserialized_datetime(column, key, value)
+            elif isinstance(column.type, UUID):
+                self._try_to_set_attribute_with_uuid(column, key, value)
+        elif not isinstance(value, datetime) and isinstance(column.type, DateTime):
+            self._try_to_set_attribute_with_deserialized_datetime(column, key, value)
+        else:
+            setattr(self, key, value)
 
     def _try_to_set_attribute_with_deserialized_datetime(self, col, key, value):
         try:
