@@ -3,7 +3,7 @@ import inflect
 
 class Accessor():
 
-    def get(self, path):
+    def get_from(self, path):
         if '.' in path:
             chunks = path.split('.')
             key = chunks[0]
@@ -16,7 +16,7 @@ class Accessor():
                     next_path = '.'.join(chunks[2:])
             else:
                 next_path = '.'.join(chunks[1:])
-            return value.get(next_path)
+            return value.get_from(next_path)
         return getattr(self, path)
 
     @classmethod
