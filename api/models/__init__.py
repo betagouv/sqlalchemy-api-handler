@@ -1,10 +1,6 @@
 # pylint: disable=C0415
 # pylint: disable=W0641
 # pylint: disable=R0914
-
-from api.utils.database import db
-
-
 def import_models():
     from api.models.activity import Activity
     from api.models.foo import Foo

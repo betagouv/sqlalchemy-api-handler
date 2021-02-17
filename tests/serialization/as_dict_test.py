@@ -4,6 +4,7 @@ from api.models.offer import Offer
 from api.models.stock import Stock
 from api.models.user import User
 
+
 class AsDictTest:
     def test_simple_dictify(self, app):
         # given
