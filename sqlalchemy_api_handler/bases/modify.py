@@ -262,11 +262,14 @@ class Modify(Delete, SoftDelete):
         return model.modify(entity, model._existing_from(datum))
 
     @classmethod
-    def create_or_modify(model, datum):
+    def create_or_modify(model, datum, with_add=True):
         entity = model.find(datum)
         if entity:
             return model.modify(entity, model._existing_from(datum))
-        return model(**model._created_from(datum))
+        entity = model(**model._created_from(datum))
+        if with_add:
+            Modify.add(entity)
+        return entity
 
 def dehumanize_if_needed(column, value: Any) -> Any:
     if is_id_column(column):

@@ -16,6 +16,7 @@ from sqlalchemy_api_handler.serialization import as_dict
 from tests.conftest import with_delete
 from api.models.foo import Foo
 from api.models.offer import Offer
+from api.models.offer_tag import OfferTag
 from api.models.offerer import Offerer
 from api.models.scope import ScopeType
 from api.models.stock import Stock
@@ -495,11 +496,9 @@ class ModifyTest:
         # Given
         offerer = Offerer(name="foo")
         user = User(email="foo.marx@com", publicName="Foo Marx")
-        user_offerer = UserOfferer(
-            rights='admin',
-            offerer=offerer,
-            user=user
-        )
+        user_offerer = UserOfferer(rights='admin',
+                                   offerer=offerer,
+                                   user=user)
         ApiHandler.save(user_offerer)
 
         # When
@@ -560,7 +559,7 @@ class ModifyTest:
         assert tag2.scopes[0].tagId == tag2.id
 
     @with_delete
-    def test_foo(self, app):
+    def test_create_or_modify_returns_created_tag_with_next_id(self, app):
         # Given
         TAGS = [
             {
@@ -601,6 +600,25 @@ class ModifyTest:
 
         assert '/'.join([str(tag.id) for tag in tags1]) == '/'.join([str(tag.id) for tag in tags2])
         assert '/'.join([str(tag.scopes[0].id) for tag in tags1]) == '/'.join([str(tag.scopes[0].id) for tag in tags2])
+
+    @with_delete
+    def test_create_or_modify_returns_link_entities(self, app):
+        # Given
+        offer_dict = {
+            '__SEARCH_BY__': 'name',
+            'name': 'foo',
+            'stock': Scope.create_or_modify({
+                '__SEARCH_BY__': '',
+                'price': 3
+            })
+        }
+
+        # When
+        offer = Offer.create_or_modify(offer_dict)
+
+        # Then
+        assert offer.stock.price == 3
+
 
 
     @with_delete
