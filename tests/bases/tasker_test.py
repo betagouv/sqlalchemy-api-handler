@@ -23,17 +23,3 @@ class TaskerTest:
         assert task.name == 'api.tasks.hello.print_text'
         assert task.state == TaskState.SUCCEED
         assert task.result == { 'text': text }
-
-    @with_delete
-    def test_create_delayed_task(self, app):
-        # Given
-        text = 'Karl !'
-
-        # When
-        print_text.delay(text)
-
-        # Then
-        task = Task.query.first()
-        assert task.isEager == False
-        assert task.name == 'api.tasks.hello.print_text'
-        assert task.state == TaskState.PUBLISHED
