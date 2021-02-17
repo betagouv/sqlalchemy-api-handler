@@ -14,7 +14,6 @@ setup(FLASK_APP)
 
 import_tasks()
 
-
 CELERY_APP.conf.beat_schedule = {
     'hourly_hello_sync': {
         'kwargs': {
