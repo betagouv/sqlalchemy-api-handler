@@ -12,7 +12,7 @@ class AccessorTest:
         stock = Stock(offer=offer, price=1)
 
         # When
-        offer_name = stock.get_from('offer.name')
+        offer_name = stock.get('offer.name')
 
         # Then
         assert offer_name == offer.name
@@ -23,7 +23,7 @@ class AccessorTest:
         stock = Stock(offer=offer, price=1)
 
         # When
-        stock_price = stock.get_from('offer.stocks.0.price')
+        stock_price = stock.get('offer.stocks.0.price')
 
         # Then
         assert stock_price == stock.price
