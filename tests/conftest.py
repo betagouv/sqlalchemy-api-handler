@@ -2,6 +2,10 @@ from functools import wraps
 from flask import Flask
 import pytest
 
+# need to import activity here to make sure it is
+# the first import compared to the other models
+# otherwise activity does not work 
+from api.models.activity import Activity
 from api.utils.database import create, db, delete
 from api.utils.setup import setup
 
