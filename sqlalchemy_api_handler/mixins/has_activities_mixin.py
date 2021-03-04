@@ -61,6 +61,15 @@ class HasActivitiesMixin(object):
         query_filter = (self._get_activity_join_filter()) & \
                        (Activity.verb == 'update')
         return Activity.query.filter(query_filter) \
+                             .order_by(desc(Activity.id)) \
+                             .limit(1) \
+                             .one()
+
+
+    def just_before_activity_from(self, activity):
+        Activity = Activator.get_activity()
+        return Activity.query.filter(self._get_activity_join_filter(),
+                                     Activity.dateCreated < activity.dateCreated) \
                              .order_by(desc(Activity.dateCreated)) \
                              .limit(1) \
                              .one()
