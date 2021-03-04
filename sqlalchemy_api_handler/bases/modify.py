@@ -240,7 +240,9 @@ class Modify(Delete, SoftDelete):
             filters = ', '.join(search_by) if isinstance(search_by, list) else search_by
             errors.add_error('_filter_from', 'None of filters found among: ' + filters)
             raise errors
+        print('MMM', model, datum, filters)
         entity = model.query.filter_by(**filters).first()
+        print('APRES', model, datum)
         if not entity:
             return None
         return entity
@@ -263,11 +265,20 @@ class Modify(Delete, SoftDelete):
         return model.modify(entity, model._existing_from(datum))
 
     @classmethod
-    def create_or_modify(model, datum):
+    def create_or_modify(model,
+                         datum,
+                         with_add=False):
+        print('datum', datum)
         entity = model.find(datum)
+        print('datum', datum)
         if entity:
-            return model.modify(entity, model._existing_from(datum))
-        return model(**model._created_from(datum))
+            return model.modify(entity,
+                                model._existing_from(datum),
+                                with_add=with_add)
+        entity = model(**model._created_from(datum))
+        if with_add:
+            Modify.add(entity)
+        return entity
 
 def dehumanize_if_needed(column, value: Any) -> Any:
     if is_id_column(column):

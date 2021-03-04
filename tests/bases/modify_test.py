@@ -16,6 +16,7 @@ from sqlalchemy_api_handler.serialization import as_dict
 from tests.conftest import with_delete
 from api.models.foo import Foo
 from api.models.offer import Offer
+from api.models.offer_tag import OfferTag
 from api.models.offerer import Offerer
 from api.models.scope import ScopeType
 from api.models.stock import Stock
@@ -33,13 +34,11 @@ now = datetime.utcnow()
 class ModifyTest:
     def test_user_string_fields_are_stripped_of_whitespace(self):
         # Given
-        user_data = {
-            'email': '   test@example.com',
-            'firstName': 'John   ',
-            'lastName': None,
-            'postalCode': '   93100   ',
-            'publicName': ''
-        }
+        user_data = { 'email': '   test@example.com',
+                      'firstName': 'John   ',
+                      'lastName': None,
+                      'postalCode': '   93100   ',
+                      'publicName': '' }
 
         # When
         user = User(**user_data)
@@ -162,14 +161,10 @@ class ModifyTest:
     def test_for_valid_relationship_dict(self):
         # Given
         test_object = Stock()
-        offer_dict = {
-            'name': 'foo',
-            'type': 'bar'
-        }
-        stock_dict = {
-            'offer': offer_dict,
-            'price': 1
-        }
+        offer_dict = { 'name': 'foo',
+                       'type': 'bar' }
+        stock_dict = { 'offer': offer_dict,
+                       'price': 1 }
 
         # When
         test_object.modify(stock_dict)
@@ -182,17 +177,11 @@ class ModifyTest:
     def test_for_valid_relationship_dicts(self):
         # Given
         test_object = Offer()
-        stock_dict1 = {
-            'price': 1
-        }
-        stock_dict2 = {
-            'price': 1
-        }
-        offer_dict = {
-            'name': 'foo',
-            'stocks': [stock_dict1, stock_dict2],
-            'type': 'bar'
-        }
+        stock_dict1 = { 'price': 1 }
+        stock_dict2 = { 'price': 1 }
+        offer_dict = {  'name': 'foo',
+                        'stocks': [stock_dict1, stock_dict2],
+                        'type': 'bar' }
 
         # When
         test_object.modify(offer_dict)
@@ -302,11 +291,9 @@ class ModifyTest:
 
         # When
         with pytest.raises(EmptyFilterError) as errors:
-            Offer.find({
-                '__SEARCH_BY__': 'position',
-                'name': 'fee',
-                'type': 'bric'
-            })
+            Offer.find({ '__SEARCH_BY__': 'position',
+                         'name': 'fee',
+                         'type': 'bric' })
 
         # Then
         assert errors.value.errors['_filter_from'] == ["None of filters found among: position"]
@@ -318,11 +305,9 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find({
-            '__SEARCH_BY__': 'name',
-            'name': 'fee',
-            'type': 'bric'
-        })
+        offer2 = Offer.find({ '__SEARCH_BY__': 'name',
+                              'name': 'fee',
+                              'type': 'bric' })
 
         # Then
         assert offer2 is None
@@ -334,10 +319,8 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find({
-            '__SEARCH_BY__': 'name',
-            'name': 'foo'
-        })
+        offer2 = Offer.find({ '__SEARCH_BY__': 'name',
+                              'name': 'foo' })
 
         # Then
         assert offer2.id == offer1.id
@@ -351,10 +334,8 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find_or_create({
-            '__SEARCH_BY__': 'name',
-            'name': 'foo'
-        })
+        offer2 = Offer.find_or_create({ '__SEARCH_BY__': 'name',
+                                        'name': 'foo' })
 
         # Then
         assert offer2.id == offer1.id
@@ -368,11 +349,9 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find_or_create({
-            '__SEARCH_BY__': 'name',
-            'name': 'fee',
-            'type': 'gold'
-        })
+        offer2 = Offer.find_or_create({ '__SEARCH_BY__': 'name',
+                                        'name': 'fee',
+                                        'type': 'gold' })
 
         # Then
         assert offer2.id != offer1.id
@@ -386,11 +365,9 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.find_and_modify({
-            '__SEARCH_BY__': 'name',
-            'name': 'foo',
-            'type': 'bric'
-        })
+        offer2 = Offer.find_and_modify({ '__SEARCH_BY__': 'name',
+                                         'name': 'foo',
+                                         'type': 'bric' })
 
         # Then
         assert offer2.id == offer1.id
@@ -405,11 +382,9 @@ class ModifyTest:
 
         # When
         with pytest.raises(ResourceNotFoundError) as e:
-            Offer.find_and_modify({
-                '__SEARCH_BY__': 'name',
-                'name': 'fee',
-                'type': 'bric'
-            })
+            Offer.find_and_modify({ '__SEARCH_BY__': 'name',
+                                    'name': 'fee',
+                                    'type': 'bric' })
 
         # Then
         assert e.value.errors['find_and_modify'] == ['No ressource found with {"name": "fee"} ']
@@ -421,11 +396,9 @@ class ModifyTest:
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.create_or_modify({
-            '__SEARCH_BY__': 'name',
-            'name': 'fee',
-            'type': 'bric'
-        })
+        offer2 = Offer.create_or_modify({ '__SEARCH_BY__': 'name',
+                                          'name': 'fee',
+                                          'type': 'bric' })
 
         # Then
         assert offer2.id != offer1.id
@@ -435,15 +408,13 @@ class ModifyTest:
     @with_delete
     def test_create_or_modify_returns_modified_offer(self, app):
         # Given
-        offer1 = Offer(name="foo", type="bar")
+        offer1 = Offer(name='foo', type='bar')
         ApiHandler.save(offer1)
 
         # When
-        offer2 = Offer.create_or_modify({
-            '__SEARCH_BY__': 'name',
-            'name': 'foo',
-            'type': 'bric'
-        })
+        offer2 = Offer.create_or_modify({ '__SEARCH_BY__': 'name',
+                                          'name': 'foo',
+                                          'type': 'bric' })
 
         # Then
         assert offer2.id == offer1.id
@@ -459,11 +430,9 @@ class ModifyTest:
         ApiHandler.save(offerer1)
 
         # When
-        offerer2 = Offerer.create_or_modify({
-            '__SEARCH_BY__': 'id',
-            'id': humanize(offerer1.id),
-            'name': 'fee'
-        })
+        offerer2 = Offerer.create_or_modify({ '__SEARCH_BY__': 'id',
+                                              'id': humanize(offerer1.id),
+                                              'name': 'fee' })
 
         # Then
         assert offerer2.id == offerer1.id
@@ -477,12 +446,10 @@ class ModifyTest:
         ApiHandler.save(offerer, user)
 
         # When
-        user_offerer = UserOfferer.create_or_modify({
-            '__SEARCH_BY__': ['offererId', 'userId'],
-            'rights': 'admin',
-            'offererId': humanize(offerer.id),
-            'userId': humanize(user.id)
-        })
+        user_offerer = UserOfferer.create_or_modify({ '__SEARCH_BY__': ['offererId', 'userId'],
+                                                      'rights': 'admin',
+                                                      'offererId': humanize(offerer.id),
+                                                      'userId': humanize(user.id) })
 
         # Then
         assert user_offerer.offererId == offerer.id
@@ -495,20 +462,16 @@ class ModifyTest:
         # Given
         offerer = Offerer(name="foo")
         user = User(email="foo.marx@com", publicName="Foo Marx")
-        user_offerer = UserOfferer(
-            rights='admin',
-            offerer=offerer,
-            user=user
-        )
+        user_offerer = UserOfferer(rights='admin',
+                                   offerer=offerer,
+                                   user=user)
         ApiHandler.save(user_offerer)
 
         # When
-        user_offerer = UserOfferer.create_or_modify({
-            '__SEARCH_BY__': ['offererId', 'userId'],
-            'offererId': humanize(offerer.id),
-            'rights': 'editor',
-            'userId': humanize(user.id)
-        })
+        user_offerer = UserOfferer.create_or_modify({ '__SEARCH_BY__': ['offererId', 'userId'],
+                                                      'offererId': humanize(offerer.id),
+                                                      'rights': 'editor',
+                                                      'userId': humanize(user.id) })
 
         # Then
         assert user_offerer.offererId == offerer.id
@@ -518,15 +481,9 @@ class ModifyTest:
     @with_delete
     def test_create_or_modify_returns_created_tag_with_nested_scope(self, app):
         # Given
-        tag = Tag.create_or_modify({
-            '__SEARCH_BY__': 'label',
-            'label': 'Very High',
-            'scopes': [
-                {
-                    'type': ScopeType.REVIEW
-                }
-            ]
-        })
+        tag = Tag.create_or_modify({ '__SEARCH_BY__': 'label',
+                                     'label': 'Very High',
+                                     'scopes': [ { 'type': ScopeType.REVIEW } ] })
 
         # When
         ApiHandler.save(tag)
@@ -601,6 +558,41 @@ class ModifyTest:
 
         assert '/'.join([str(tag.id) for tag in tags1]) == '/'.join([str(tag.id) for tag in tags2])
         assert '/'.join([str(tag.scopes[0].id) for tag in tags1]) == '/'.join([str(tag.scopes[0].id) for tag in tags2])
+
+
+    @with_delete
+    def test_create_or_modify_with_automatic_add(self, app):
+        # Given
+        from api.utils.database import db
+        """
+        offer = Offer.create_or_modify({ '__SEARCH_BY__': 'name',
+                                          'name': 'foo',
+                                          'type': 'bar' },
+                                        with_add=True
+                                        )
+        print('AVANT', offer, offer.id)
+        stock = Stock.create_or_modify({ '__SEARCH_BY__': 'offer',
+                                          'offer': offer,
+                                          'price': 2},
+                                       #with_add=True
+                                       )
+        """
+        offer = Offer(name='foo', type='bar')
+        print(offer, offer.id)
+        db.session.add(offer)
+        print('KKK', Offer.query.filter().first())
+        #print('KKK', offer, offer.id)
+        #stock = Stock.query.filter().first()
+        #print(offer, offer.id)
+
+        #print(stock, stock.id)
+        #print(stock.offer, stock.offer.id)
+        #print(offer, offer.id)
+        # When
+
+
+        #Then
+        assert 2 == 3
 
 
     @with_delete

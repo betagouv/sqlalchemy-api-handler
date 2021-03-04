@@ -7,7 +7,6 @@ from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.bases.save import Save
 from sqlalchemy_api_handler.utils.datum import relationships_in
-from sqlalchemy_api_handler.utils.logger import logger
 
 
 def merged_datum_from_activities(activities,
@@ -33,7 +32,8 @@ class Activator(Save):
                  with_check_not_soft_deleted=True):
         Activity = Activator.get_activity()
         for (entity_identifier, grouped_activities) in groupby(activities, key=lambda activity: activity.entityIdentifier):
-            grouped_activities = sorted(grouped_activities, key=lambda activity: activity.dateCreated)
+            grouped_activities = sorted(grouped_activities,
+                                        key=lambda activity: activity.dateCreated)
 
             first_activity = grouped_activities[0]
             table_name = first_activity.table_name
