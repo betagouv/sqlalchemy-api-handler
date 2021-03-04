@@ -89,9 +89,6 @@ class Activator(Save):
                 if insert_activity.transaction:
                     first_activity.transaction = Activity.transaction.mapper.class_()
                     first_activity.transaction.actor  = insert_activity.transaction.actor
-
-                for activity in grouped_activities[1:]:
-                    activity.old_data = { id_key: entity.id }
                 Activator.activate(*grouped_activities[1:],
                                    with_check_not_soft_deleted=with_check_not_soft_deleted)
                 continue
@@ -106,16 +103,31 @@ class Activator(Save):
 
             all_activities_since_min_date = sorted(already_activities_since_min_date + grouped_activities,
                                                    key=lambda activity: activity.dateCreated)
-            datum = merged_datum_from_activities(all_activities_since_min_date,
-                                                 model,
-                                                 initial=all_activities_since_min_date[0].datum)
-            if model.id.key in datum:
-                del datum[model.id.key]
-            entity = model.query.get(entity_id)
-            entity.modify(datum,
-                          with_check_not_soft_deleted=with_check_not_soft_deleted)
 
-            Save.save(entity, *grouped_activities)
+            entity = model.query.get(entity_id)
+            before_data = all_activities_since_min_date[0].old_data \
+                           or entity.just_before_activity_from(all_activities_since_min_date[0]).data
+            merged_datum = {}
+            for activity in all_activities_since_min_date:
+                activity.old_data = before_data
+                activity.verb = 'update'
+                before_data = { **before_data,
+                                 **activity.changed_data }
+                merged_datum = { **merged_datum,
+                                 **relationships_in(activity.patch, model) }
+
+            if model.id.key in merged_datum:
+                del merged_datum[model.id.key]
+
+            db = Activator.get_db()
+            db.session.add_all(grouped_activities)
+            db.session.flush()
+            entity.modify(merged_datum,
+                          with_add=True,
+                          with_check_not_soft_deleted=with_check_not_soft_deleted)
+            db.session.flush()
+            db.session.delete(entity.__lastActivity__)
+            db.session.commit()
 
 
     @classmethod

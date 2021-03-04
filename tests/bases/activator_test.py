@@ -145,7 +145,7 @@ class ActivatorTest:
         assert insert_offer_activity.patch['id'] == humanize(offer.id)
 
     @with_delete
-    def test_create_activities_on_existing_offer_saves_none_activities_and_an_update_one(self, app):
+    def test_create_activities_on_existing_offer_saves_update_activities(self, app):
         # Given
         offer_activity_identifier = uuid4()
         first_patch = { 'name': 'bar', 'type': 'foo' }
@@ -171,21 +171,17 @@ class ActivatorTest:
         offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         all_activities = Activity.query.all()
         offer_activities = offer.__activities__
-        merged_patch = { 'name': 'bor', 'type': 'fee' }
-        assert len(all_activities) == 4
-        assert len(offer_activities) == 4
+        assert len(all_activities) == 3
+        assert len(offer_activities) == 3
         assert offer_activities[0].entityIdentifier == offer.activityIdentifier
         assert offer_activities[0].verb == 'insert'
         assert offer_activities[0].id == offer_activities[0].id
         assert offer_activities[1].entityIdentifier == offer.activityIdentifier
-        assert offer_activities[1].verb == None
+        assert offer_activities[1].verb == 'update'
         assert offer_activities[1].patch.items() == second_patch.items()
         assert offer_activities[2].entityIdentifier == offer.activityIdentifier
-        assert offer_activities[2].verb == None
+        assert offer_activities[2].verb == 'update'
         assert offer_activities[2].patch.items() == third_patch.items()
-        assert offer_activities[3].entityIdentifier == offer.activityIdentifier
-        assert offer_activities[3].verb == 'update'
-        assert offer_activities[3].patch.items() == merged_patch.items()
         assert offer.name == 'bor'
         assert offer.type == 'fee'
 
