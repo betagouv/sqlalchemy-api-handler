@@ -95,10 +95,9 @@ class Activator(Save):
 
             min_date = min(map(lambda a: a.dateCreated, grouped_activities))
             already_activities_since_min_date = Activity.query \
-                                                        .filter(
-                                                            (entity._get_activity_join_filter()) & \
-                                                            (Activity.dateCreated >= min_date)
-                                                        ) \
+                                                        .filter(entity._get_activity_join_filter(),
+                                                                Activity.dateCreated >= min_date,
+                                                                Activity.verb == 'update') \
                                                         .all()
 
             all_activities_since_min_date = sorted(already_activities_since_min_date + grouped_activities,
@@ -116,17 +115,19 @@ class Activator(Save):
                 merged_datum = { **merged_datum,
                                  **relationships_in(activity.patch, model) }
 
+
             if model.id.key in merged_datum:
                 del merged_datum[model.id.key]
 
             db = Activator.get_db()
             db.session.add_all(grouped_activities)
-            db.session.flush()
+            table_name = model.__tablename__
+            db.session.execute(f'ALTER TABLE {table_name} DISABLE TRIGGER audit_trigger_update;')
             entity.modify(merged_datum,
                           with_add=True,
                           with_check_not_soft_deleted=with_check_not_soft_deleted)
             db.session.flush()
-            db.session.delete(entity.__lastActivity__)
+            db.session.execute(f'ALTER TABLE {table_name} ENABLE TRIGGER audit_trigger_update;')
             db.session.commit()
 
 
