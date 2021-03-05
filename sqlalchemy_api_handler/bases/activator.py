@@ -121,13 +121,12 @@ class Activator(Save):
 
             db = Activator.get_db()
             db.session.add_all(grouped_activities)
-            table_name = model.__tablename__
-            db.session.execute(f'ALTER TABLE {table_name} DISABLE TRIGGER audit_trigger_update;')
+            db.session.execute(f'ALTER TABLE {model.__tablename__} DISABLE TRIGGER audit_trigger_update;')
             entity.modify(merged_datum,
                           with_add=True,
                           with_check_not_soft_deleted=with_check_not_soft_deleted)
             db.session.flush()
-            db.session.execute(f'ALTER TABLE {table_name} ENABLE TRIGGER audit_trigger_update;')
+            db.session.execute(f'ALTER TABLE {model.__tablename__} ENABLE TRIGGER audit_trigger_update;')
             db.session.commit()
 
 
