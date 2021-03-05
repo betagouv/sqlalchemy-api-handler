@@ -133,7 +133,7 @@ elif [[ "$CMD" == "database" ]]; then
 elif [[ "$CMD" == "psql" ]]; then
   check start apipostgresdb
 	COLUMNS=${COLUMNS:-''};
-	docker exec -it $APP_NAME-apipostgresdb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '${APP_NAME}_api' $*"
+	docker exec -it $APP_NAME-apipostgresdb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '${APP_NAME}_apipostgres' $*"
   exit_with_success
 
 
