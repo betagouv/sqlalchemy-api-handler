@@ -31,7 +31,7 @@ services:
       - MACHINE_ENV=development
       - MODULE_NAME=${MODULE_NAME}
       - PIP_NAME=${PIP_NAME}
-    image: &api_image ${APP_NAME}-api
+    image: &api_image ${DOCKER_REPOSITORY}/api:1.0
     networks:
       - apipostgresdb_nw
       - apiredisdb_nw
@@ -85,6 +85,7 @@ services:
                      --loglevel=INFO;"
     container_name: ${APP_NAME}-apischeduler
     depends_on:
+      - apidefaultworker
       - apipostgresdb
       - apiredisdb
       - apiweb
