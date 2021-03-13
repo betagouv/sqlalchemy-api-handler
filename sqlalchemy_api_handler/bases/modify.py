@@ -37,7 +37,8 @@ class Modify(Delete, SoftDelete):
                datum: dict,
                skipped_keys: List[str] = [],
                with_add=False,
-               with_check_not_soft_deleted=True):
+               with_check_not_soft_deleted=True,
+               with_flush=False):
 
         if with_add:
             Modify.add(self)
@@ -77,6 +78,9 @@ class Modify(Delete, SoftDelete):
                 if isinstance(value_type, property) and value_type.fset is None:
                     return
             setattr(self, key, datum[key])
+
+        if with_flush:
+            Modify.get_db().session.flush()
 
         return self
 
@@ -232,7 +236,9 @@ class Modify(Delete, SoftDelete):
         return existing
 
     @classmethod
-    def find(model, datum):
+    def find(model,
+             datum,
+             with_no_autoflush=True):
         filters = model._filter_from(datum)
         if not filters:
             search_by = datum['__SEARCH_BY__']
@@ -240,23 +246,32 @@ class Modify(Delete, SoftDelete):
             filters = ', '.join(search_by) if isinstance(search_by, list) else search_by
             errors.add_error('_filter_from', 'None of filters found among: ' + filters)
             raise errors
-        print('MMM', model, datum, filters)
-        entity = model.query.filter_by(**filters).first()
-        print('APRES', model, datum)
+
+        if with_no_autoflush:
+            with Modify.get_db().session.no_autoflush:
+                entity = model.query.filter_by(**filters).first()
+        else:
+            entity = model.query.filter_by(**filters).first()
+
         if not entity:
             return None
         return entity
 
     @classmethod
-    def find_or_create(model, datum):
-        entity = model.find(datum)
+    def find_or_create(model,
+                       datum,
+                       with_no_autoflush=True):
+        entity = model.find(datum, with_no_autoflush=with_no_autoflush)
         if entity:
             return entity
         return model(**model._created_from(datum))
 
     @classmethod
-    def find_and_modify(model, datum):
-        entity = model.find(datum)
+    def find_and_modify(model,
+                        datum,
+                        with_no_autoflush=True):
+        entity = model.find(datum,
+                            with_no_autoflush=with_no_autoflush)
         if not entity:
             errors = ResourceNotFoundError()
             filters = model._filter_from(datum)
@@ -267,17 +282,21 @@ class Modify(Delete, SoftDelete):
     @classmethod
     def create_or_modify(model,
                          datum,
-                         with_add=False):
-        print('datum', datum)
-        entity = model.find(datum)
-        print('datum', datum)
+                         with_add=False,
+                         with_flush=False,
+                         with_no_autoflush=True):
+        entity = model.find(datum,
+                            with_no_autoflush=with_no_autoflush)
         if entity:
             return model.modify(entity,
                                 model._existing_from(datum),
-                                with_add=with_add)
+                                with_add=with_add,
+                                with_flush=with_flush)
         entity = model(**model._created_from(datum))
         if with_add:
             Modify.add(entity)
+        if with_flush:
+            Modify.get_db().session.flush()
         return entity
 
 def dehumanize_if_needed(column, value: Any) -> Any:

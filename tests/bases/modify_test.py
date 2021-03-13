@@ -426,7 +426,6 @@ class ModifyTest:
     def test_create_or_modify_returns_modified_offerer_search_by_id(self, app):
         # Given
         offerer1 = Offerer(name="foo")
-
         ApiHandler.save(offerer1)
 
         # When
@@ -561,39 +560,29 @@ class ModifyTest:
 
 
     @with_delete
-    def test_create_or_modify_with_automatic_add(self, app):
+    def test_create_or_modify_with_entity_search(self, app):
         # Given
         from api.utils.database import db
-        """
         offer = Offer.create_or_modify({ '__SEARCH_BY__': 'name',
                                           'name': 'foo',
                                           'type': 'bar' },
-                                        with_add=True
-                                        )
-        print('AVANT', offer, offer.id)
-        stock = Stock.create_or_modify({ '__SEARCH_BY__': 'offer',
+                                        with_add=True,
+                                        with_flush=True)
+        stock1 = Stock.create_or_modify({ '__SEARCH_BY__': ['offer', 'price'],
                                           'offer': offer,
-                                          'price': 2},
-                                       #with_add=True
-                                       )
-        """
-        offer = Offer(name='foo', type='bar')
-        print(offer, offer.id)
-        db.session.add(offer)
-        print('KKK', Offer.query.filter().first())
-        #print('KKK', offer, offer.id)
-        #stock = Stock.query.filter().first()
-        #print(offer, offer.id)
-
-        #print(stock, stock.id)
-        #print(stock.offer, stock.offer.id)
-        #print(offer, offer.id)
-        # When
-
+                                          'price': 2})
+        stock2 = Stock.create_or_modify({ '__SEARCH_BY__': ['offer', 'price'],
+                                          'offer': offer,
+                                          'price': 3})
 
         #Then
-        assert 2 == 3
-
+        assert offer.id != None
+        assert offer.name == 'foo'
+        assert offer.type == 'bar'
+        assert stock1.offer.id == offer.id
+        assert stock2.offer.id == offer.id
+        assert stock1.id == None
+        assert stock2.id == None
 
     @with_delete
     def test_modify_a_property_with_no_fset(self, app):
