@@ -20,7 +20,7 @@ CELERY_APP.conf.beat_schedule = {
         'kwargs': {
             'mode': 'Karl !'
         },
-        'task': 'tasks.hello.print_text',
+        'task': 'api.tasks.hello.print_text',
         'schedule': crontab(minute=15, hour='*/1'),
     },
 }
