@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, String, Text
 from sqlalchemy_api_handler import ApiHandler
 
 from api.utils.database import db
@@ -19,5 +19,3 @@ class Tag(ApiHandler,
     info = Column(Text())
 
     label = Column(String(128), unique=True)
-
-    value = Column(Integer())

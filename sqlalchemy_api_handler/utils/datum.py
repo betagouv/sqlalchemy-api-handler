@@ -45,6 +45,60 @@ def columns_in(datum, model):
     return columnized_datum
 
 
+def merge(source, destination):
+    '''
+    run me with nosetests --with-doctest file.py
+
+    >>> a = { 'first' : { 'all_rows' : { 'pass' : 'dog', 'number' : '1' } } }
+    >>> b = { 'first' : { 'all_rows' : { 'fail' : 'cat', 'number' : '5' } } }
+    >>> merge(b, a) == { 'first' : { 'all_rows' : { 'pass' : 'dog', 'fail' : 'cat', 'number' : '5' } } }
+    True
+    '''
+    for key, value in source.items():
+        if isinstance(value, dict):
+            # get node or create one
+            node = destination.setdefault(key, {})
+            merge(value, node)
+        else:
+            destination[key] = value
+
+    return destination
+
+
+def nesting_datum_from(flatten_path_datum,
+                       nested_data_by_prefix=None):
+    datum = {}
+    if nested_data_by_prefix is None:
+        nested_data_by_prefix = {}
+    for (key, value) in flatten_path_datum.items():
+        if '.' in key:
+            chunks = key.split('.')
+            prefix = chunks[0]
+            index = int(chunks[1]) if chunks[1].isdigit() else None
+            if prefix not in nested_data_by_prefix:
+                nested_data_by_prefix[prefix] = [] if index != None else {}
+            if index != None:
+                next_key = '.'.join(chunks[2:])
+
+                is_new = len(nested_data_by_prefix[prefix]) < index + 1
+
+                next_value = nesting_datum_from({ next_key: value },
+                                                nested_data_by_prefix=nested_data_by_prefix[prefix][index] if not is_new else None)
+                if is_new:
+                    nested_data_by_prefix[prefix].insert(index, next_value)
+                else:
+                    merged = merge(nested_data_by_prefix[prefix][index], next_value)
+                    nested_data_by_prefix[prefix][index] = merged
+            else:
+                next_key = '.'.join(chunks[1:])
+                next_value = nesting_datum_from({ next_key: value },
+                                                nested_data_by_prefix=nested_data_by_prefix[prefix])
+                nested_data_by_prefix[prefix].update(next_value)
+        else:
+            datum[key] = value
+    return {**datum, **nested_data_by_prefix}
+
+
 def relationships_in(datum, model):
     relationed_datum = {**datum}
     for (key, relationship) in model.__mapper__.relationships.items():

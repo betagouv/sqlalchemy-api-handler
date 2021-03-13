@@ -5,6 +5,7 @@ def import_models():
     from api.models.activity import Activity
     from api.models.foo import Foo
     from api.models.offer import Offer
+    from api.models.offer_tag import OfferTag
     from api.models.offerer import Offerer
     from api.models.scope import Scope
     from api.models.stock import Stock

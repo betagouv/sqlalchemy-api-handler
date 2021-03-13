@@ -14,7 +14,7 @@ from sqlalchemy import BigInteger, \
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.schema import Sequence
-from typing import List, Any, Iterable, Set
+from typing import List, Iterable, Set
 
 from sqlalchemy_api_handler.bases.delete import Delete
 from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
@@ -23,8 +23,11 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 ResourceNotFoundError, \
                                                 UuidCastError
 from sqlalchemy_api_handler.bases.soft_delete import SoftDelete
-from sqlalchemy_api_handler.utils.date import match_format
-from sqlalchemy_api_handler.utils.dehumanize import dehumanize
+from sqlalchemy_api_handler.utils.date import deserialize_datetime, \
+                                              match_format
+from sqlalchemy_api_handler.utils.datum import nesting_datum_from
+from sqlalchemy_api_handler.utils.dehumanize import dehumanize, \
+                                                    dehumanize_if_needed
 from sqlalchemy_api_handler.utils.humanize import humanize
 from sqlalchemy_api_handler.utils.is_id_column import is_id_column
 
@@ -37,7 +40,9 @@ class Modify(Delete, SoftDelete):
                datum: dict,
                skipped_keys: List[str] = [],
                with_add=False,
-               with_check_not_soft_deleted=True):
+               with_check_not_soft_deleted=True,
+               with_flush=False,
+               with_no_autoflush=True):
 
         if with_add:
             Modify.add(self)
@@ -58,7 +63,9 @@ class Modify(Delete, SoftDelete):
         for key in relationship_keys_to_modify:
             relationship = relationships[key]
             model = relationship.mapper.class_
-            value = model.instance_from(datum[key], parent=self)
+            value = model.instance_from(datum[key],
+                                        parent=self,
+                                        with_no_autoflush=with_no_autoflush)
             if value:
                 setattr(self, key, value)
 
@@ -78,29 +85,61 @@ class Modify(Delete, SoftDelete):
                     return
             setattr(self, key, datum[key])
 
+        if with_flush:
+            Modify.get_db().session.flush()
+
         return self
 
     @classmethod
-    def instance_from_primary_value(model, value):
-        primary_key_columns = model.__mapper__.primary_key
-        primary_keys = [
-            column.key
-            for column in primary_key_columns
-        ]
-        primary_keys_values = [
-            value.get(primary_key)
-            for primary_key in primary_keys
-        ]
-        if all(primary_keys_values):
-            pks = [
-                dehumanize_if_needed(column, primary_keys_values[index])
-                for (index, column) in enumerate(primary_key_columns)
-            ]
-            instance = model.query.get(pks)
-            return instance.modify(value)
+    def _primary_filter_from(model, value):
+        return dict([
+            (column.key, dehumanize_if_needed(column, value.get(column.key)))
+            for column in model.__mapper__.primary_key
+        ])
 
     @classmethod
-    def instance_from_search_by_value(model, value, parent=None):
+    def _unique_filter_from(model, value):
+        unique_columns = [c for c in model.__mapper__.columns if c.unique]
+        for unique_column in unique_columns:
+            if unique_column.key in value:
+                unique_value = value[unique_column.key]
+                if unique_value:
+                    return { unique_column.key: dehumanize_if_needed(unique_column, unique_value) }
+
+    @classmethod
+    def _instance_from_primary_value(model,
+                                     value,
+                                     with_no_autoflush=True):
+        primary_filter = model._primary_filter_from(value)
+        primary_values = primary_filter.values()
+        if all(primary_values):
+            if with_no_autoflush:
+                with Modify.get_db().session.no_autoflush:
+                    instance = model.query.get(primary_values)
+            else:
+                instance = model.query.get(primary_values)
+            if instance:
+                return instance.modify(value)
+
+    @classmethod
+    def _instance_from_unique_value(model,
+                                    value,
+                                    with_no_autoflush=True):
+        unique_filter = model._unique_filter_from(value)
+        if unique_filter:
+            if with_no_autoflush:
+                with Modify.get_db().session.no_autoflush:
+                    instance = model.query.filter_by(**unique_filter).first()
+            else:
+                instance = model.query.filter_by(**unique_filter).first()
+            if instance:
+                return instance.modify(value)
+
+    @classmethod
+    def _instance_from_search_by_value(model,
+                                       value,
+                                       parent=None,
+                                       with_no_autoflush=True):
         value_dict = {}
         for (column_name, sub_value) in value.items():
             column_value = sub_value
@@ -111,25 +150,34 @@ class Modify(Delete, SoftDelete):
                 if 'humanized' in sub_value and sub_value['humanized']:
                     column_value = humanize(column_value)
             value_dict[column_name] = column_value
-        return model.create_or_modify(value_dict)
+        return model.create_or_modify(value_dict, with_no_autoflush=with_no_autoflush)
 
     @classmethod
     def instance_from(model,
                       value,
-                      parent=None):
+                      parent=None,
+                      with_no_autoflush=True):
         if not isinstance(value, model):
             if hasattr(value, 'items'):
-                instance = model.instance_from_primary_value(value)
+                if '__SEARCH_BY__' in value:
+                    return model._instance_from_search_by_value(value,
+                                                                parent=parent,
+                                                                with_no_autoflush=with_no_autoflush)
+
+                instance = model._instance_from_primary_value(value,
+                                                              with_no_autoflush=with_no_autoflush)
+                if not instance:
+                    instance = model._instance_from_unique_value(value,
+                                                                 with_no_autoflush=with_no_autoflush)
                 if instance:
                     return instance
-                if '__SEARCH_BY__' in value:
-                    return model.instance_from_search_by_value(value,
-                                                               parent=parent)
                 return model(**value)
 
             if hasattr(value, '__iter__'):
                 return [
-                    model.instance_from(obj, parent=parent)
+                    model.instance_from(obj,
+                                        parent=parent,
+                                        with_no_autoflush=with_no_autoflush)
                     for obj in value
                 ]
         return value
@@ -154,7 +202,7 @@ class Modify(Delete, SoftDelete):
 
     def _try_to_set_attribute_with_deserialized_datetime(self, col, key, value):
         try:
-            datetime_value = _deserialize_datetime(key, value)
+            datetime_value = deserialize_datetime(key, value)
             setattr(self, key, datetime_value)
         except TypeError:
             error = DateTimeCastError()
@@ -181,9 +229,12 @@ class Modify(Delete, SoftDelete):
     @classmethod
     def _filter_from(model, datum):
         if '__SEARCH_BY__' not in datum or not datum['__SEARCH_BY__']:
-            errors = EmptyFilterError()
-            errors.add_error('_filter_from', 'No __SEARCH_BY__ item inside datum')
-            raise errors
+            return model._primary_filter_from(datum)
+            #if not instance:
+            #    errors = EmptyFilterError()
+            #    errors.add_error('_filter_from', 'No __SEARCH_BY__ item inside datum and we could not retrieve entity from primary key values')
+            #    raise errors
+            #return instance
 
         search_by_keys = datum['__SEARCH_BY__']
         if not isinstance(search_by_keys, list):
@@ -232,7 +283,9 @@ class Modify(Delete, SoftDelete):
         return existing
 
     @classmethod
-    def find(model, datum):
+    def find(model,
+             datum,
+             with_no_autoflush=True):
         filters = model._filter_from(datum)
         if not filters:
             search_by = datum['__SEARCH_BY__']
@@ -240,21 +293,32 @@ class Modify(Delete, SoftDelete):
             filters = ', '.join(search_by) if isinstance(search_by, list) else search_by
             errors.add_error('_filter_from', 'None of filters found among: ' + filters)
             raise errors
-        entity = model.query.filter_by(**filters).first()
+
+        if with_no_autoflush:
+            with Modify.get_db().session.no_autoflush:
+                entity = model.query.filter_by(**filters).first()
+        else:
+            entity = model.query.filter_by(**filters).first()
+
         if not entity:
             return None
         return entity
 
     @classmethod
-    def find_or_create(model, datum):
-        entity = model.find(datum)
+    def find_or_create(model,
+                       datum,
+                       with_no_autoflush=True):
+        entity = model.find(datum, with_no_autoflush=with_no_autoflush)
         if entity:
             return entity
         return model(**model._created_from(datum))
 
     @classmethod
-    def find_and_modify(model, datum):
-        entity = model.find(datum)
+    def find_and_modify(model,
+                        datum,
+                        with_no_autoflush=True):
+        entity = model.find(datum,
+                            with_no_autoflush=with_no_autoflush)
         if not entity:
             errors = ResourceNotFoundError()
             filters = model._filter_from(datum)
@@ -263,30 +327,23 @@ class Modify(Delete, SoftDelete):
         return model.modify(entity, model._existing_from(datum))
 
     @classmethod
-    def create_or_modify(model, datum):
-        entity = model.find(datum)
+    def create_or_modify(model,
+                         datum,
+                         with_add=False,
+                         with_flush=False,
+                         with_no_autoflush=True):
+        nesting_datum = nesting_datum_from(datum)
+        entity = model.find(nesting_datum,
+                            with_no_autoflush=with_no_autoflush)
         if entity:
-            return model.modify(entity, model._existing_from(datum))
-        return model(**model._created_from(datum))
-
-def dehumanize_if_needed(column, value: Any) -> Any:
-    if is_id_column(column):
-        return dehumanize(value)
-    return value
-
-
-def _deserialize_datetime(key, value):
-    if value is None:
-        return None
-
-    valid_patterns = ['%Y-%m-%dT%H:%M:%S.%fZ', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%SZ']
-    datetime_value = None
-
-    for pattern in valid_patterns:
-        if match_format(value, pattern):
-            datetime_value = datetime.strptime(value, pattern)
-
-    if not datetime_value:
-        raise TypeError('Invalid value for %s: %r' % (key, value), 'datetime', key)
-
-    return datetime_value
+            return model.modify(entity,
+                                model._existing_from(nesting_datum),
+                                with_add=with_add,
+                                with_flush=with_flush,
+                                with_no_autoflush=with_no_autoflush)
+        entity = model(**model._created_from(nesting_datum))
+        if with_add:
+            Modify.add(entity)
+        if with_flush:
+            Modify.get_db().session.flush()
+        return entity
