@@ -24,6 +24,8 @@ fi
 
 set -o allexport
 source $ROOT_PATH/.env
+source $ROOT_PATH/scripts/utils.sh
+source $ROOT_PATH/scripts/configure.sh
 set +o allexport
 
 # =============================================
@@ -39,42 +41,6 @@ fi
 
 CMD="$1"
 shift
-
-# =============================================
-# Global Utilities
-# =============================================
-
-function check {
-  STATE=$1
-  CONTAINER=${APP_NAME}-${2}
-  GREP=$(docker ps | grep $CONTAINER)
-  if [[ "$GREP" ]]; then
-    if [[ "$STATE" == "stop" ]]; then
-      exit_with_error "$CONTAINER is running. You should stop it before applying your command."
-    fi
-  elif [[ "$STATE" == "start" ]]; then
-    exit_with_error "$CONTAINER is not running. You should start it before applying your command."
-  fi
-}
-
-
-function exit_with_error {
-  MESSAGE=${1-"end of $APP_NAME command."}
-  RED='\033[0;31m'
-  NO_COLOR='\033[0m'
-  echo -e "${RED}""ERROR : $MESSAGE""${NO_COLOR}"
-  exit 1
-}
-
-
-function exit_with_success {
-  MESSAGE=${1-"end of $APP_NAME command."}
-  GREEN='\033[0;32m'
-  NO_COLOR='\033[0m'
-  echo -e "${GREEN}""SUCCESS : $MESSAGE""${NO_COLOR}"
-  exit 0
-}
-
 
 # =============================================
 # Local commands : use Docker
@@ -119,7 +85,7 @@ elif [[ "$CMD" == "database" ]]; then
   elif [[ "$SUB_COMMAND" == "schema" ]]; then
     check start apipostgresdb
     FILE=schema_$(date +"%Y_%m_%d__%H_%M_%S").sql
-    docker exec $APP_NAME-apipostgresdb bash -c "PGPASSWORD='$APP_NAME'_password pg_dump -h localhost -d '$APP_NAME'_api -U '$APP_NAME'_user --no-comments --no-owner -N function_schema --no-privileges --schema-only --exclude-table alembic_version --exclude-schema topology --username '$APP_NAME'_user --format p > /var/lib/postgresql/$FILE"
+    docker exec $APP_NAME-apipostgresdb bash -c "PGPASSWORD=\$POSTGRES_PASSWORD pg_dump -h localhost -d \$POSTGRES_DB -U \$POSTGRES_USER --no-comments --no-owner -N function_schema --no-privileges --schema-only --exclude-table alembic_version --exclude-schema topology --username \$POSTGRES_USER --format p > /var/lib/postgresql/$FILE"
     sudo sed -i "s/SELECT pg_catalog.set_config('search_path', '', false);/SET search_path = public, pg_catalog;/g" $ROOT_PATH/docker_data/apipostgresdb/$FILE
   else
     check start apipostgresdb
@@ -133,7 +99,7 @@ elif [[ "$CMD" == "database" ]]; then
 elif [[ "$CMD" == "psql" ]]; then
   check start apipostgresdb
 	COLUMNS=${COLUMNS:-''};
-	docker exec -it $APP_NAME-apipostgresdb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U '$APP_NAME'_user '${APP_NAME}_apipostgres' $*"
+	docker exec -it $APP_NAME-apipostgresdb bash -c "COLUMNS=\"'$COLUMNS'\" psql -U \$POSTGRES_USER \$POSTGRES_DB $*"
   exit_with_success
 
 
