@@ -13,12 +13,18 @@ def match_format(value: str, format: str):
 
 
 def deserialize_datetime(key, value):
+    if value is None:
+        return None
+
     valid_patterns = ['%Y-%m-%dT%H:%M:%S.%fZ', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%SZ']
     datetime_value = None
 
     for pattern in valid_patterns:
         if match_format(value, pattern):
             datetime_value = datetime.strptime(value, pattern)
+
+    if not datetime_value:
+        raise TypeError('Invalid value for %s: %r' % (key, value), 'datetime', key)
 
     return datetime_value
 

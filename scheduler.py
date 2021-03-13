@@ -18,7 +18,7 @@ import_tasks()
 CELERY_APP.conf.beat_schedule = {
     'hourly_hello_sync': {
         'kwargs': {
-            'mode': 'Karl !'
+            'text': 'Karl !'
         },
         'task': 'api.tasks.hello.print_text',
         'schedule': crontab(minute=15, hour='*/1'),
