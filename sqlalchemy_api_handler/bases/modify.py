@@ -107,9 +107,9 @@ class Modify(Delete, SoftDelete):
                     return { unique_column.key: dehumanize_if_needed(unique_column, unique_value) }
 
     @classmethod
-    def _instance_from_primary_value(model,
-                                     value,
-                                     with_no_autoflush=True):
+    def _instance_from_primaries(model,
+                                 value,
+                                 with_no_autoflush=True):
         primary_filter = model._primary_filter_from(value)
         primary_values = primary_filter.values()
         if all(primary_values):
@@ -122,9 +122,9 @@ class Modify(Delete, SoftDelete):
                 return instance.modify(value)
 
     @classmethod
-    def _instance_from_unique_value(model,
-                                    value,
-                                    with_no_autoflush=True):
+    def _instance_from_unicity(model,
+                               value,
+                               with_no_autoflush=True):
         unique_filter = model._unique_filter_from(value)
         if unique_filter:
             if with_no_autoflush:
@@ -153,6 +153,40 @@ class Modify(Delete, SoftDelete):
         return model.create_or_modify(value_dict, with_no_autoflush=with_no_autoflush)
 
     @classmethod
+    def _value_with_search_by_from_relationships(model,
+                                                 value,
+                                                 parent=None):
+        search_filter = {}
+        if parent:
+            parent_unique_filter = parent.__class__._unique_filter_from(value)
+            if parent_unique_filter:
+                search_filter.update(parent_unique_filter)
+        for relationship in model.__mapper__.relationships:
+            if relationship.key in value:
+                relationship_unique_columns = [c for c in relationship.mapper.columns if c.unique]
+                sub_value = value[relationship.key]
+                for relationship_unique_column in relationship_unique_columns:
+                    if relationship_unique_column.key in sub_value:
+                        if hasattr(model, relationship_unique_column.key):
+                            search_filter[relationship_unique_column.key] = sub_value[relationship_unique_column.key]
+        if search_filter:
+            return { **value,
+                     **search_filter,
+                     '__SEARCH_BY__': list(search_filter.keys())}
+
+    @classmethod
+    def _instance_from_relationships(model,
+                                     value,
+                                     parent=None,
+                                     with_no_autoflush=True):
+        value = model._value_with_search_by_from_relationships(value,
+                                                               parent=parent)
+        if value:
+            return model._instance_from_search_by_value(value,
+                                                        parent=parent,
+                                                        with_no_autoflush=with_no_autoflush)
+
+    @classmethod
     def instance_from(model,
                       value,
                       parent=None,
@@ -163,12 +197,16 @@ class Modify(Delete, SoftDelete):
                     return model._instance_from_search_by_value(value,
                                                                 parent=parent,
                                                                 with_no_autoflush=with_no_autoflush)
-
-                instance = model._instance_from_primary_value(value,
+                instance = model._instance_from_relationships(value,
+                                                              parent=parent,
+                                                              with_no_autoflush=with_no_autoflush)
+                instance = None
+                if not instance:
+                    instance = model._instance_from_primaries(value,
                                                               with_no_autoflush=with_no_autoflush)
                 if not instance:
-                    instance = model._instance_from_unique_value(value,
-                                                                 with_no_autoflush=with_no_autoflush)
+                    instance = model._instance_from_unicity(value,
+                                                            with_no_autoflush=with_no_autoflush)
                 if instance:
                     return instance
                 return model(**value)

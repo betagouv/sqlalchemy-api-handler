@@ -652,6 +652,10 @@ class ModifyTest:
         for (key, value) in datum.items():
             assert stock.get(key) == value
 
+        stock = Stock.create_or_modify(datum)
+        for (key, value) in datum.items():
+            assert stock.get(key) == value
+
     @with_delete
     def test_instance_from(self, app):
         # Given

@@ -95,6 +95,8 @@ def nesting_datum_from(flatten_path_datum,
                                                 nested_data_by_prefix=nested_data_by_prefix[prefix])
                 nested_data_by_prefix[prefix].update(next_value)
         else:
+            if key == '__SEARCH_BY__' and  ',' in value:
+                value = value.split(',')
             datum[key] = value
     return {**datum, **nested_data_by_prefix}
 
