@@ -730,3 +730,19 @@ class ModifyTest:
                 continue
             assert offer.get(key) == value
         assert offer.offerTags[0].tag.id == tag.id
+
+
+    @with_delete
+    def test_create_or_modify_retrieves_automatically_with_unique_datum(self, app):
+        # Given
+        tag1 = Tag(label='foo')
+        ApiHandler.save(tag1)
+        datum = {
+                  'label': 'foo',
+                }
+
+        # When
+        tag2 = Tag.create_or_modify(datum)
+
+        # Then
+        assert tag2.id == tag1.id

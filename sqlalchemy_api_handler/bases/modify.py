@@ -229,12 +229,10 @@ class Modify(Delete, SoftDelete):
     @classmethod
     def _filter_from(model, datum):
         if '__SEARCH_BY__' not in datum or not datum['__SEARCH_BY__']:
+            unique_filter = model._unique_filter_from(datum)
+            if unique_filter:
+                return unique_filter
             return model._primary_filter_from(datum)
-            #if not instance:
-            #    errors = EmptyFilterError()
-            #    errors.add_error('_filter_from', 'No __SEARCH_BY__ item inside datum and we could not retrieve entity from primary key values')
-            #    raise errors
-            #return instance
 
         search_by_keys = datum['__SEARCH_BY__']
         if not isinstance(search_by_keys, list):
