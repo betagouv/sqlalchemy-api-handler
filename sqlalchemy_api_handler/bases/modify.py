@@ -200,7 +200,6 @@ class Modify(Delete, SoftDelete):
                 instance = model._instance_from_relationships(value,
                                                               parent=parent,
                                                               with_no_autoflush=with_no_autoflush)
-                instance = None
                 if not instance:
                     instance = model._instance_from_primaries(value,
                                                               with_no_autoflush=with_no_autoflush)
