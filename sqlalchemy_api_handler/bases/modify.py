@@ -65,6 +65,7 @@ class Modify(Delete, SoftDelete):
             model = relationship.mapper.class_
             value = model.instance_from(datum[key],
                                         parent=self,
+                                        parent_datum=datum,
                                         with_no_autoflush=with_no_autoflush)
             if value:
                 setattr(self, key, value)
@@ -105,6 +106,16 @@ class Modify(Delete, SoftDelete):
                 unique_value = value[unique_column.key]
                 if unique_value:
                     return { unique_column.key: dehumanize_if_needed(unique_column, unique_value) }
+
+    @classmethod
+    def _relationship_unique_filter_from(model, relationship_model, value):
+        unique_columns = [c for c in relationship_model.__mapper__.columns if c.unique]
+        for unique_column in unique_columns:
+            if unique_column.key in value:
+                relationship_value = value[unique_column.key]
+                if relationship_value is not None \
+                   and hasattr(model, unique_column.key):
+                    return { unique_column.key: relationship_value }
 
     @classmethod
     def _instance_from_primaries(model,
@@ -155,20 +166,20 @@ class Modify(Delete, SoftDelete):
     @classmethod
     def _value_with_search_by_from_relationships(model,
                                                  value,
-                                                 parent=None):
+                                                 parent=None,
+                                                 parent_datum=None):
         search_filter = {}
-        if parent:
-            parent_unique_filter = parent.__class__._unique_filter_from(value)
-            if parent_unique_filter:
-                search_filter.update(parent_unique_filter)
+        if parent and parent_datum:
+            parent_filter = model._relationship_unique_filter_from(parent.__class__,
+                                                                   parent_datum)
+            if parent_filter:
+                search_filter.update(parent_filter)
         for relationship in model.__mapper__.relationships:
             if relationship.key in value:
-                relationship_unique_columns = [c for c in relationship.mapper.columns if c.unique]
-                sub_value = value[relationship.key]
-                for relationship_unique_column in relationship_unique_columns:
-                    if relationship_unique_column.key in sub_value:
-                        if hasattr(model, relationship_unique_column.key):
-                            search_filter[relationship_unique_column.key] = sub_value[relationship_unique_column.key]
+                relationship_filter = model._relationship_unique_filter_from(relationship.mapper.class_,
+                                                                             value[relationship.key])
+                if relationship_filter:
+                    search_filter.update(relationship_filter)
         if search_filter:
             return { **value,
                      **search_filter,
@@ -178,9 +189,11 @@ class Modify(Delete, SoftDelete):
     def _instance_from_relationships(model,
                                      value,
                                      parent=None,
+                                     parent_datum=None,
                                      with_no_autoflush=True):
         value = model._value_with_search_by_from_relationships(value,
-                                                               parent=parent)
+                                                               parent=parent,
+                                                               parent_datum=parent_datum)
         if value:
             return model._instance_from_search_by_value(value,
                                                         parent=parent,
@@ -190,6 +203,7 @@ class Modify(Delete, SoftDelete):
     def instance_from(model,
                       value,
                       parent=None,
+                      parent_datum=None,
                       with_no_autoflush=True):
         if not isinstance(value, model):
             if hasattr(value, 'items'):
@@ -199,6 +213,7 @@ class Modify(Delete, SoftDelete):
                                                                 with_no_autoflush=with_no_autoflush)
                 instance = model._instance_from_relationships(value,
                                                               parent=parent,
+                                                              parent_datum=parent_datum,
                                                               with_no_autoflush=with_no_autoflush)
                 if not instance:
                     instance = model._instance_from_primaries(value,
@@ -214,6 +229,7 @@ class Modify(Delete, SoftDelete):
                 return [
                     model.instance_from(obj,
                                         parent=parent,
+                                        parent_datum=parent_datum,
                                         with_no_autoflush=with_no_autoflush)
                     for obj in value
                 ]
