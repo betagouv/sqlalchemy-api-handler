@@ -66,6 +66,8 @@ class Modify(Delete, SoftDelete):
             value = model.instance_from(datum[key],
                                         parent=self,
                                         parent_datum=datum,
+                                        with_add=with_add,
+                                        with_flush=with_flush,
                                         with_no_autoflush=with_no_autoflush)
             if value:
                 setattr(self, key, value)
@@ -92,36 +94,53 @@ class Modify(Delete, SoftDelete):
         return self
 
     @classmethod
-    def _primary_filter_from(model, value):
+    def _primary_filter_from(model, datum):
         return dict([
-            (column.key, dehumanize_if_needed(column, value.get(column.key)))
+            (column.key, dehumanize_if_needed(column, datum.get(column.key)))
             for column in model.__mapper__.primary_key
         ])
 
     @classmethod
-    def _unique_filter_from(model, value):
+    def _unique_filter_from(model, datum):
         unique_columns = [c for c in model.__mapper__.columns if c.unique]
         for unique_column in unique_columns:
-            if unique_column.key in value:
-                unique_value = value[unique_column.key]
+            if unique_column.key in datum:
+                unique_value = datum[unique_column.key]
                 if unique_value:
                     return { unique_column.key: dehumanize_if_needed(unique_column, unique_value) }
 
     @classmethod
-    def _relationship_unique_filter_from(model, relationship_model, value):
-        unique_columns = [c for c in relationship_model.__mapper__.columns if c.unique]
-        for unique_column in unique_columns:
-            if unique_column.key in value:
-                relationship_value = value[unique_column.key]
-                if relationship_value is not None \
-                   and hasattr(model, unique_column.key):
-                    return { unique_column.key: relationship_value }
+    def _one_way_foreign_filter_from(model, relationship_model, datum):
+        columns = [c for c in model.__mapper__.columns]
+        foreign_filter = {}
+        for column in columns:
+            if column.foreign_keys:
+                for foreign_key in column.foreign_keys:
+                    key = foreign_key.target_fullname.split('.')[1]
+                    if hasattr(relationship_model, key):
+                        relationship_column = getattr(relationship_model, key)
+                        if relationship_column.foreign_keys:
+                            continue
+                        if key in datum:
+                            value = datum[column.key]
+                            if value is not None:
+                                foreign_filter[column.key] = value
+        return foreign_filter
+
+    @classmethod
+    def _foreign_filter_from(model, relationship_model, datum):
+        return {
+          **(model._one_way_foreign_filter_from(relationship_model, datum) or {}),
+          **(relationship_model._one_way_foreign_filter_from(model, datum) or {})
+        }
 
     @classmethod
     def _instance_from_primaries(model,
-                                 value,
+                                 datum,
+                                 with_add=False,
+                                 with_flush=False,
                                  with_no_autoflush=True):
-        primary_filter = model._primary_filter_from(value)
+        primary_filter = model._primary_filter_from(datum)
         primary_values = primary_filter.values()
         if all(primary_values):
             if with_no_autoflush:
@@ -130,13 +149,17 @@ class Modify(Delete, SoftDelete):
             else:
                 instance = model.query.get(primary_values)
             if instance:
-                return instance.modify(value)
+                return instance.modify(datum,
+                                       with_add=with_add,
+                                       with_flush=with_flush)
 
     @classmethod
     def _instance_from_unicity(model,
-                               value,
+                               datum,
+                               with_add=False,
+                               with_flush=False,
                                with_no_autoflush=True):
-        unique_filter = model._unique_filter_from(value)
+        unique_filter = model._unique_filter_from(datum)
         if unique_filter:
             if with_no_autoflush:
                 with Modify.get_db().session.no_autoflush:
@@ -144,15 +167,19 @@ class Modify(Delete, SoftDelete):
             else:
                 instance = model.query.filter_by(**unique_filter).first()
             if instance:
-                return instance.modify(value)
+                return instance.modify(datum,
+                                       with_add=with_add,
+                                       with_flush=with_flush)
 
     @classmethod
     def _instance_from_search_by_value(model,
-                                       value,
+                                       datum,
                                        parent=None,
+                                       with_add=False,
+                                       with_flush=False,
                                        with_no_autoflush=True):
         value_dict = {}
-        for (column_name, sub_value) in value.items():
+        for (column_name, sub_value) in datum.items():
             column_value = sub_value
             if hasattr(sub_value, 'items') \
                 and 'type' in sub_value \
@@ -161,42 +188,56 @@ class Modify(Delete, SoftDelete):
                 if 'humanized' in sub_value and sub_value['humanized']:
                     column_value = humanize(column_value)
             value_dict[column_name] = column_value
-        return model.create_or_modify(value_dict, with_no_autoflush=with_no_autoflush)
+        return model.create_or_modify(value_dict,
+                                      with_add=with_add,
+                                      with_flush=with_flush,
+                                      with_no_autoflush=with_no_autoflush)
 
     @classmethod
-    def _value_with_search_by_from_relationships(model,
-                                                 value,
-                                                 parent=None,
-                                                 parent_datum=None):
+    def _datum_with_search_by_from_foreigns(model,
+                                            datum,
+                                            parent=None,
+                                            parent_datum=None):
         search_filter = {}
         if parent and parent_datum:
-            parent_filter = model._relationship_unique_filter_from(parent.__class__,
-                                                                   parent_datum)
+            parent_filter = model._foreign_filter_from(parent.__class__,
+                                                       parent_datum)
             if parent_filter:
                 search_filter.update(parent_filter)
+
         for relationship in model.__mapper__.relationships:
-            if relationship.key in value:
-                relationship_filter = model._relationship_unique_filter_from(relationship.mapper.class_,
-                                                                             value[relationship.key])
+            if relationship.key in datum:
+                relationship_filter = model._foreign_filter_from(relationship.mapper.class_,
+                                                                             datum[relationship.key])
                 if relationship_filter:
                     search_filter.update(relationship_filter)
+
         if search_filter:
-            return { **value,
+            unique_columns = [c for c in model.__mapper__.columns if c.unique]
+            for unique_column in unique_columns:
+                if unique_column.key in search_filter:
+                    search_filter = { unique_column.key: search_filter[unique_column.key] }
+
+            return { **datum,
                      **search_filter,
                      '__SEARCH_BY__': list(search_filter.keys())}
 
     @classmethod
-    def _instance_from_relationships(model,
-                                     value,
-                                     parent=None,
-                                     parent_datum=None,
-                                     with_no_autoflush=True):
-        value = model._value_with_search_by_from_relationships(value,
-                                                               parent=parent,
-                                                               parent_datum=parent_datum)
-        if value:
-            return model._instance_from_search_by_value(value,
+    def _instance_from_foreigns(model,
+                                datum,
+                                parent=None,
+                                parent_datum=None,
+                                with_add=False,
+                                with_flush=False,
+                                with_no_autoflush=True):
+        datum = model._datum_with_search_by_from_foreigns(datum,
+                                                          parent=parent,
+                                                          parent_datum=parent_datum)
+        if datum:
+            return model._instance_from_search_by_value(datum,
                                                         parent=parent,
+                                                        with_add=with_add,
+                                                        with_flush=with_flush,
                                                         with_no_autoflush=with_no_autoflush)
 
     @classmethod
@@ -204,32 +245,50 @@ class Modify(Delete, SoftDelete):
                       value,
                       parent=None,
                       parent_datum=None,
+                      with_add=False,
+                      with_flush=False,
                       with_no_autoflush=True):
         if not isinstance(value, model):
             if hasattr(value, 'items'):
                 if '__SEARCH_BY__' in value:
                     return model._instance_from_search_by_value(value,
                                                                 parent=parent,
+                                                                with_add=with_add,
+                                                                with_flush=with_flush,
                                                                 with_no_autoflush=with_no_autoflush)
-                instance = model._instance_from_relationships(value,
-                                                              parent=parent,
-                                                              parent_datum=parent_datum,
-                                                              with_no_autoflush=with_no_autoflush)
+                instance = model._instance_from_foreigns(value,
+                                                         parent=parent,
+                                                         parent_datum=parent_datum,
+                                                         with_add=with_add,
+                                                         with_flush=with_flush,
+                                                         with_no_autoflush=with_no_autoflush)
                 if not instance:
                     instance = model._instance_from_primaries(value,
+                                                              with_add=with_add,
+                                                              with_flush=with_flush,
                                                               with_no_autoflush=with_no_autoflush)
                 if not instance:
                     instance = model._instance_from_unicity(value,
+                                                            with_add=with_add,
+                                                            with_flush=with_flush,
                                                             with_no_autoflush=with_no_autoflush)
                 if instance:
                     return instance
-                return model(**value)
+
+                entity = model(**model._created_from(value))
+                if with_add:
+                    Modify.add(entity)
+                if with_flush:
+                    Modify.get_db().session.flush()
+                return entity
 
             if hasattr(value, '__iter__'):
                 return [
                     model.instance_from(obj,
                                         parent=parent,
                                         parent_datum=parent_datum,
+                                        with_add=with_add,
+                                        with_flush=with_flush,
                                         with_no_autoflush=with_no_autoflush)
                     for obj in value
                 ]
@@ -358,15 +417,24 @@ class Modify(Delete, SoftDelete):
     @classmethod
     def find_or_create(model,
                        datum,
+                       with_add=False,
+                       with_flush=False,
                        with_no_autoflush=True):
         entity = model.find(datum, with_no_autoflush=with_no_autoflush)
         if entity:
             return entity
-        return model(**model._created_from(datum))
+        entity = model(**model._created_from(datum))
+        if with_add:
+            Modify.add(entity)
+        if with_flush:
+            Modify.get_db().session.flush()
+        return entity
 
     @classmethod
     def find_and_modify(model,
                         datum,
+                        with_add=False,
+                        with_flush=False,
                         with_no_autoflush=True):
         entity = model.find(datum,
                             with_no_autoflush=with_no_autoflush)
@@ -375,7 +443,10 @@ class Modify(Delete, SoftDelete):
             filters = model._filter_from(datum)
             errors.add_error('find_and_modify', 'No ressource found with {} '.format(json.dumps(filters)))
             raise errors
-        return model.modify(entity, model._existing_from(datum))
+        return model.modify(entity,
+                            model._existing_from(datum),
+                            with_add=with_add,
+                            with_flush=with_flush)
 
     @classmethod
     def create_or_modify(model,
