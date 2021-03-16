@@ -122,6 +122,10 @@ class ForbiddenError(ApiErrors):
     pass
 
 
+class GetPathError(ApiErrors):
+    pass
+
+
 class NotSoftDeletableMixinException(ApiErrors):
     pass
 

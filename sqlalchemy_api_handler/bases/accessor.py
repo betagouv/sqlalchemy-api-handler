@@ -1,9 +1,13 @@
 import inflect
 
+from sqlalchemy_api_handler.bases.errors import GetPathError
+
 
 class Accessor():
 
-    def get(self, path):
+    def get(self,
+            path,
+            with_get_path_error=True):
         if '.' in path:
             chunks = path.split('.')
             key = chunks[0]
@@ -16,7 +20,14 @@ class Accessor():
                     next_path = '.'.join(chunks[2:])
             else:
                 next_path = '.'.join(chunks[1:])
-            return value.get(next_path)
+            if value:
+                return value.get(next_path, with_get_path_error=with_get_path_error)
+            if with_get_path_error:
+                errors = GetPathError()
+                errors.add_error('path', f'This path {path} returns a None with entity {str(self)} at key {key}')
+                raise errors
+            return None
+
         return getattr(self, path)
 
     @classmethod
