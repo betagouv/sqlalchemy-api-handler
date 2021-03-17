@@ -9,25 +9,24 @@ class Accessor():
             path,
             with_get_path_error=True):
 
-        is_direct_attribute_key =  '.' not in path
-        if is_direct_attribute_key:
+        if path is None or path == '':
+            return None
+
+        if '.' not in path:
             return getattr(self, path)
 
         chunks = path.split('.')
         key = chunks[0]
-        value = getattr(self, key)
-
         child_key = chunks[1]
-        start_index_for_child_path = 1
-        child_key_is_index = child_key.isdigit()
-        if child_key_is_index:
-            value = value[int(child_key)]
-            path_is_direct_a_get_of_child_element = len(chunks) == 2
-            if path_is_direct_a_get_of_child_element:
-                return value
-            start_index_for_child_path = 2
 
-        child_path = '.'.join(chunks[start_index_for_child_path:])
+        if child_key.isdigit():
+            value = getattr(self, key)[int(child_key)]
+            child_path = '.'.join(chunks[2:])
+            if child_path == '':
+                return value
+        else:
+            value = getattr(self, key)
+            child_path = '.'.join(chunks[1:])
 
         if value is not None:
             return value.get(child_path, with_get_path_error=with_get_path_error)

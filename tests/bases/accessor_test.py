@@ -18,7 +18,19 @@ class AccessorTest:
         # Then
         assert offer_name == offer.name
 
-    def test_get_with_a_index_path(self, app):
+    def test_get_with_an_index_path_at_entity(self, app):
+        # Given
+        offer = Offer(name='foo', type='bar')
+        stock1 = Stock(offer=offer, price=1)
+
+        # When
+        stock2 = stock1.get('offer.stocks.0')
+
+        # Then
+        assert stock1.id == stock2.id
+
+
+    def test_get_with_an_index_path_at_value(self, app):
         # Given
         offer = Offer(name='foo', type='bar')
         stock = Stock(offer=offer, price=1)
