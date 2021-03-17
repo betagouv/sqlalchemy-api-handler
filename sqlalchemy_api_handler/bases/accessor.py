@@ -1,23 +1,43 @@
 import inflect
 
+from sqlalchemy_api_handler.bases.errors import GetPathError
+
 
 class Accessor():
 
-    def get(self, path):
-        if '.' in path:
-            chunks = path.split('.')
-            key = chunks[0]
-            value = getattr(self, key)
-            if chunks[1].isdigit():
-                value = value[int(chunks[1])]
-                if len(chunks) == 2:
-                    return value
-                else:
-                    next_path = '.'.join(chunks[2:])
-            else:
-                next_path = '.'.join(chunks[1:])
-            return value.get(next_path)
-        return getattr(self, path)
+    def get(self,
+            path,
+            with_get_path_error=True):
+
+        is_direct_attribute_key =  '.' not in path
+        if is_direct_attribute_key:
+            return getattr(self, path)
+
+        chunks = path.split('.')
+        key = chunks[0]
+        value = getattr(self, key)
+
+        child_key = chunks[1]
+        start_index_for_child_path = 1
+        child_key_is_index = child_key.isdigit()
+        if child_key_is_index:
+            value = value[int(child_key)]
+            path_is_direct_a_get_of_child_element = len(chunks) == 2
+            if path_is_direct_a_get_of_child_element:
+                return value
+            start_index_for_child_path = 2
+
+        child_path = '.'.join(chunks[start_index_for_child_path:])
+
+        if value is not None:
+            return value.get(child_path, with_get_path_error=with_get_path_error)
+
+        if with_get_path_error:
+            errors = GetPathError()
+            errors.add_error('path', f'This path {path} returns a None with entity {str(self)} at key {key}')
+            raise errors
+
+        return None
 
     @classmethod
     def get_db(cls):
