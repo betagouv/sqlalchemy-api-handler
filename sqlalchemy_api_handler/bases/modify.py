@@ -122,7 +122,7 @@ class Modify(Delete, SoftDelete):
                         if relationship_column.foreign_keys:
                             continue
                         if key in datum:
-                            value = datum[column.key]
+                            value = datum[key]
                             if value is not None:
                                 foreign_filter[column.key] = value
         return foreign_filter
