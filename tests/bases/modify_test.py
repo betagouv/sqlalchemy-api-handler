@@ -32,24 +32,6 @@ time_interval.end = datetime(2018, 2, 2, 5, 15, 25, 222000)
 now = datetime.utcnow()
 
 class ModifyTest:
-    def test_user_string_fields_are_stripped_of_whitespace(self):
-        # Given
-        user_data = { 'email': '   test@example.com',
-                      'firstName': 'John   ',
-                      'lastName': None,
-                      'postalCode': '   93100   ',
-                      'publicName': '' }
-
-        # When
-        user = User(**user_data)
-
-        # Then
-        assert user.email == 'test@example.com'
-        assert user.firstName == 'John'
-        assert user.lastName == None
-        assert user.postalCode == '93100'
-        assert user.publicName == ''
-
     def test_for_sql_integer_value_with_string_raises_decimal_cast_error(self):
         # Given
         test_object = Foo()
