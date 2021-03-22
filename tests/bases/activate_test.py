@@ -13,7 +13,7 @@ from api.models.stock import Stock
 from api.models.user import User
 
 
-class ActivatorTest:
+class ActivateTest:
     def test_models(self, app):
         # When
         models = ApiHandler.models()

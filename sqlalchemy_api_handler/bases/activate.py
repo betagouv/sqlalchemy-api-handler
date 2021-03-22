@@ -6,15 +6,8 @@ from postgresql_audit.flask import versioning_manager
 from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.bases.save import Save
-from sqlalchemy_api_handler.utils.datum import relationships_in
-
-
-def merged_datum_from_activities(activities,
-                                 model,
-                                 initial=None):
-    return reduce(lambda agg, activity: {**agg, **relationships_in(activity.patch, model)},
-                  activities,
-                  relationships_in(initial, model) if initial else {})
+from sqlalchemy_api_handler.utils.datum import merged_datum_from_activities, \
+                                               relationships_in
 
 
 class Activate(Save):

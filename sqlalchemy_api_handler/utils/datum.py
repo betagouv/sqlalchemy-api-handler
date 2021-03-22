@@ -114,7 +114,7 @@ def relationships_in(datum, model):
 
 
 
-def old_data_from(activity):
+def old_data_from(entity, activity):
     if activity.verb == 'insert':
         return activity.changed_data
     if activity.old_data:
@@ -126,7 +126,7 @@ def merged_datum_from_activities(entity,
                                  activities,
                                  initial=None):
     merged_datum = {}
-    old_data = old_data_from(activities[0])
+    old_data = old_data_from(entity, activities[0])
     for activity in activities:
         activity.old_data = old_data
         activity.verb = 'update'
