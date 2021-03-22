@@ -45,10 +45,9 @@ class Activator(Save):
                 entity = query.one()
                 entity_id = entity.id
                 query.delete()
-                Activator.get_db().session.commit()
                 delete_activity = entity.__deleteActivity__
                 delete_activity.dateCreated = first_activity.dateCreated
-                Save.save(delete_activity)
+                Save.add(delete_activity)
 
                 # want to make as if first_activity was the delete_activity one
                 # for such route like operations
@@ -74,10 +73,10 @@ class Activator(Save):
             if not entity_id:
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityIdentifier = entity_identifier
-                Activator.save(entity)
+                Save.add(entity)
                 insert_activity = entity.__insertActivity__
                 insert_activity.dateCreated = first_activity.dateCreated
-                Save.save(insert_activity)
+                Save.add(insert_activity)
                 # want to make as if first_activity was the insert_activity one
                 # very useful for the routes operation
                 # '''
@@ -127,7 +126,6 @@ class Activator(Save):
                           with_check_not_soft_deleted=with_check_not_soft_deleted)
             db.session.flush()
             db.session.execute(f'ALTER TABLE {model.__tablename__} ENABLE TRIGGER audit_trigger_update;')
-            db.session.commit()
 
 
     @classmethod
