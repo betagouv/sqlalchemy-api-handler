@@ -5,19 +5,19 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.sql import func
 
-from sqlalchemy_api_handler.bases.activator import Activator
+from sqlalchemy_api_handler.bases.activate import Activate
 from sqlalchemy_api_handler.mixins.task_mixin import TaskState
 from sqlalchemy_api_handler.utils.date import strptime
 
 
-class Tasker(Activator):
+class Tasker(Activate):
 
     @classmethod
     def set_celery(cls, celery_app, flask_app):
         module = sys.modules['celery.signals']
-        Task = Activator.model_from_name('Task')
+        Task = Activate.model_from_name('Task')
         BaseTask = celery_app.Task
-        db = Activator.get_db()
+        db = Activate.get_db()
         task_db_session = sys.modules['flask_sqlalchemy'].SQLAlchemy().session
 
         class AppTask(BaseTask):

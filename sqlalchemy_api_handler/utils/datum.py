@@ -111,3 +111,27 @@ def relationships_in(datum, model):
                                   .one()
             relationed_datum[key] = instance
     return relationed_datum
+
+
+
+def old_data_from(activity):
+    if activity.verb == 'insert':
+        return activity.changed_data
+    if activity.old_data:
+        return activity.old_data
+    return entity.just_before_activity_from(activity).data
+
+
+def merged_datum_from_activities(entity,
+                                 activities,
+                                 initial=None):
+    merged_datum = {}
+    old_data = old_data_from(activities[0])
+    for activity in activities:
+        activity.old_data = old_data
+        activity.verb = 'update'
+        old_data = { **old_data,
+                     **activity.changed_data }
+        merged_datum = { **merged_datum,
+                         **relationships_in(activity.patch, entity.__class__) }
+    return merged_datum
