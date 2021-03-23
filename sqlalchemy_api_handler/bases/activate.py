@@ -67,6 +67,7 @@ class Activate(Save):
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityIdentifier = entity_identifier
                 Save.add(entity)
+                Activate.get_db().session.flush()
                 insert_activity = entity.__insertActivity__
                 insert_activity.dateCreated = first_activity.dateCreated
                 Save.add(insert_activity)

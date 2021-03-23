@@ -4,6 +4,7 @@ from sqlalchemy import BigInteger, \
                        desc
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy_api_handler.bases.activate import Activate
+from sqlalchemy_api_handler.bases.errors import IdNoneError
 from sqlalchemy.orm.collections import InstrumentedList
 
 
@@ -18,6 +19,11 @@ class HasActivitiesMixin(object):
         Activity = Activate.get_activity()
         id_key = self.__class__.id.property.key
         id_value = getattr(self, id_key)
+        if id_value is None:
+            errors = IdNoneError()
+            errors.add_error('_get_activity_join_by_entity_id_filter',
+                             f'tried to filter with a None id value for a {self.__class__.__name__} entity')
+            raise errors
         return ((Activity.old_data[id_key].astext.cast(BigInteger) == id_value) | \
                 (Activity.changed_data[id_key].astext.cast(BigInteger) == id_value))
 
@@ -38,10 +44,8 @@ class HasActivitiesMixin(object):
     @property
     def __deleteActivity__(self):
         Activity = Activate.get_activity()
-        query_filter = (
-            (self._get_activity_join_filter()) & \
-            (Activity.verb == 'delete')
-        )
+        query_filter = ((self._get_activity_join_filter()) & \
+                        (Activity.verb == 'delete'))
         return Activity.query.filter(query_filter).one()
 
     @property

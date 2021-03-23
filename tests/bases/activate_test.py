@@ -45,6 +45,9 @@ class ActivateTest:
         # Then
         assert activity.patch['offerId'] == offer.humanizedId
 
+
+
+
     @with_delete
     def test_create_offer_saves_an_insert_activity(self, app):
         # Given
@@ -143,6 +146,57 @@ class ActivateTest:
         assert patch.items() <= insert_offer_activity.patch.items()
         assert insert_offer_activity.datum['id'] == humanize(offer.id)
         assert insert_offer_activity.patch['id'] == humanize(offer.id)
+
+
+
+
+    @with_delete
+    def test_create_activity_on_not_existing_offers_saves_two_insert_activities(self, app):
+        # Given
+        offer1_activity_identifier = uuid4()
+        patch1 = { 'name': 'bar', 'type': 'foo' }
+        activity1 = Activity(dateCreated=datetime.utcnow(),
+                             entityIdentifier=offer1_activity_identifier,
+                             patch=patch1,
+                             tableName='offer')
+        offer2_activity_identifier = uuid4()
+        patch2 = { 'name': 'bor', 'type': 'fee' }
+        activity2 = Activity(dateCreated=datetime.utcnow(),
+                             entityIdentifier=offer2_activity_identifier,
+                             patch=patch2,
+                             tableName='offer')
+
+        # When
+        ApiHandler.activate(activity1, activity2)
+
+        # Then
+        all_activities = Activity.query.all()
+        assert len(all_activities) == 2
+
+        offer1 = Offer.query.filter_by(activityIdentifier=offer1_activity_identifier).one()
+        offer1_activities = offer1.__activities__
+        insert_offer1_activity = offer1_activities[0]
+        assert len(offer1_activities) == 1
+        assert insert_offer1_activity.entityIdentifier == offer1.activityIdentifier
+        assert insert_offer1_activity.verb == 'insert'
+        assert patch1.items() <= insert_offer1_activity.datum.items()
+        assert patch1.items() <= insert_offer1_activity.patch.items()
+        assert insert_offer1_activity.datum['id'] == humanize(offer1.id)
+        assert insert_offer1_activity.patch['id'] == humanize(offer1.id)
+
+        offer2 = Offer.query.filter_by(activityIdentifier=offer2_activity_identifier).one()
+        offer2_activities = offer2.__activities__
+        insert_offer2_activity = offer2_activities[0]
+        assert len(offer2_activities) == 1
+        assert insert_offer2_activity.entityIdentifier == offer2.activityIdentifier
+        assert insert_offer2_activity.verb == 'insert'
+        assert patch2.items() <= insert_offer2_activity.datum.items()
+        assert patch2.items() <= insert_offer2_activity.patch.items()
+        assert insert_offer2_activity.datum['id'] == humanize(offer2.id)
+        assert insert_offer2_activity.patch['id'] == humanize(offer2.id)
+
+
+
 
     @with_delete
     def test_create_activities_on_existing_offer_saves_update_activities(self, app):
