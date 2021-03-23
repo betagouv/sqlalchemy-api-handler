@@ -301,10 +301,10 @@ class Modify(Delete, SoftDelete):
                 self._try_to_set_attribute_with_decimal_value(column, key, value, 'integer')
             elif isinstance(column.type, (Float, Numeric)):
                 self._try_to_set_attribute_with_decimal_value(column, key, value, 'float')
-            elif isinstance(column.type, String):
-                setattr(self, key, value.strip() if value else value)
             elif isinstance(column.type, DateTime):
                 self._try_to_set_attribute_with_deserialized_datetime(column, key, value)
+            elif isinstance(column.type, String):
+                setattr(self, key, value)
             elif isinstance(column.type, UUID):
                 self._try_to_set_attribute_with_uuid(column, key, value)
         elif not isinstance(value, datetime) and isinstance(column.type, DateTime):

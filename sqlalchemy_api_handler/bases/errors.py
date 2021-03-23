@@ -118,6 +118,10 @@ class EmptyFilterError(ApiErrors):
     pass
 
 
+class IdNoneError(ApiErrors):
+    pass
+
+
 class ForbiddenError(ApiErrors):
     pass
 
