@@ -1,10 +1,11 @@
 from collections import OrderedDict
-from functools import singledispatch
-from typing import Iterable, Set, List
+from functools import partial, singledispatch
+from typing import Callable, Iterable, Set, List
 from sqlalchemy.orm.collections import InstrumentedList
 
 from sqlalchemy_api_handler.api_handler import ApiHandler
 from sqlalchemy_api_handler.serialization.serialize import serialize
+from sqlalchemy_api_handler.utils.asynchronous import async_map
 
 
 def exclusive_includes_from(entity, includes):
@@ -18,23 +19,33 @@ def exclusive_includes_from(entity, includes):
 @singledispatch
 def as_dict(value,
             column=None,
+            async_map=None,
             includes=None,
-            mode=None):
+            mode=None,
+            use_async=False):
     return serialize(value, column=column)
 
 
 @as_dict.register(InstrumentedList)
 def as_dict_for_intrumented_list(entities,
                                  column=None,
+                                 async_map: Callable=None,
                                  includes: Iterable = None,
-                                 mode: str = 'columns-and-includes'):
+                                 mode: str = 'columns-and-includes',
+                                 use_async: bool=False):
     not_deleted_entities = filter(lambda x: not x.is_soft_deleted(), entities)
-    return [as_dict(entity, includes=includes, mode=mode) for entity in not_deleted_entities]
+    dictify = partial(as_dict,
+                      async_map=async_map,
+                      includes=includes,
+                      mode=mode)
+    map_method = async_map if use_async else map
+    return list(map_method(dictify, not_deleted_entities))
 
 
 @as_dict.register(ApiHandler)
 def as_dict_for_api_handler(entity,
                             column=None,
+                            async_map: Callable=None,
                             includes: Iterable=None,
                             mode: str='columns-and-includes'):
     result = OrderedDict()
@@ -45,6 +56,9 @@ def as_dict_for_api_handler(entity,
         includes = exclusive_includes_from(entity, includes)
 
     for key in _keys_to_serialize(entity, includes):
+        use_async = key.startswith('|')
+        if use_async:
+            key = key[1:]
         value = getattr(entity, key)
         columns = entity.__mapper__.columns
         column = columns.get(key)
@@ -52,14 +66,23 @@ def as_dict_for_api_handler(entity,
             synonym = entity.__mapper__.synonyms.get(key)
             if synonym:
                 column = synonym._proxied_property.columns[0]
-        result[key] = as_dict(value, column=column)
+        result[key] = as_dict(value,
+                              async_map=async_map,
+                              column=column)
 
     for join in _joins_to_serialize(includes):
         key = join['key']
+        use_async = key.startswith('|')
+        if use_async:
+            key = key[1:]
         sub_includes = join.get('includes')
         sub_mode = join.get('mode', mode)
         value = getattr(entity, key)
-        result[key] = as_dict(value, includes=sub_includes, mode=sub_mode)
+        result[key] = as_dict(value,
+                              async_map=async_map,
+                              includes=sub_includes,
+                              mode=sub_mode,
+                              use_async=use_async)
 
     return result
 

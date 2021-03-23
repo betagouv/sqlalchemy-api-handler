@@ -13,8 +13,10 @@ def chunks_from(elements, chunk_by=None):
 
 def create_asynchronous(func,
                         args_list=None,
+                        executor_class=None,
                         kwargs_list=None,
-                        max_workers=10):
+                        max_workers=10,
+                        use_multiprocessing=False):
     if args_list and kwargs_list:
         if len(args_list) != len(kwargs_list):
             raise 'args_list and kwargs_list must have the same length.'
@@ -23,9 +25,12 @@ def create_asynchronous(func,
     elif kwargs_list:
         args_list = [()]*len(kwargs_list)
 
+    if executor_class is None:
+        executor_class = ThreadPoolExecutor
+
     async def asynchronous_func():
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            loop = asyncio.get_event_loop()
+        loop = asyncio.get_event_loop()
+        with executor_class(max_workers=max_workers) as executor:
             tasks = [
                 loop.run_in_executor(executor, partial(func, **kwargs), *args)
                 for (args, kwargs) in zip(args_list, kwargs_list)
@@ -38,6 +43,7 @@ def async_map(func,
               args_list=None,
               kwargs_list=None,
               chunk_by=None,
+              executor_class=None,
               max_workers=None,
               sleep_between=None):
     if args_list and kwargs_list:
@@ -69,11 +75,16 @@ def async_map(func,
         asynchronous_func = create_asynchronous(func,
                                                 args_list=args_chunks[index] if args_chunks else None,
                                                 kwargs_list=kwargs_chunks[index] if kwargs_chunks else None,
+                                                executor_class=executor_class,
                                                 max_workers=max_workers)
-        loop = asyncio.get_event_loop()
         future = asyncio.ensure_future(asynchronous_func())
+        loop = asyncio.get_event_loop()
         loop.run_until_complete(future)
         results += future.result()
         if sleep_between:
             sleep(sleep_between)
     return results
+
+
+def async_map_with_one_arg(func, args):
+    return async_map(func, [(arg,) for arg in args])
