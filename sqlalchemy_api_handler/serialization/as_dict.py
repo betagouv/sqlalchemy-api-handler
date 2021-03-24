@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial, singledispatch
 from typing import Callable, Iterable, Set, List
 from sqlalchemy.orm.collections import InstrumentedList
@@ -38,6 +39,11 @@ def as_dict_for_intrumented_list(entities,
                       async_map=async_map,
                       includes=includes,
                       mode=mode)
+
+    if use_async and async_map is None:
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            return list(executor.map(dictify, not_deleted_entities))
+
     map_method = async_map if use_async else map
     return list(map_method(dictify, not_deleted_entities))
 

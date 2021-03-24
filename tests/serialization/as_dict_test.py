@@ -1,5 +1,5 @@
 import pytest
-from flask_executor import Executor
+from concurrent.futures import ThreadPoolExecutor
 
 from sqlalchemy_api_handler.serialization import as_dict
 from sqlalchemy_api_handler.utils import async_map_with_one_arg
@@ -101,7 +101,6 @@ class AsDictTest:
         assert set(user_dict.keys()) == set(includes)
         assert set(user_dict.values()) == set(map(lambda key: user_fields_dict[key], includes))
 
-
     def test_dictify_with_sync_map(self, app):
         # given
         offer = Offer(name='foo', type='bar')
@@ -120,7 +119,27 @@ class AsDictTest:
         assert offer_dict['offerTags'][0]['tag']['label'] == 'beep'
         assert offer_dict['offerTags'][1]['tag']['label'] == 'boop'
 
-    def test_dictify_with_thread_async_map(self, app):
+    def test_dictify_with_async_map(self, app):
+        # given
+        offer_tags_count = 10
+        offer = Offer(name='foo', type='bar')
+        offer_tags = []
+        for index in range(0, offer_tags_count):
+            tag = Tag(label=str(index))
+            offer_tags.append(OfferTag(offer=offer, tag=tag))
+
+        # when
+        includes = [{ 'key': '|offerTags', 'includes': ['tag'] }]
+        offer_dict = as_dict(offer,
+                             includes=includes)
+
+        # then
+        assert len(offer_dict['offerTags']) == offer_tags_count
+        for index in range(0, offer_tags_count):
+            assert offer_dict['offerTags'][index]['tag']['label'] == str(index)
+            assert offer_dict['offerTags'][index]['tag']['sleptFoo'] == 0
+
+    def test_dictify_with_custom_async_map(self, app):
         # given
         offer_tags_count = 10
         offer = Offer(name='foo', type='bar')
@@ -133,27 +152,6 @@ class AsDictTest:
         includes = [{ 'key': '|offerTags', 'includes': ['tag'] }]
         offer_dict = as_dict(offer,
                              async_map=async_map_with_one_arg,
-                             includes=includes)
-
-        # then
-        assert len(offer_dict['offerTags']) == offer_tags_count
-        for index in range(0, offer_tags_count):
-            assert offer_dict['offerTags'][index]['tag']['label'] == str(index)
-            assert offer_dict['offerTags'][index]['tag']['sleptFoo'] == 0
-
-    def test_dictify_with_flask_async_map(self, app):
-        # given
-        offer_tags_count = 10
-        offer = Offer(name='foo', type='bar')
-        offer_tags = []
-        for index in range(0, offer_tags_count):
-            tag = Tag(label=str(index))
-            offer_tags.append(OfferTag(offer=offer, tag=tag))
-
-        # when
-        includes = [{ 'key': '|offerTags', 'includes': ['tag'] }]
-        offer_dict = as_dict(offer,
-                             async_map=Executor(app).map,
                              includes=includes)
 
         # then
