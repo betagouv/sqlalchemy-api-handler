@@ -47,7 +47,8 @@ def as_dict_for_api_handler(entity,
                             column=None,
                             async_map: Callable=None,
                             includes: Iterable=None,
-                            mode: str='columns-and-includes'):
+                            mode: str='columns-and-includes',
+                            use_async: bool=False):
     result = OrderedDict()
 
     if includes is None and hasattr(entity, '__as_dict_includes__'):
