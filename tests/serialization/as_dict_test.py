@@ -2,7 +2,6 @@ import pytest
 from concurrent.futures import ThreadPoolExecutor
 
 from sqlalchemy_api_handler.serialization import as_dict
-from sqlalchemy_api_handler.utils import async_map_with_one_arg
 from api.models.offer import Offer
 from api.models.offer_tag import OfferTag
 from api.models.stock import Stock
@@ -150,12 +149,13 @@ class AsDictTest:
 
         # when
         includes = [{ 'key': '|offerTags', 'includes': ['tag'] }]
-        offer_dict = as_dict(offer,
-                             async_map=async_map_with_one_arg,
-                             includes=includes)
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            offer_dict = as_dict(offer,
+                                 async_map=executor.map,
+                                 includes=includes)
 
-        # then
-        assert len(offer_dict['offerTags']) == offer_tags_count
-        for index in range(0, offer_tags_count):
-            assert offer_dict['offerTags'][index]['tag']['label'] == str(index)
-            assert offer_dict['offerTags'][index]['tag']['sleptFoo'] == 0
+            # then
+            assert len(offer_dict['offerTags']) == offer_tags_count
+            for index in range(0, offer_tags_count):
+                assert offer_dict['offerTags'][index]['tag']['label'] == str(index)
+                assert offer_dict['offerTags'][index]['tag']['sleptFoo'] == 0

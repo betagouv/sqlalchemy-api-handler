@@ -1,12 +1,11 @@
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor
 from functools import partial, singledispatch
 from typing import Callable, Iterable, Set, List
 from sqlalchemy.orm.collections import InstrumentedList
 
 from sqlalchemy_api_handler.api_handler import ApiHandler
 from sqlalchemy_api_handler.serialization.serialize import serialize
-from sqlalchemy_api_handler.utils.asynchronous import async_map
+from sqlalchemy_api_handler.utils.asynchronous import async_map as default_async_map
 
 
 def exclusive_includes_from(entity, includes):
@@ -34,16 +33,13 @@ def as_dict_for_intrumented_list(entities,
                                  includes: Iterable = None,
                                  mode: str = 'columns-and-includes',
                                  use_async: bool=False):
+    if async_map is None:
+        async_map = default_async_map
     not_deleted_entities = filter(lambda x: not x.is_soft_deleted(), entities)
     dictify = partial(as_dict,
                       async_map=async_map,
                       includes=includes,
                       mode=mode)
-
-    if use_async and async_map is None:
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            return list(executor.map(dictify, not_deleted_entities))
-
     map_method = async_map if use_async else map
     return list(map_method(dictify, not_deleted_entities))
 

@@ -1,9 +1,9 @@
 import pytest
 
-from sqlalchemy_api_handler.utils import nesting_datum_from
+from sqlalchemy_api_handler.utils.datum import nesting_datum_from
 
 
-class UtilsTest:
+class DatumTest:
     def test_nesting_datum(self, app):
         # Given
         datum = {
