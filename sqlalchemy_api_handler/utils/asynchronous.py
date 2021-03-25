@@ -1,8 +1,6 @@
-# https://medium.com/hackernoon/how-to-run-asynchronous-web-requests-in-parallel-with-python-3-5-without-aiohttp-264dc0f8546
 from time import sleep
 from itertools import chain
 from functools import partial
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -17,7 +15,7 @@ def zipped_async_map(func,
                      kwargs_list=None,
                      chunk_by=None,
                      executor_class=None,
-                     max_workers=10,
+                     max_workers=5,
                      sleep_between=None):
     if args_list and kwargs_list:
         listed_args_list = list(args_list)
@@ -70,5 +68,5 @@ def zipped_async_map(func,
         return results
 
 
-def async_map(func, *lists):
-    return zipped_async_map(func, zip(*lists))
+def async_map(func, *lists, **kwargs):
+    return zipped_async_map(func, zip(*lists), **kwargs)
