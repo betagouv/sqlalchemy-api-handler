@@ -17,6 +17,7 @@ def zipped_async_map(func,
                      executor_class=None,
                      max_workers=5,
                      sleep_between=None):
+
     if args_list and kwargs_list:
         listed_args_list = list(args_list)
         listed_kwargs_list = list(kwargs_list)
@@ -24,18 +25,21 @@ def zipped_async_map(func,
             raise 'args_list and kwargs_list must have the same length.'
         args_chunks = list(chunks_from(listed_args_list, chunk_by))
         kwargs_chunks = list(chunks_from(listed_kwargs_list, chunk_by))
+        chunks_count = len(args_chunks)
     elif args_list and not kwargs_list:
         listed_args_list = list(args_list)
         if len(listed_args_list) == 0:
             return []
         args_chunks = list(chunks_from(listed_args_list, chunk_by))
         kwargs_chunks = None
+        chunks_count = len(args_chunks)
     elif kwargs_list:
         listed_kwargs_list = list(kwargs_list)
         if len(listed_kwargs_list) == 0:
             return []
         args_chunks = None
         kwargs_chunks = list(chunks_from(listed_kwargs_list, chunk_by))
+        chunks_count = len(kwargs_chunks)
     elif args_list is None and kwargs_list is None:
         raise 'one args_list or kwargs_list need to be specified.'
     else:
@@ -50,7 +54,7 @@ def zipped_async_map(func,
 
     results = []
     with executor_class(max_workers=max_workers) as executor:
-        for index in range(0, len(args_chunks)):
+        for index in range(0, chunks_count):
             args_list = args_chunks[index] if args_chunks else None
             kwargs_list = kwargs_chunks[index] if kwargs_chunks else None
             if args_list and kwargs_list:

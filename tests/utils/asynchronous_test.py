@@ -15,7 +15,8 @@ class AsynchronousTest:
             return a + b
 
         # When
-        results = list(zipped_async_map(add, [(first_call_a, first_call_b), (second_call_a, second_call_b)]))
+        results = list(zipped_async_map(add,
+                                        [(first_call_a, first_call_b), (second_call_a, second_call_b)]))
 
         # Then
         assert results[0] == first_call_a + first_call_b
@@ -43,6 +44,23 @@ class AsynchronousTest:
         assert results[0] == first_call_a + first_call_b
         assert results[1] == second_call_a - second_call_b
 
+    def test_zipped_async_map_with_kwargs_list(self, app):
+        # Given
+        def op(action='add'):
+            if action == 'add':
+                return 1 + 1
+            elif action == 'substract':
+                return 1 - 1
+            return None
+
+        # When
+        results = list(zipped_async_map(op,
+                                        None,
+                                        [{ 'action': 'add' }, { 'action': 'substract'}]))
+
+        # Then
+        assert results[0] == 2
+        assert results[1] == 0
 
     def test_add_function_with_simple_map(self, app):
         # Given
