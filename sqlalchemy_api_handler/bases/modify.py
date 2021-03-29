@@ -381,7 +381,7 @@ class Modify(Delete, SoftDelete):
         created = {**datum}
         if 'id' in created and created['id'] == '__NEXT_ID_IF_NOT_EXISTS__':
             db = Modify.get_db()
-            seq = Sequence('{}_id_seq'.format(model.__tablename__))
+            seq = Sequence(f'{model.__tablename__}_{model.id.property.key}_seq')
             created['id'] = humanize(db.session.execute(seq))
         return created
 
