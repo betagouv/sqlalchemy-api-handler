@@ -4,6 +4,7 @@ from uuid import uuid4
 from flask_login import login_user
 from sqlalchemy import desc, Integer
 from sqlalchemy_api_handler import ApiHandler, humanize
+from sqlalchemy_api_handler.bases.errors import JustBeforeActivityNotFound
 from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
@@ -343,3 +344,23 @@ class ActivateTest:
         offers = Offer.query.all()
         assert len(offers) == 0
         assert activity.entityIdentifier == offer.activityIdentifier
+
+    @with_delete
+    def test_raise_JustBeforeActivityNotFound_when_passing_two_activities_with_same_date_created(self, app):
+        # Given
+        date_created = datetime.utcnow()
+        offer_activity_identifier = uuid4()
+        first_patch = { 'name': 'bar', 'type': 'foo' }
+        first_activity = Activity(dateCreated=date_created,
+                                  entityIdentifier=offer_activity_identifier,
+                                  patch=first_patch,
+                                  tableName='offer')
+        second_patch = { 'name': 'bor' }
+        second_activity = Activity(dateCreated=date_created,
+                                   entityIdentifier=offer_activity_identifier,
+                                   patch=second_patch,
+                                   tableName='offer')
+
+        # When
+        with pytest.raises(JustBeforeActivityNotFound) as error:
+            ApiHandler.activate(first_activity, second_activity)

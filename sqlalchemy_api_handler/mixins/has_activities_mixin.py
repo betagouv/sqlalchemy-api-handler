@@ -4,8 +4,11 @@ from sqlalchemy import BigInteger, \
                        desc
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy_api_handler.bases.activate import Activate
-from sqlalchemy_api_handler.bases.errors import IdNoneError
+from sqlalchemy_api_handler.bases.errors import IdNoneError, \
+                                                JustBeforeActivityNotFound
 from sqlalchemy.orm.collections import InstrumentedList
+
+
 
 
 class HasActivitiesMixin(object):
@@ -70,7 +73,9 @@ class HasActivitiesMixin(object):
         Activity = Activate.get_activity()
         query_filter = (self._get_activity_join_filter()) & \
                        (Activity.dateCreated < activity.dateCreated)
-        return Activity.query.filter(query_filter) \
-                             .order_by(desc(Activity.dateCreated)) \
-                             .limit(1) \
-                             .one()
+
+        before_activity = Activity.query.filter(query_filter) \
+                                  .order_by(desc(Activity.dateCreated)) \
+                                  .first()
+        if before_activity is None:
+            raise JustBeforeActivityNotFound(f'Failed to find an activity just before that one {vars(activity)}')

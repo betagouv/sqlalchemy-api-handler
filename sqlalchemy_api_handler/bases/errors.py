@@ -130,6 +130,10 @@ class GetPathError(ApiErrors):
     pass
 
 
+class JustBeforeActivityNotFound(Exception):
+    pass
+
+
 class NotSoftDeletableMixinException(ApiErrors):
     pass
 
