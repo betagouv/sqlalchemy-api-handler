@@ -79,3 +79,4 @@ class HasActivitiesMixin(object):
                                   .first()
         if before_activity is None:
             raise JustBeforeActivityNotFound(f'Failed to find an activity just before that one {vars(activity)}')
+        return before_activity
