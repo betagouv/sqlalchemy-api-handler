@@ -15,6 +15,7 @@ from sqlalchemy_api_handler.utils.humanize import humanize, \
 
 
 class ActivityMixin(object):
+
     _entityIdentifier = None
 
     @declared_attr

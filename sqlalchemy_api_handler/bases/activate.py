@@ -1,6 +1,7 @@
 from functools import reduce
 from itertools import groupby
 from sqlalchemy import BigInteger, desc
+from sqlalchemy.event import listens_for
 from postgresql_audit.flask import versioning_manager
 
 from sqlalchemy_api_handler.bases.accessor import Accessor
@@ -19,6 +20,7 @@ class Activate(Save):
     @classmethod
     def set_activity(cls, activity_cls):
         Activate.activity_cls = activity_cls
+
 
     @staticmethod
     def activate(*activities,
@@ -79,6 +81,7 @@ class Activate(Save):
             if not entity_id:
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityIdentifier = entity_identifier
+                entity.dateCreated = first_activity.dateCreated
                 Save.add(entity)
                 Activate.get_db().session.flush()
                 insert_activity = entity.__insertActivity__

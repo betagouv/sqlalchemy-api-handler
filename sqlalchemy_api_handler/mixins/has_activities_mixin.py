@@ -1,6 +1,8 @@
+from datetime import datetime
 from uuid import uuid4
 from sqlalchemy import BigInteger, \
                        Column, \
+                       DateTime, \
                        desc
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy_api_handler.bases.activate import Activate
@@ -17,6 +19,10 @@ class HasActivitiesMixin(object):
     activityIdentifier = Column(UUID(as_uuid=True),
                                      default=uuid4,
                                      index=True)
+
+    dateCreated = Column(DateTime,
+                         default=datetime.utcnow,
+                         nullable=False)
 
     def _get_activity_join_by_entity_id_filter(self):
         Activity = Activate.get_activity()

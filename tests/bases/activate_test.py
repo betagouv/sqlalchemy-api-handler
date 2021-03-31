@@ -141,15 +141,13 @@ class ActivateTest:
         insert_offer_activity = offer_activities[0]
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
+        assert insert_offer_activity.dateCreated == offer.dateCreated
         assert insert_offer_activity.entityIdentifier == offer.activityIdentifier
         assert insert_offer_activity.verb == 'insert'
         assert patch.items() <= insert_offer_activity.datum.items()
         assert patch.items() <= insert_offer_activity.patch.items()
         assert insert_offer_activity.datum['id'] == humanize(offer.id)
         assert insert_offer_activity.patch['id'] == humanize(offer.id)
-
-
-
 
     @with_delete
     def test_create_activity_on_not_existing_offers_saves_two_insert_activities(self, app):
@@ -178,6 +176,7 @@ class ActivateTest:
         offer1_activities = offer1.__activities__
         insert_offer1_activity = offer1_activities[0]
         assert len(offer1_activities) == 1
+        assert insert_offer1_activity.dateCreated == offer1.dateCreated
         assert insert_offer1_activity.entityIdentifier == offer1.activityIdentifier
         assert insert_offer1_activity.verb == 'insert'
         assert patch1.items() <= insert_offer1_activity.datum.items()
@@ -189,15 +188,13 @@ class ActivateTest:
         offer2_activities = offer2.__activities__
         insert_offer2_activity = offer2_activities[0]
         assert len(offer2_activities) == 1
+        assert insert_offer2_activity.dateCreated == offer2.dateCreated
         assert insert_offer2_activity.entityIdentifier == offer2.activityIdentifier
         assert insert_offer2_activity.verb == 'insert'
         assert patch2.items() <= insert_offer2_activity.datum.items()
         assert patch2.items() <= insert_offer2_activity.patch.items()
         assert insert_offer2_activity.datum['id'] == humanize(offer2.id)
         assert insert_offer2_activity.patch['id'] == humanize(offer2.id)
-
-
-
 
     @with_delete
     def test_create_activities_on_existing_offer_saves_update_activities(self, app):
@@ -228,6 +225,7 @@ class ActivateTest:
         offer_activities = offer.__activities__
         assert len(all_activities) == 3
         assert len(offer_activities) == 3
+        assert offer_activities[0].dateCreated == offer.dateCreated
         assert offer_activities[0].entityIdentifier == offer.activityIdentifier
         assert offer_activities[0].verb == 'insert'
         assert offer_activities[0].id == offer_activities[0].id
