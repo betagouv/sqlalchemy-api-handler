@@ -24,7 +24,20 @@ class Activate(Save):
     def activate(*activities,
                  with_check_not_soft_deleted=True):
         Activity = Activate.get_activity()
-        for (entity_identifier, grouped_activities) in groupby(activities, key=lambda activity: activity.entityIdentifier):
+        potential_existing_activities = Activity.query.filter(Activity.entityIdentifier.in_([a.entityIdentifier for a in activities])) \
+                                                      .filter(Activity.dateCreated.in_([a.dateCreated for a in activities])) \
+                                                      .all()
+        potential_existing_activities_dict = { (a.dateCreated, a.entityIdentifier) : a for a in potential_existing_activities }
+        unknown_activities = []
+        for activity in activities:
+            existing_activity = potential_existing_activities_dict.get((activity.dateCreated, activity.entityIdentifier))
+            if existing_activity:
+                for key, value in vars(existing_activity).items():
+                    setattr(activity, key, value)
+            else:
+                unknown_activities.append(activity)
+
+        for (entity_identifier, grouped_activities) in groupby(unknown_activities, key=lambda activity: activity.entityIdentifier):
             grouped_activities = sorted(grouped_activities,
                                         key=lambda activity: activity.dateCreated)
 
