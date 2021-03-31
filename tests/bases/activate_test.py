@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 from flask_login import login_user
 from sqlalchemy import desc, Integer
@@ -302,6 +302,62 @@ class ActivateTest:
 
 
     @with_delete
+    def test_same_insert_activity_should_not_be_recorded_twice(self, app):
+        # Given
+        offer_activity_identifier = uuid4()
+        offer_patch = { 'name': 'bar', 'type': 'foo' }
+        date_created = datetime.utcnow()
+        offer_activity1 = Activity(dateCreated=date_created,
+                                   entityIdentifier=offer_activity_identifier,
+                                   patch=offer_patch,
+                                   tableName='offer')
+        ApiHandler.activate(offer_activity1)
+        duplicate_offer_activity = Activity(dateCreated=date_created,
+                                            entityIdentifier=offer_activity_identifier,
+                                            patch=offer_patch,
+                                            tableName='offer')
+
+        # When
+        ApiHandler.activate(duplicate_offer_activity)
+
+        # Then
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        assert offer.activityIdentifier == offer_activity1.entityIdentifier
+        assert len(offer.__activities__) == 1
+
+
+    @with_delete
+    def test_same_update_activity_should_not_be_recorded_twice(self, app):
+        # Given
+        offer_activity_identifier = uuid4()
+        offer_patch = { 'name': 'bar', 'type': 'foo' }
+        offer_activity1 = Activity(dateCreated=datetime.utcnow(),
+                                   entityIdentifier=offer_activity_identifier,
+                                   patch=offer_patch,
+                                   tableName='offer')
+        ApiHandler.activate(offer_activity1)
+
+        offer_patch = { 'name': 'bor', 'type': 'foo' }
+        date_created = datetime.utcnow()
+        offer_activity2 = Activity(dateCreated=date_created,
+                                   entityIdentifier=offer_activity_identifier,
+                                   patch=offer_patch,
+                                   tableName='offer')
+        ApiHandler.activate(offer_activity2)
+        duplicate_offer_activity = Activity(dateCreated=date_created,
+                                            entityIdentifier=offer_activity_identifier,
+                                            patch=offer_patch,
+                                            tableName='offer')
+
+        # When
+        ApiHandler.activate(duplicate_offer_activity)
+
+        # Then
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        assert offer.activityIdentifier == offer_activity2.entityIdentifier
+        assert len(offer.__activities__) == 2
+
+    @with_delete
     def test_create_activity_on_not_existing_offer_with_model_name(self, app):
         # Given
         offer_activity_identifier = uuid4()
@@ -346,7 +402,7 @@ class ActivateTest:
         assert activity.entityIdentifier == offer.activityIdentifier
 
     @with_delete
-    def test_raise_JustBeforeActivityNotFound_when_passing_two_activities_with_same_date_created(self, app):
+    def test_raise_JustBeforeActivityNotFound_when_update_activity_date_before_insert_activity_date(self, app):
         # Given
         date_created = datetime.utcnow()
         offer_activity_identifier = uuid4()
@@ -355,12 +411,15 @@ class ActivateTest:
                                   entityIdentifier=offer_activity_identifier,
                                   patch=first_patch,
                                   tableName='offer')
+
+        ApiHandler.activate(first_activity)
+
         second_patch = { 'name': 'bor' }
-        second_activity = Activity(dateCreated=date_created,
+        second_activity = Activity(dateCreated=date_created - timedelta(minutes=1),
                                    entityIdentifier=offer_activity_identifier,
                                    patch=second_patch,
                                    tableName='offer')
 
-        # When
+        # When + Then
         with pytest.raises(JustBeforeActivityNotFound) as error:
-            ApiHandler.activate(first_activity, second_activity)
+            ApiHandler.activate(second_activity)
