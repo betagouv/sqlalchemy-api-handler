@@ -327,6 +327,25 @@ class ActivateTest:
 
 
     @with_delete
+    def test_same_insert_activity_should_not_be_recorded_twice_from_dict_edition(self, app):
+        # Given
+        offer_activity_identifier = uuid4()
+        offer_patch = { 'name': 'bar', 'type': 'foo' }
+        date_created = datetime.utcnow()
+        offer_activity1 = Activity(**{'modelName': 'Offer', 'dateCreated': '2021-03-31T14:18:52.618Z', 'localIdentifier': 'ec510dea-1087-4770-83be-91c2b91a7d05/2021-03-30T12:21:54.540Z', 'localDossierId': 'AEE8EHCP', 'entityIdentifier': str(offer_activity_identifier), 'patch': offer_patch})
+        ApiHandler.activate(offer_activity1)
+        duplicate_offer_activity = Activity(**{'modelName': 'Offer', 'dateCreated': '2021-03-31T14:18:52.618Z', 'localIdentifier': 'ec510dea-1087-4770-83be-91c2b91a7d05/2021-03-30T12:21:54.540Z', 'localDossierId': 'AEE8EHCP', 'entityIdentifier': str(offer_activity_identifier), 'patch': offer_patch})
+
+        # When
+        ApiHandler.activate(duplicate_offer_activity)
+
+        # Then
+        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        assert str(offer.activityIdentifier) == offer_activity1.entityIdentifier
+        assert len(offer.__activities__) == 1
+
+
+    @with_delete
     def test_same_update_activity_should_not_be_recorded_twice(self, app):
         # Given
         offer_activity_identifier = uuid4()
