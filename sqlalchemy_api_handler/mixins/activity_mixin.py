@@ -25,7 +25,7 @@ class ActivityMixin(object):
         return synonym('issued_at')
 
     @property
-    def entityCreatedAt(self):
+    def entityInsertedAt(self):
         return strptime(self.data.get('dateCreated')) or self.entity.dateCreated
 
     @declared_attr

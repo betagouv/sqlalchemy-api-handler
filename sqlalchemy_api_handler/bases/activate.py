@@ -21,7 +21,6 @@ class Activate(Save):
     def set_activity(cls, activity_cls):
         Activate.activity_cls = activity_cls
 
-
     @staticmethod
     def activate(*activities,
                  with_check_not_soft_deleted=True):
@@ -81,7 +80,7 @@ class Activate(Save):
             if not entity_id:
                 entity = model(**relationships_in(first_activity.patch, model))
                 entity.activityIdentifier = entity_identifier
-                entity.dateCreated = first_activity.dateCreated
+                entity.__insertActivityDate__ = first_activity.dateCreated
                 Save.add(entity)
                 Activate.get_db().session.flush()
                 insert_activity = entity.__insertActivity__
