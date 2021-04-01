@@ -7,7 +7,7 @@ from sqlalchemy.sql import func
 
 from sqlalchemy_api_handler.bases.activate import Activate
 from sqlalchemy_api_handler.mixins.task_mixin import TaskState
-from sqlalchemy_api_handler.utils.date import strptime
+import sqlalchemy_api_handler.utils.date as date_helper
 
 
 class Tasker(Activate):
@@ -49,8 +49,8 @@ class Tasker(Activate):
                                        isEager=False,
                                        kwargs=body[1],
                                        name=headers['task'],
-                                       planificationTime=strptime('{}Z'.format(headers['eta']).replace('+00:00', '')) \
-                                                  if headers.get('eta') else None,
+                                       planificationTime=date_helper.to_datetime('{}Z'.format(headers['eta']).replace('+00:00', '')) \
+                                                         if headers.get('eta') else None,
                                        queue=routing_key,
                                        state=TaskState.CREATED)
                 task_db_session.add(task_entity)
