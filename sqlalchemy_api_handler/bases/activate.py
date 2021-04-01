@@ -1,7 +1,6 @@
 from functools import reduce
 from itertools import groupby
 from sqlalchemy import BigInteger, desc
-from sqlalchemy.event import listens_for
 from postgresql_audit.flask import versioning_manager
 
 from sqlalchemy_api_handler.bases.accessor import Accessor
