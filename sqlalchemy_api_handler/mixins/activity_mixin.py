@@ -1,3 +1,4 @@
+from datetime import datetime
 import uuid
 from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -9,6 +10,7 @@ from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.utils.datum import columns_in, \
                                                relationships_in, \
                                                synonyms_in
+from sqlalchemy_api_handler.utils.date import strptime
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
 from sqlalchemy_api_handler.utils.humanize import humanize, \
                                                   humanize_ids_in
@@ -21,6 +23,10 @@ class ActivityMixin(object):
     @declared_attr
     def dateCreated(cls):
         return synonym('issued_at')
+
+    @property
+    def entityCreatedAt(self):
+        return strptime(self.data.get('dateCreated')) or self.entity.dateCreated
 
     @declared_attr
     def tableName(cls):
