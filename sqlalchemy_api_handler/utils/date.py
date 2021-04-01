@@ -28,8 +28,6 @@ def to_datetime(date: str, date_format=DATE_ISO_FORMAT):
     valid_patterns = [DATE_ISO_FORMAT,
                       DATE_ISO_FORMAT.replace('.%fZ', ''),
                       DATE_ISO_FORMAT.replace('.%fZ', 'Z')]
-    datetime_value = None
-
     for pattern in valid_patterns:
         try:
             return datetime.strptime(date, pattern)

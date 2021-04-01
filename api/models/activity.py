@@ -1,5 +1,4 @@
 from postgresql_audit.flask import versioning_manager
-from sqlalchemy.event import listens_for
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.mixins import ActivityMixin
 

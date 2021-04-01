@@ -26,7 +26,7 @@ class ActivityMixin(object):
 
     @property
     def entityInsertedAt(self):
-        return sqlalchemy_api_handler.utils.date.to_datetime(self.data.get('__insertActivityDate__')) or self.entity.__insertActivityDate__
+        return sqlalchemy_api_handler.utils.date.to_datetime(self.data.get('dateCreated')) or self.entity.dateCreated
 
     @declared_attr
     def tableName(cls):
