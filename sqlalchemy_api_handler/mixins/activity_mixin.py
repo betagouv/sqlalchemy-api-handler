@@ -10,7 +10,7 @@ from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.utils.datum import columns_in, \
                                                relationships_in, \
                                                synonyms_in
-from sqlalchemy_api_handler.utils.date import strptime
+import sqlalchemy_api_handler.utils.date
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
 from sqlalchemy_api_handler.utils.humanize import humanize, \
                                                   humanize_ids_in
@@ -26,7 +26,7 @@ class ActivityMixin(object):
 
     @property
     def entityInsertedAt(self):
-        return strptime(self.data.get('__insertActivityDate__')) or self.entity.__insertActivityDate__
+        return sqlalchemy_api_handler.utils.date.to_datetime(self.data.get('__insertActivityDate__')) or self.entity.__insertActivityDate__
 
     @declared_attr
     def tableName(cls):

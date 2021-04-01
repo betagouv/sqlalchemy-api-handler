@@ -15,7 +15,13 @@ class DateTimes:
         return self.datetimes == other.datetimes
 
 
-def strptime(date: str, date_format=DATE_ISO_FORMAT):
+def to_datestring(date, date_format=DATE_ISO_FORMAT):
+    if not date:
+        return None
+    return date.strftime(date_format)
+
+
+def to_datetime(date: str, date_format=DATE_ISO_FORMAT):
     if date is None:
         return None
 
@@ -29,9 +35,3 @@ def strptime(date: str, date_format=DATE_ISO_FORMAT):
             return datetime.strptime(date, pattern)
         except ValueError:
             continue
-
-
-def strftime(date, date_format=DATE_ISO_FORMAT):
-    if not date:
-        return None
-    return date.strftime(date_format)

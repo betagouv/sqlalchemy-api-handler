@@ -1,5 +1,4 @@
 # pylint: disable=W0212
-
 import json
 import uuid
 from datetime import datetime
@@ -23,7 +22,7 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 ResourceNotFoundError, \
                                                 UuidCastError
 from sqlalchemy_api_handler.bases.soft_delete import SoftDelete
-from sqlalchemy_api_handler.utils.date import strptime
+import sqlalchemy_api_handler.utils.date
 from sqlalchemy_api_handler.utils.datum import nesting_datum_from
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize, \
                                                     dehumanize_if_needed
@@ -313,7 +312,7 @@ class Modify(Delete, SoftDelete):
 
     def _try_to_set_attribute_with_deserialized_datetime(self, col, key, value):
         try:
-            datetime_value = strptime(value)
+            datetime_value = sqlalchemy_api_handler.utils.date.to_datetime(value)
             if not datetime_value:
                 raise TypeError('Invalid value for %s: %r' % (key, value), 'datetime', key)
             setattr(self, key, datetime_value)
