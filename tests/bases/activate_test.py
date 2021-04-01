@@ -69,7 +69,7 @@ class ActivateTest:
         assert len(offer_activities) == 1
         assert insert_offer_activity_from_query == insert_offer_activity
         assert offer.activityIdentifier == insert_offer_activity.entityIdentifier
-        assert insert_offer_activity.entityInsertedAt == offer.dateCreated
+        assert insert_offer_activity.entityInsertedAt == offer.__insertActivityDate__
         assert insert_offer_activity.oldDatum == {}
         assert insert_offer_activity.transaction == None
         assert insert_offer_activity.verb == 'insert'
@@ -142,7 +142,7 @@ class ActivateTest:
         insert_offer_activity = offer_activities[0]
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
-        assert insert_offer_activity.entityInsertedAt == offer.dateCreated
+        assert insert_offer_activity.entityInsertedAt == offer.__insertActivityDate__
         assert insert_offer_activity.entityIdentifier == offer.activityIdentifier
         assert insert_offer_activity.verb == 'insert'
         assert patch.items() <= insert_offer_activity.datum.items()
@@ -177,7 +177,7 @@ class ActivateTest:
         offer1_activities = offer1.__activities__
         insert_offer1_activity = offer1_activities[0]
         assert len(offer1_activities) == 1
-        assert insert_offer1_activity.entityInsertedAt == offer1.dateCreated
+        assert insert_offer1_activity.entityInsertedAt == offer1.__insertActivityDate__
         assert insert_offer1_activity.entityIdentifier == offer1.activityIdentifier
         assert insert_offer1_activity.verb == 'insert'
         assert patch1.items() <= insert_offer1_activity.datum.items()
@@ -189,7 +189,7 @@ class ActivateTest:
         offer2_activities = offer2.__activities__
         insert_offer2_activity = offer2_activities[0]
         assert len(offer2_activities) == 1
-        assert insert_offer2_activity.entityInsertedAt == offer2.dateCreated
+        assert insert_offer2_activity.entityInsertedAt == offer2.__insertActivityDate__
         assert insert_offer2_activity.entityIdentifier == offer2.activityIdentifier
         assert insert_offer2_activity.verb == 'insert'
         assert patch2.items() <= insert_offer2_activity.datum.items()
@@ -226,15 +226,15 @@ class ActivateTest:
         offer_activities = offer.__activities__
         assert len(all_activities) == 3
         assert len(offer_activities) == 3
-        assert offer_activities[0].entityInsertedAt == offer.dateCreated
+        assert offer_activities[0].entityInsertedAt == offer.__insertActivityDate__
         assert offer_activities[0].entityIdentifier == offer.activityIdentifier
         assert offer_activities[0].verb == 'insert'
         assert offer_activities[0].id == offer_activities[0].id
-        assert offer_activities[1].entityInsertedAt == offer.dateCreated
+        assert offer_activities[1].entityInsertedAt == offer.__insertActivityDate__
         assert offer_activities[1].entityIdentifier == offer.activityIdentifier
         assert offer_activities[1].verb == 'update'
         assert offer_activities[1].patch.items() == second_patch.items()
-        assert offer_activities[2].entityInsertedAt == offer.dateCreated
+        assert offer_activities[2].entityInsertedAt == offer.__insertActivityDate__
         assert offer_activities[2].entityIdentifier == offer.activityIdentifier
         assert offer_activities[2].verb == 'update'
         assert offer_activities[2].patch.items() == third_patch.items()

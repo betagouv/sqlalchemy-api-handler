@@ -20,7 +20,7 @@ class HasActivitiesMixin(object):
                                      default=uuid4,
                                      index=True)
 
-    __insertActivityDate__ = Column(DateTime)
+    __insertActivityDate__ = Column(DateTime())
 
     def _get_activity_join_by_entity_id_filter(self):
         Activity = Activate.get_activity()

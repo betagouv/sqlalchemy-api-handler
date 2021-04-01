@@ -26,7 +26,7 @@ class ActivityMixin(object):
 
     @property
     def entityInsertedAt(self):
-        return strptime(self.data.get('dateCreated')) or self.entity.dateCreated
+        return strptime(self.data.get('__insertActivityDate__')) or self.entity.__insertActivityDate__
 
     @declared_attr
     def tableName(cls):
