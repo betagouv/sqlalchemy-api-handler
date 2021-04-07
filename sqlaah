@@ -69,7 +69,6 @@ elif [[ "$CMD" == "celery" ]]; then
   check start apischeduler
   check start apiweb
   check start api${QUEUE}worker
-  check start apislowworker
   docker exec ${APP_NAME}-api${QUEUE}worker bash -c "cd /opt/api && celery $SUB_COMMANDS"
   exit_with_success
 
@@ -95,6 +94,16 @@ elif [[ "$CMD" == "database" ]]; then
   exit_with_success
 
 
+# Run pip, ex ./$COMMAND_NAME celery upgrade HEAD
+elif [[ "$CMD" == "pip" ]]; then
+  SUB_COMMANDS=$*
+  check start apidefaultworker
+  check start apiweb
+  docker exec ${APP_NAME}-apidefaultworker bash -c "cd /opt/api && pip $SUB_COMMANDS"
+  docker exec ${APP_NAME}-apiweb bash -c "cd /opt/api && pip $SUB_COMMANDS"
+  exit_with_success
+
+
 # Connect to Postgresql database in command line using psql
 elif [[ "$CMD" == "psql" ]]; then
   check start apipostgresdb
@@ -116,6 +125,9 @@ elif [[ "$CMD" == "prepublish" ]]; then
     twine check dist/${PIP_NAME}-${VERSION}.tar.gz &&
     twine upload --repository-url https://test.pypi.org/legacy/ dist/*"
   exit_with_success
+
+
+
 
 
 # Publish package to PyPi
