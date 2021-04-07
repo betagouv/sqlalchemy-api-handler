@@ -121,7 +121,7 @@ class Activate(Save):
                 entity.modify(merged_datum,
                               with_add=True,
                               with_check_not_soft_deleted=with_check_not_soft_deleted)
-            db.session.flush()
+                db.session.flush()
 
 
     @classmethod
