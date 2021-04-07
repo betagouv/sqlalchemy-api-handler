@@ -15,7 +15,7 @@ ApiHandler.set_db(db)
 
 
 def delete():
-    logger.info('Delete all the database...')
+    logger.info('Delete all the tables...')
     for table in reversed(db.metadata.sorted_tables):
         print('Deleting table {table_name}...'.format(table_name=table))
         db.session.execute(table.delete())
@@ -26,6 +26,8 @@ def delete():
 
 def create_activity_and_transaction_tables():
     orm.configure_mappers()
+    db.session.execute("CREATE EXTENSION btree_gist;")
+    db.session.commit()
     Activity = ApiHandler.get_activity()
     Activity.transaction.mapper.class_.__table__.create(db.session.get_bind())
     Activity.__table__.create(db.session.get_bind())
