@@ -115,14 +115,13 @@ class Activate(Save):
 
             db = Activate.get_db()
             db.session.add_all(grouped_activities)
-            db.session.execute(f'ALTER TABLE {model.__tablename__} DISABLE TRIGGER audit_trigger_update;')
             if model.id.key in merged_datum:
                 del merged_datum[model.id.key]
-            entity.modify(merged_datum,
-                          with_add=True,
-                          with_check_not_soft_deleted=with_check_not_soft_deleted)
-            db.session.flush()
-            db.session.execute(f'ALTER TABLE {model.__tablename__} ENABLE TRIGGER audit_trigger_update;')
+            with versioning_manager.disable(db.session):
+                entity.modify(merged_datum,
+                              with_add=True,
+                              with_check_not_soft_deleted=with_check_not_soft_deleted)
+                db.session.flush()
 
 
     @classmethod

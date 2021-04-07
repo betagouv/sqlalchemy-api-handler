@@ -7,7 +7,7 @@ flask-login==0.4.1
 flask_script==2.0.6
 flask_sqlalchemy==2.4.1
 pip-licenses==1.10.0
-PostgreSQL-Audit==0.10.0
+PostgreSQL-Audit==0.12.4
 pytest==4.0.0
 pytest-cov==2.6.1
 pytest-flask==0.14.0

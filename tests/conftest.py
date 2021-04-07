@@ -13,7 +13,7 @@ setup(FLASK_APP,
 
 try:
     create()
-except Exception:
+except Exception as ExpectedExceptionIfDatabaseAlreadyCreatedAtPreviousRun:
     pass
 
 
