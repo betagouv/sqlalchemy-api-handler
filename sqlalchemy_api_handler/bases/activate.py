@@ -117,7 +117,7 @@ class Activate(Save):
             db.session.add_all(grouped_activities)
             if model.id.key in merged_datum:
                 del merged_datum[model.id.key]
-            with cls.get_activity().disable(db.session):
+            with Activate.get_activity().disable(db.session):
                 entity.modify(merged_datum,
                               with_add=True,
                               with_check_not_soft_deleted=with_check_not_soft_deleted)
