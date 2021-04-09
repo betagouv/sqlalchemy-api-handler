@@ -1,5 +1,5 @@
 import binascii
-from base64 import b32encode, b32decode
+from base64 import b32decode
 from typing import Any
 
 from sqlalchemy_api_handler.utils.is_id_column import is_id_column
