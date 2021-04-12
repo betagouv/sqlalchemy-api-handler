@@ -1,22 +1,18 @@
-from datetime import datetime
 import uuid
-from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, synonym
+from sqlalchemy.orm import synonym
 
 from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.utils.datum import columns_in, \
-                                               relationships_in, \
                                                synonyms_in
 import sqlalchemy_api_handler.utils.date as date_helper
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
-from sqlalchemy_api_handler.utils.humanize import humanize, \
-                                                  humanize_ids_in
+from sqlalchemy_api_handler.utils.humanize import humanize_ids_in
 
 
-class ActivityMixin(object):
+class ActivityMixin():
 
     _entityIdentifier = None
 

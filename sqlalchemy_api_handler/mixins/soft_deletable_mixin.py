@@ -1,7 +1,9 @@
+# pylint: disable=R0903
+
 from sqlalchemy import Column, Boolean
 
 
-class SoftDeletableMixin(object):
+class SoftDeletableMixin():
     isSoftDeleted = Column(Boolean,
                            default=False,
                            nullable=False)

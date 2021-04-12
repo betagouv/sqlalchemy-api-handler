@@ -1,11 +1,13 @@
-import pytest
-from datetime import datetime, timedelta
+# pylint: disable=R0201
+# pylint: disable=W0613
+
 from uuid import uuid4
+from datetime import datetime, timedelta
+import pytest
 from flask_login import login_user
-from sqlalchemy import desc, Integer
+from sqlalchemy import Integer
 from sqlalchemy_api_handler import ApiHandler, humanize
 from sqlalchemy_api_handler.bases.errors import JustBeforeActivityNotFound
-from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
 from api.models.activity import Activity
@@ -23,12 +25,7 @@ class ActivateTest:
         assert Activity in models
 
     def test_model_from_name(self, app):
-        # When
-        GotActivity = ApiHandler.model_from_name('Activity')
-
-        # Then
-        assert GotActivity == Activity
-
+        assert ApiHandler.model_from_name('Activity') == Activity
 
     def test_instance_an_activity(self, app):
         # Given
@@ -45,9 +42,6 @@ class ActivateTest:
 
         # Then
         assert activity.patch['offerId'] == offer.humanizedId
-
-
-
 
     @with_delete
     def test_create_offer_saves_an_insert_activity(self, app):
@@ -71,7 +65,7 @@ class ActivateTest:
         assert offer.activityIdentifier == insert_offer_activity.entityIdentifier
         assert insert_offer_activity.entityInsertedAt == offer.dateCreated
         assert insert_offer_activity.oldDatum == {}
-        assert insert_offer_activity.transaction == None
+        assert insert_offer_activity.transaction is None
         assert insert_offer_activity.verb == 'insert'
         assert offer_dict.items() <= insert_offer_activity.patch.items()
         assert offer_dict.items() <= insert_offer_activity.datum.items()
@@ -332,7 +326,6 @@ class ActivateTest:
         # Given
         offer_activity_identifier = uuid4()
         offer_patch = { 'name': 'bar', 'type': 'foo' }
-        date_created = datetime.utcnow()
         offer_activity1 = Activity(**{'modelName': 'Offer', 'dateCreated': '2021-03-31T14:18:52.618Z', 'localIdentifier': 'ec510dea-1087-4770-83be-91c2b91a7d05/2021-03-30T12:21:54.540Z', 'localDossierId': 'AEE8EHCP', 'entityIdentifier': str(offer_activity_identifier), 'patch': offer_patch})
         ApiHandler.activate(offer_activity1)
         duplicate_offer_activity = Activity(**{'modelName': 'Offer', 'dateCreated': '2021-03-31T14:18:52.618Z', 'localIdentifier': 'ec510dea-1087-4770-83be-91c2b91a7d05/2021-03-30T12:21:54.540Z', 'localDossierId': 'AEE8EHCP', 'entityIdentifier': str(offer_activity_identifier), 'patch': offer_patch})
@@ -422,7 +415,7 @@ class ActivateTest:
         assert activity.entityIdentifier == offer.activityIdentifier
 
     @with_delete
-    def test_raise_JustBeforeActivityNotFound_when_update_activity_date_before_insert_activity_date(self, app):
+    def test_raise_just_before_activity_not_found_when_update_activity_date_before_insert_activity_date(self, app):
         # Given
         date_created = datetime.utcnow()
         offer_activity_identifier = uuid4()
@@ -441,5 +434,5 @@ class ActivateTest:
                                    tableName='offer')
 
         # When + Then
-        with pytest.raises(JustBeforeActivityNotFound) as error:
+        with pytest.raises(JustBeforeActivityNotFound):
             ApiHandler.activate(second_activity)

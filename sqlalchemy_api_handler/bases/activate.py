@@ -1,6 +1,7 @@
-from functools import reduce
+# pylint: disable=C0103
+
 from itertools import groupby
-from sqlalchemy import BigInteger, desc
+import sqlalchemy as sa
 from postgresql_audit.flask import versioning_manager
 
 from sqlalchemy_api_handler.bases.accessor import Accessor
@@ -20,6 +21,8 @@ class Activate(Save):
     def set_activity(cls, activity_cls):
         Activate.activity_cls = activity_cls
 
+    # pylint: disable=R0914
+    # pylint: disable=R0915
     @staticmethod
     def activate(*activities,
                  with_check_not_soft_deleted=True):
@@ -44,7 +47,6 @@ class Activate(Save):
             first_activity = grouped_activities[0]
             table_name = first_activity.table_name
             model = Save.model_from_table_name(table_name)
-            id_key = model.id.property.key
 
             if first_activity.verb == 'delete':
                 query = model.query.filter_by(activityIdentifier=entity_identifier)
@@ -102,7 +104,7 @@ class Activate(Save):
 
             min_date = min(map(lambda a: a.dateCreated, grouped_activities))
             already_activities_since_min_date = Activity.query \
-                                                        .filter(entity._get_activity_join_filter(),
+                                                        .filter(entity.get_activity_join_filter(),
                                                                 Activity.dateCreated >= min_date,
                                                                 Activity.verb == 'update') \
                                                         .all()
@@ -132,7 +134,7 @@ class Activate(Save):
             models += [Activity]
         return models
 
-
+    @staticmethod
     def downgrade(op):
         op.drop_table('activity')
         op.drop_table('transaction')
@@ -146,6 +148,7 @@ class Activate(Save):
         '''
         )
 
+    @staticmethod
     def upgrade(op):
         from sqlalchemy_api_handler.mixins.activity_mixin import ActivityMixin
         db = Activate.get_db()
