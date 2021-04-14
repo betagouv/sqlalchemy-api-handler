@@ -19,6 +19,8 @@ class HasActivitiesMixin():
 
     dateCreated = Column(DateTime())
 
+    dateModified = Column(DateTime())
+
     def _get_activity_join_by_entity_id_filter(self):
         Activity = Activate.get_activity()
         id_key = self.__class__.id.property.key

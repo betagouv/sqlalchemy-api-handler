@@ -110,11 +110,13 @@ class ActivateTest:
         update_offer_activity = offer_activities[1]
         assert len(all_activities) == 2
         assert len(offer_activities) == 2
+        assert update_offer_activity.dateCreated == offer.dateModified
         assert update_offer_activity.entityIdentifier == offer.activityIdentifier
         assert update_offer_activity.verb == 'update'
         assert {**offer_dict, **modify_dict}.items() <= update_offer_activity.datum.items()
         assert modify_dict.items() == update_offer_activity.patch.items()
         assert offer_dict.items() <= update_offer_activity.oldDatum.items()
+
 
     @with_delete
     def test_create_activity_on_not_existing_offer_saves_an_insert_activity(self, app):
@@ -234,6 +236,7 @@ class ActivateTest:
         assert offer_activities[2].patch.items() == third_patch.items()
         assert offer.name == 'bor'
         assert offer.type == 'fee'
+        assert offer.dateModified == offer_activities[2].dateCreated
 
     @with_delete
     def test_create_activity_stock_binds_relationship_with_offer(self, app):

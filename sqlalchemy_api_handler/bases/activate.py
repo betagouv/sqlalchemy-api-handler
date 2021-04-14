@@ -120,6 +120,7 @@ class Activate(Save):
             if model.id.key in merged_datum:
                 del merged_datum[model.id.key]
             with versioning_manager.disable(db.session):
+                entity.dateModified = all_activities_since_min_date[-1].dateCreated
                 entity.modify(merged_datum,
                               with_add=True,
                               with_check_not_soft_deleted=with_check_not_soft_deleted)

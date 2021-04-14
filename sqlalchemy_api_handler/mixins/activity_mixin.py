@@ -1,3 +1,7 @@
+# pylint: disable=C0103
+# pylint: disable=E0213
+# pylint: disable=R0201
+
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
@@ -24,6 +28,10 @@ class ActivityMixin():
     def entityInsertedAt(self):
         return date_helper.to_datetime(self.data.get('dateCreated')) or self.entity.dateCreated
 
+    @property
+    def entityUpdatedAt(self):
+        return date_helper.to_datetime(self.data.get('dateModified')) or self.entity.dateModified
+
     @declared_attr
     def tableName(cls):
         return synonym('table_name')
@@ -43,6 +51,7 @@ class ActivityMixin():
         if activity_identifier:
             self._entityIdentifier = activity_identifier
             return uuid.UUID(self._entityIdentifier)
+        return None
 
     @entityIdentifier.expression
     def entityIdentifier(cls):
@@ -76,6 +85,7 @@ class ActivityMixin():
                                             self._entityIdentifier)
         if activity_identifier:
             return model.query.filter_by(activityIdentifier=activity_identifier).one()
+        return None
 
     @property
     def oldDatum(self):
