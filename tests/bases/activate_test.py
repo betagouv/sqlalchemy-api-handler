@@ -47,8 +47,6 @@ class ActivateTest:
         assert activity.patch['offerId'] == offer.humanizedId
 
 
-
-
     @with_delete
     def test_create_offer_saves_an_insert_activity(self, app):
         # Given
@@ -342,7 +340,7 @@ class ActivateTest:
 
         # Then
         offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
-        assert str(offer.activityIdentifier) == offer_activity1.entityIdentifier
+        assert offer.activityIdentifier == offer_activity1.entityIdentifier
         assert len(offer.__activities__) == 1
 
 
