@@ -1,4 +1,4 @@
-from datetime import datetime
+
 import uuid
 from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -42,6 +42,8 @@ class ActivityMixin(object):
     @hybrid_property
     def entityIdentifier(self):
         if self._entityIdentifier:
+            if isinstance(self._entityIdentifier, str):
+                return uuid.UUID(self._entityIdentifier)
             return self._entityIdentifier
         activity_identifier = self.data.get('activityIdentifier')
         if activity_identifier:
@@ -76,10 +78,10 @@ class ActivityMixin(object):
     @property
     def entity(self):
         model = self.model
-        activity_identifier = self.data.get('activityIdentifier',
-                                            self._entityIdentifier)
+        activity_identifier = self.entityIdentifier
         if activity_identifier:
             return model.query.filter_by(activityIdentifier=activity_identifier).one()
+        return None
 
     @property
     def oldDatum(self):
