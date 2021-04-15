@@ -34,7 +34,7 @@ class HasActivitiesMixin(object):
         return ((Activity.old_data[id_key].astext.cast(BigInteger) == id_value) | \
                 (Activity.changed_data[id_key].astext.cast(BigInteger) == id_value))
 
-    def _get_activity_join_filter(self):
+    def get_activity_join_filter(self):
         Activity = Activate.get_activity()
         return ((Activity.table_name == self.__tablename__) & \
                 (self._get_activity_join_by_entity_id_filter()))
@@ -42,7 +42,7 @@ class HasActivitiesMixin(object):
     @property
     def __activities__(self):
         Activity = Activate.get_activity()
-        query_filter = self._get_activity_join_filter()
+        query_filter = self.get_activity_join_filter()
         return InstrumentedList(Activity.query.filter(query_filter) \
                                               .order_by(Activity.dateCreated) \
                                               .order_by(Activity.id) \
@@ -51,21 +51,21 @@ class HasActivitiesMixin(object):
     @property
     def __deleteActivity__(self):
         Activity = Activate.get_activity()
-        query_filter = ((self._get_activity_join_filter()) & \
+        query_filter = ((self.get_activity_join_filter()) & \
                         (Activity.verb == 'delete'))
         return Activity.query.filter(query_filter).one()
 
     @property
     def __insertActivity__(self):
         Activity = Activate.get_activity()
-        query_filter = (self._get_activity_join_filter()) & \
+        query_filter = (self.get_activity_join_filter()) & \
                        (Activity.verb == 'insert')
         return Activity.query.filter(query_filter).one()
 
     @property
     def __lastActivity__(self):
         Activity = Activate.get_activity()
-        query_filter = (self._get_activity_join_filter()) & \
+        query_filter = (self.get_activity_join_filter()) & \
                        (Activity.verb == 'update')
         return Activity.query.filter(query_filter) \
                              .order_by(desc(Activity.id)) \
@@ -75,7 +75,7 @@ class HasActivitiesMixin(object):
 
     def just_before_activity_from(self, activity):
         Activity = Activate.get_activity()
-        query_filter = (self._get_activity_join_filter()) & \
+        query_filter = (self.get_activity_join_filter()) & \
                        (Activity.dateCreated < activity.dateCreated)
 
         before_activity = Activity.query.filter(query_filter) \

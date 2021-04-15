@@ -1,11 +1,10 @@
-import pytest
 from datetime import datetime, timedelta
 from uuid import uuid4
+import pytest
 from flask_login import login_user
-from sqlalchemy import desc, Integer
+from sqlalchemy import Integer
 from sqlalchemy_api_handler import ApiHandler, humanize
 from sqlalchemy_api_handler.bases.errors import JustBeforeActivityNotFound
-from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
 from api.models.activity import Activity
