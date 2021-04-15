@@ -1,3 +1,5 @@
+# pylint: disable=W0212
+
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize
 from sqlalchemy_api_handler.utils.humanize import humanize
 from sqlalchemy_api_handler.utils.is_id_column import is_id_column
@@ -76,8 +78,8 @@ def nesting_datum_from(flatten_path_datum,
             prefix = chunks[0]
             index = int(chunks[1]) if chunks[1].isdigit() else None
             if prefix not in nested_data_by_prefix:
-                nested_data_by_prefix[prefix] = [] if index != None else {}
-            if index != None:
+                nested_data_by_prefix[prefix] = [] if index is not None else {}
+            if index is not None:
                 next_key = '.'.join(chunks[2:])
 
                 is_new = len(nested_data_by_prefix[prefix]) < index + 1
@@ -113,7 +115,6 @@ def relationships_in(datum, model):
     return relationed_datum
 
 
-
 def old_data_from(entity, activity):
     if activity.verb == 'insert':
         return activity.changed_data
@@ -123,8 +124,7 @@ def old_data_from(entity, activity):
 
 
 def merged_datum_from_activities(entity,
-                                 activities,
-                                 initial=None):
+                                 activities):
     merged_datum = {}
     old_data = old_data_from(entity, activities[0])
     for activity in activities:

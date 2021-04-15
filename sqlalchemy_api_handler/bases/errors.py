@@ -1,6 +1,5 @@
 import re
 import traceback
-from sqlalchemy.exc import DataError
 from sqlalchemy import CHAR, \
                        Column,\
                        Enum,\
