@@ -113,7 +113,6 @@ class Activate(Save):
     @staticmethod
     def activate(*activities,
                  with_check_not_soft_deleted=True):
-        entities = []
         for (entity_identifier, grouped_activities) in groupby(Activate.unknown_activities_from(activities),
                                                                key=lambda activity: activity.entityIdentifier):
             grouped_activities = sorted(grouped_activities,
@@ -125,8 +124,6 @@ class Activate(Save):
 
             if first_activity.verb == 'delete':
                 Activate.activate_deletion(first_activity)
-                Activate.activate(*grouped_activities[1:],
-                                   with_check_not_soft_deleted=with_check_not_soft_deleted)
                 continue
 
             if model is None:
@@ -138,15 +135,13 @@ class Activate(Save):
                                 .first()
             if not entity:
                 Activate.activate_insertion(first_activity)
-                entities += Activate.activate(*grouped_activities[1:],
-                                              with_check_not_soft_deleted=with_check_not_soft_deleted)
+                Activate.activate(*grouped_activities[1:],
+                                  with_check_not_soft_deleted=with_check_not_soft_deleted)
                 continue
 
-            entities.append(entity)
             Activate.activate_updates(grouped_activities,
                                       entity,
                                       with_check_not_soft_deleted=with_check_not_soft_deleted)
-        return entities
 
 
     @classmethod

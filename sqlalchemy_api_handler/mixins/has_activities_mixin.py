@@ -20,7 +20,9 @@ class HasActivitiesMixin(object):
                                      default=uuid4,
                                      index=True)
 
-    dateCreated = Column(DateTime())
+    dateCreated = Column(DateTime(),
+                         nullable=False,
+                         default=datetime.utcnow)
 
     def _get_activity_join_by_entity_id_filter(self):
         Activity = Activate.get_activity()
