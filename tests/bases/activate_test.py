@@ -1,11 +1,10 @@
-import pytest
 from datetime import datetime, timedelta
 from uuid import uuid4
+import pytest
 from flask_login import login_user
-from sqlalchemy import desc, Integer
+from sqlalchemy import Integer
 from sqlalchemy_api_handler import ApiHandler, humanize
 from sqlalchemy_api_handler.bases.errors import JustBeforeActivityNotFound
-from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
 from api.models.activity import Activity
@@ -135,8 +134,10 @@ class ActivateTest:
 
         # Then
         all_activities = Activity.query.all()
-        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+
+        offer = activity.entity
         offer_activities = offer.__activities__
+        assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         insert_offer_activity = offer_activities[0]
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
@@ -171,7 +172,8 @@ class ActivateTest:
         all_activities = Activity.query.all()
         assert len(all_activities) == 2
 
-        offer1 = Offer.query.filter_by(activityIdentifier=offer1_activity_identifier).one()
+        offer1 = activity1.entity
+        assert offer1 == Offer.query.filter_by(activityIdentifier=offer1_activity_identifier).one()
         offer1_activities = offer1.__activities__
         insert_offer1_activity = offer1_activities[0]
         assert len(offer1_activities) == 1
@@ -183,7 +185,8 @@ class ActivateTest:
         assert insert_offer1_activity.datum['id'] == humanize(offer1.id)
         assert insert_offer1_activity.patch['id'] == humanize(offer1.id)
 
-        offer2 = Offer.query.filter_by(activityIdentifier=offer2_activity_identifier).one()
+        offer2 = activity2.entity
+        assert offer2 == Offer.query.filter_by(activityIdentifier=offer2_activity_identifier).one()
         offer2_activities = offer2.__activities__
         insert_offer2_activity = offer2_activities[0]
         assert len(offer2_activities) == 1
@@ -219,7 +222,8 @@ class ActivateTest:
         ApiHandler.activate(first_activity, second_activity, third_activity)
 
         # Then
-        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        offer = third_activity.entity
+        assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         all_activities = Activity.query.all()
         offer_activities = offer.__activities__
         assert len(all_activities) == 3
@@ -293,12 +297,13 @@ class ActivateTest:
         ApiHandler.activate(stock_activity, offer_activity2)
 
         # Then
-        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
-        stock = Stock.query.filter_by(activityIdentifier=stock_activity_identifier).one()
+        offer = offer_activity2.entity
+        stock = stock_activity.entity
+        assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        assert stock == Stock.query.filter_by(activityIdentifier=stock_activity_identifier).one()
         assert offer.activityIdentifier == offer_activity2.entityIdentifier
         assert stock.activityIdentifier == stock_activity.entityIdentifier
         assert stock.offerId == offer.id
-
 
     @with_delete
     def test_same_insert_activity_should_not_be_recorded_twice(self, app):
@@ -324,13 +329,11 @@ class ActivateTest:
         assert offer.activityIdentifier == offer_activity1.entityIdentifier
         assert len(offer.__activities__) == 1
 
-
     @with_delete
     def test_same_insert_activity_should_not_be_recorded_twice_from_dict_edition(self, app):
         # Given
         offer_activity_identifier = uuid4()
         offer_patch = { 'name': 'bar', 'type': 'foo' }
-        date_created = datetime.utcnow()
         offer_activity1 = Activity(**{'modelName': 'Offer', 'dateCreated': '2021-03-31T14:18:52.618Z', 'localIdentifier': 'ec510dea-1087-4770-83be-91c2b91a7d05/2021-03-30T12:21:54.540Z', 'localDossierId': 'AEE8EHCP', 'entityIdentifier': str(offer_activity_identifier), 'patch': offer_patch})
         ApiHandler.activate(offer_activity1)
         duplicate_offer_activity = Activity(**{'modelName': 'Offer', 'dateCreated': '2021-03-31T14:18:52.618Z', 'localIdentifier': 'ec510dea-1087-4770-83be-91c2b91a7d05/2021-03-30T12:21:54.540Z', 'localDossierId': 'AEE8EHCP', 'entityIdentifier': str(offer_activity_identifier), 'patch': offer_patch})
@@ -342,7 +345,6 @@ class ActivateTest:
         offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         assert offer.activityIdentifier == offer_activity1.entityIdentifier
         assert len(offer.__activities__) == 1
-
 
     @with_delete
     def test_same_update_activity_should_not_be_recorded_twice(self, app):
@@ -389,7 +391,8 @@ class ActivateTest:
         ApiHandler.activate(activity)
 
         # Then
-        offer = Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        offer = activity.entity
+        assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         insert_offer_activity = offer.__activities__[0]
         assert insert_offer_activity.entityIdentifier == offer.activityIdentifier
         assert insert_offer_activity.verb == 'insert'
