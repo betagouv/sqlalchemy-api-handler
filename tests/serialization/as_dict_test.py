@@ -118,7 +118,26 @@ class AsDictTest:
         assert offer_dict['offerTags'][0]['tag']['label'] == 'beep'
         assert offer_dict['offerTags'][1]['tag']['label'] == 'boop'
 
-    def test_dictify_with_async_map(self, app):
+    def test_dictify_with_async_map_key(self, app):
+        # given
+        offer_tags_count = 10
+        offer = Offer(name='foo', type='bar')
+        offer_tags = []
+        for index in range(0, offer_tags_count):
+            tag = Tag(label=str(index))
+            offer_tags.append(OfferTag(offer=offer, tag=tag))
+
+        # when
+        includes = ['|offerTags']
+        offer_dict = as_dict(offer,
+                             includes=includes)
+
+        # then
+        assert len(offer_dict['offerTags']) == offer_tags_count
+        for index in range(0, offer_tags_count):
+            assert offer_dict['offerTags'][index]['tagId'] == offer_tags[index].id
+
+    def test_dictify_with_async_map_join(self, app):
         # given
         offer_tags_count = 10
         offer = Offer(name='foo', type='bar')
@@ -138,7 +157,7 @@ class AsDictTest:
             assert offer_dict['offerTags'][index]['tag']['label'] == str(index)
             assert offer_dict['offerTags'][index]['tag']['sleptFoo'] == 0
 
-    def test_dictify_with_custom_async_map(self, app):
+    def test_dictify_with_custom_async_map_join(self, app):
         # given
         offer_tags_count = 10
         offer = Offer(name='foo', type='bar')
