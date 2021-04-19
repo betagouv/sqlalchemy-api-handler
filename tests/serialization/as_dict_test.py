@@ -37,7 +37,7 @@ class AsDictTest:
         user = User(**user_fields_dict)
 
         # when
-        user_dict = as_dict(user, includes=["-email"])
+        user_dict = as_dict(user, includes=['-email'])
 
         # then
         user_fields_dict_without_email = dict(user_fields_dict)

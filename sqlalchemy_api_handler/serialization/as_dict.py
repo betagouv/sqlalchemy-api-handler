@@ -71,7 +71,8 @@ def as_dict_for_api_handler(entity,
                 column = synonym._proxied_property.columns[0]
         result[key] = as_dict(value,
                               async_map=async_map,
-                              column=column)
+                              column=column,
+                              use_async=use_async)
 
     for join in _joins_to_serialize(includes):
         key = join['key']
