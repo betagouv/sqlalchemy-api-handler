@@ -1,4 +1,4 @@
 from sqlalchemy_api_handler.api_errors import *
 from sqlalchemy_api_handler.api_handler import *
 
-__version__ = '0.15.post2'
+__version__ = '0.15.2.post3'
