@@ -1,4 +1,3 @@
-import os
 from flask_login import LoginManager
 from sqlalchemy_api_handler import ApiHandler
 
