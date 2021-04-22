@@ -19,38 +19,29 @@ def exclusive_includes_from(entity, includes):
 @singledispatch
 def as_dict(value,
             column=None,
-            async_map=None,
-            includes=None,
-            mode=None,
-            use_async=False):
+            **kwargs):
     return serialize(value, column=column)
 
 
 @as_dict.register(InstrumentedList)
 def as_dict_for_intrumented_list(entities,
-                                 column=None,
                                  async_map: Callable=None,
-                                 includes: Iterable = None,
-                                 mode: str = 'columns-and-includes',
-                                 use_async: bool=False):
+                                 use_async: bool=False,
+                                 **kwargs):
     if async_map is None:
         async_map = default_async_map
     not_deleted_entities = filter(lambda x: not x.is_soft_deleted(), entities)
-    dictify = partial(as_dict,
-                      async_map=async_map,
-                      includes=includes,
-                      mode=mode)
+    dictify = partial(as_dict, **kwargs)
     map_method = async_map if use_async else map
     return list(map_method(dictify, not_deleted_entities))
 
 
 @as_dict.register(ApiHandler)
 def as_dict_for_api_handler(entity,
-                            column=None,
-                            async_map: Callable=None,
                             includes: Iterable=None,
                             mode: str='columns-and-includes',
-                            use_async: bool=False):
+                            use_async: bool=False,
+                            **kwargs):
     result = OrderedDict()
 
     if includes is None and hasattr(entity, '__as_dict_includes__'):
@@ -70,8 +61,9 @@ def as_dict_for_api_handler(entity,
             if synonym:
                 column = synonym._proxied_property.columns[0]
         result[key] = as_dict(value,
-                              async_map=async_map,
-                              column=column,
+                              **kwargs,
+                              includes=includes,
+                              mode=mode,
                               use_async=use_async)
 
     for join in _joins_to_serialize(includes):
@@ -83,12 +75,11 @@ def as_dict_for_api_handler(entity,
         sub_mode = join.get('mode', mode)
         value = getattr(entity, key)
         result[key] = as_dict(value,
-                              async_map=async_map,
+                              **kwargs,
                               includes=sub_includes,
-                              mode=sub_mode,
-                              use_async=use_async)
-
+                              mode=sub_mode)
     return result
+
 
 def _joins_to_serialize(includes: Iterable=None) -> List[dict]:
     if includes is None:

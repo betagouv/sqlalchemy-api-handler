@@ -17,6 +17,7 @@ def serialize(value, column=None):
 
 @serialize.register(int)
 def _(value, column=None):
+    print('MM', value, column, is_id_column(column))
     if is_id_column(column):
         return humanize(value)
     return value
