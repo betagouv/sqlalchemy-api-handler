@@ -1,24 +1,18 @@
-from datetime import datetime, timedelta
-from pprint import pformat
+from datetime import datetime
 
 from sqlalchemy import BigInteger, \
     CheckConstraint, \
     Column, \
     DateTime, \
-    DDL, \
-    event, \
     ForeignKey, \
     Integer, \
-    Numeric, \
-    and_, \
-    or_
-from sqlalchemy.orm import column_property, relationship
-from sqlalchemy.sql import select, func
-from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.mixins import HasActivitiesMixin, \
-                                          SoftDeletableMixin
+    Numeric
+from sqlalchemy.orm import relationship
 
 from api.utils.database import db
+from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler.mixins import HasActivitiesMixin, \
+    SoftDeletableMixin
 
 
 class Stock(ApiHandler,
