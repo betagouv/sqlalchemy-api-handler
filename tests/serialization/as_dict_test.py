@@ -1,12 +1,11 @@
-import pytest
 from concurrent.futures import ThreadPoolExecutor
 
-from sqlalchemy_api_handler.serialization import as_dict
 from api.models.offer import Offer
 from api.models.offer_tag import OfferTag
 from api.models.stock import Stock
 from api.models.tag import Tag
 from api.models.user import User
+from sqlalchemy_api_handler.serialization import as_dict
 
 
 class AsDictTest:
@@ -14,7 +13,7 @@ class AsDictTest:
         # given
         user_fields_dict = {
             'email': 'marx.foo@plop.fr',
-            'firstName' : 'Marx',
+            'firstName': 'Marx',
             'lastName': 'Foo',
             'publicName': 'Marx Foo'
         }
@@ -30,7 +29,7 @@ class AsDictTest:
         # given
         user_fields_dict = {
             'email': 'marx.foo@plop.fr',
-            'firstName' : 'Marx',
+            'firstName': 'Marx',
             'lastName': 'Foo',
             'publicName': 'Marx Foo'
         }
@@ -64,7 +63,7 @@ class AsDictTest:
         # given
         user_fields_dict = {
             'email': 'marx.foo@plop.fr',
-            'firstName' : 'Marx',
+            'firstName': 'Marx',
             'lastName': 'Foo',
             'metier': 'philosophe',
             'publicName': 'Marx Foo'
@@ -82,7 +81,7 @@ class AsDictTest:
         # given
         user_fields_dict = {
             'email': 'marx.foo@plop.fr',
-            'firstName' : 'Marx',
+            'firstName': 'Marx',
             'lastName': 'Foo',
             'metier': 'philosophe',
             'publicName': 'Marx Foo'
@@ -109,7 +108,7 @@ class AsDictTest:
         offer_tag2 = OfferTag(offer=offer, tag=tag2)
 
         # when
-        includes = [{ 'key': 'offerTags', 'includes': ['tag'] }]
+        includes = [{'key': 'offerTags', 'includes': ['tag']}]
         offer_dict = as_dict(offer,
                              includes=includes)
 
@@ -147,7 +146,7 @@ class AsDictTest:
             offer_tags.append(OfferTag(offer=offer, tag=tag))
 
         # when
-        includes = [{ 'key': '|offerTags', 'includes': ['tag'] }]
+        includes = [{'key': '|offerTags', 'includes': ['tag']}]
         offer_dict = as_dict(offer,
                              includes=includes)
 
@@ -167,7 +166,7 @@ class AsDictTest:
             offer_tags.append(OfferTag(offer=offer, tag=tag))
 
         # when
-        includes = [{ 'key': '|offerTags', 'includes': ['tag'] }]
+        includes = [{'key': '|offerTags', 'includes': ['tag']}]
         with ThreadPoolExecutor(max_workers=5) as executor:
             offer_dict = as_dict(offer,
                                  async_map=executor.map,
@@ -178,3 +177,17 @@ class AsDictTest:
             for index in range(0, offer_tags_count):
                 assert offer_dict['offerTags'][index]['tag']['label'] == str(index)
                 assert offer_dict['offerTags'][index]['tag']['sleptFoo'] == 0
+
+    def test_should_return_soft_deleted_entities_when_option_is_given(self):
+        # given
+        offer = Offer(name='foo', type='bar')
+        stock1 = Stock(price=10, isSoftDeleted=True)
+        stock2 = Stock(price=5, isSoftDeleted=False)
+        offer.stocks = [stock1, stock2]
+        includes = [{'key': 'stocks', 'includes': ['price'], 'with_soft_deleted_entities': True}]
+
+        # when
+        offer_dict = as_dict(offer, includes=includes)
+
+        # then
+        assert len(offer_dict['stocks']) == 2

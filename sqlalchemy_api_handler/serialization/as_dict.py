@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from functools import partial, singledispatch
 from typing import Callable, Iterable, Set, List
+
 from sqlalchemy.orm.collections import InstrumentedList
 
 from sqlalchemy_api_handler.api_handler import ApiHandler
@@ -22,35 +23,39 @@ def as_dict(value,
             async_map=None,
             includes=None,
             mode=None,
-            use_async=False):
+            use_async=False,
+            with_soft_deleted_entities: bool = False):
     return serialize(value, column=column)
 
 
 @as_dict.register(InstrumentedList)
 def as_dict_for_intrumented_list(entities,
                                  column=None,
-                                 async_map: Callable=None,
+                                 async_map: Callable = None,
                                  includes: Iterable = None,
                                  mode: str = 'columns-and-includes',
-                                 use_async: bool=False):
+                                 use_async: bool = False,
+                                 with_soft_deleted_entities: bool = False):
     if async_map is None:
         async_map = default_async_map
-    not_deleted_entities = filter(lambda x: not x.is_soft_deleted(), entities)
+    if not with_soft_deleted_entities:
+        entities = filter(lambda x: not x.is_soft_deleted(), entities)
     dictify = partial(as_dict,
                       async_map=async_map,
                       includes=includes,
                       mode=mode)
     map_method = async_map if use_async else map
-    return list(map_method(dictify, not_deleted_entities))
+    return list(map_method(dictify, entities))
 
 
 @as_dict.register(ApiHandler)
 def as_dict_for_api_handler(entity,
                             column=None,
-                            async_map: Callable=None,
-                            includes: Iterable=None,
-                            mode: str='columns-and-includes',
-                            use_async: bool=False):
+                            async_map: Callable = None,
+                            includes: Iterable = None,
+                            mode: str = 'columns-and-includes',
+                            use_async: bool = False,
+                            with_soft_deleted_entities: bool = False):
     result = OrderedDict()
 
     if includes is None and hasattr(entity, '__as_dict_includes__'):
@@ -80,29 +85,32 @@ def as_dict_for_api_handler(entity,
         if use_async:
             key = key[1:]
         sub_includes = join.get('includes')
+        sub_with_soft_deleted_entities = join.get('with_soft_deleted_entities')
         sub_mode = join.get('mode', mode)
         value = getattr(entity, key)
         result[key] = as_dict(value,
                               async_map=async_map,
                               includes=sub_includes,
                               mode=sub_mode,
-                              use_async=use_async)
+                              use_async=use_async,
+                              with_soft_deleted_entities=sub_with_soft_deleted_entities)
 
     return result
 
-def _joins_to_serialize(includes: Iterable=None) -> List[dict]:
+
+def _joins_to_serialize(includes: Iterable = None) -> List[dict]:
     if includes is None:
         includes = ()
     dict_joins = filter(lambda include: isinstance(include, dict), includes)
     return list(dict_joins)
 
 
-def _keys_to_serialize(entity, includes: Iterable=None) -> Set[str]:
+def _keys_to_serialize(entity, includes: Iterable = None) -> Set[str]:
     all_keys = entity.__mapper__.columns.keys()
     return set(all_keys).union(_included_keys(includes)) - _excluded_keys(includes)
 
 
-def _included_keys(includes: Iterable=None) -> Set[str]:
+def _included_keys(includes: Iterable = None) -> Set[str]:
     if includes is None:
         includes = ()
     string_includes = filter(lambda include: isinstance(include, str), includes)
@@ -110,7 +118,7 @@ def _included_keys(includes: Iterable=None) -> Set[str]:
     return set(included_keys)
 
 
-def _excluded_keys(includes: Iterable=None):
+def _excluded_keys(includes: Iterable = None):
     if includes is None:
         includes = ()
     string_includes = filter(lambda include: isinstance(include, str), includes)
