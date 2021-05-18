@@ -18,12 +18,13 @@ class HasActivitiesMixin(object):
 
     activityIdentifier = Column(UUID(as_uuid=True),
                                      default=uuid4,
-                                     index=True)
+                                     index=True,
+                                     unique=True)
 
     dateCreated = Column(DateTime(),
                          default=datetime.utcnow,
                          nullable=False)
-                                                       
+
     def _get_activity_join_by_entity_id_filter(self):
         Activity = Activate.get_activity()
         id_key = self.__class__.id.property.key
