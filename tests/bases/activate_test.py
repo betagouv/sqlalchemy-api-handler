@@ -67,7 +67,7 @@ class ActivateTest:
         assert insert_offer_activity_from_query == insert_offer_activity
         assert offer.activityIdentifier == insert_offer_activity.entityIdentifier
         assert insert_offer_activity.entityInsertedAt == offer.dateCreated
-        assert insert_offer_activity.oldDatum == {}
+        assert insert_offer_activity.oldDatum == None
         assert insert_offer_activity.transaction == None
         assert insert_offer_activity.verb == 'insert'
         assert offer_dict.items() <= insert_offer_activity.patch.items()

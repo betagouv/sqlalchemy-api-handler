@@ -34,17 +34,6 @@ def int_from_bytes(xbytes):
     return int.from_bytes(xbytes, 'big')
 
 
-def dehumanize_ids_in(datum, model):
-    if datum is None:
-        return None
-    dehumanized_datum = {**datum}
-    for (key, value) in datum.items():
-        if hasattr(model, key):
-            if is_id_column(getattr(model, key)):
-                dehumanized_datum[key] = dehumanize(value)
-    return dehumanized_datum
-
-
 def dehumanize_if_needed(column, value: Any) -> Any:
     if is_id_column(column):
         return dehumanize(value)

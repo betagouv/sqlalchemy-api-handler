@@ -5,48 +5,6 @@ from sqlalchemy_api_handler.utils.humanize import humanize
 from sqlalchemy_api_handler.utils.is_id_column import is_id_column
 
 
-def dehumanize_ids_in(datum, model):
-    if not datum:
-        return None
-    dehumanized_datum = {**datum}
-    for (key, value) in datum.items():
-        if hasattr(model, key):
-            if is_id_column(getattr(model, key)):
-                dehumanized_datum[key] = dehumanize(value)
-    return dehumanized_datum
-
-
-def humanize_ids_in(datum, model):
-    if not datum:
-        return None
-    humanized_datum = {**datum}
-    for (key, value) in datum.items():
-        if hasattr(model, key):
-            if is_id_column(getattr(model, key)):
-                humanized_datum[key] = humanize(value)
-    return humanized_datum
-
-
-def synonyms_in(datum, model):
-    synonymized_datum = {**datum}
-    for synonym in model.__mapper__.synonyms:
-        column_key = synonym._proxied_property.columns[0].key
-        if column_key in synonymized_datum:
-            synonymized_datum[synonym.key] = synonymized_datum[column_key]
-            del synonymized_datum[column_key]
-    return synonymized_datum
-
-
-def columns_in(datum, model):
-    columnized_datum = {**datum}
-    for synonym in model.__mapper__.synonyms:
-        column_key = synonym._proxied_property.columns[0].key
-        if synonym.key in columnized_datum:
-            columnized_datum[column_key] = columnized_datum[synonym.key]
-            del columnized_datum[synonym.key]
-    return columnized_datum
-
-
 def merge(source, destination):
     '''
     run me with nosetests --with-doctest file.py
@@ -103,7 +61,55 @@ def nesting_datum_from(flatten_path_datum,
     return {**datum, **nested_data_by_prefix}
 
 
-def relationships_in(datum, model):
+def datum_with_dehumanize_ids_from(datum, model):
+    if not datum:
+        return None
+    dehumanized_datum = {**datum}
+    for (key, value) in datum.items():
+        if hasattr(model, key):
+            if is_id_column(getattr(model, key)):
+                dehumanized_datum[key] = dehumanize(value)
+    return dehumanized_datum
+
+
+def datum_with_humanize_ids_from(datum, model):
+    if not datum:
+        return None
+    humanized_datum = {**datum}
+    for (key, value) in datum.items():
+        if hasattr(model, key):
+            if is_id_column(getattr(model, key)):
+                humanized_datum[key] = humanize(value)
+    return humanized_datum
+
+
+def datum_with_synonym_columns_from(datum, model):
+    if not datum:
+        return None
+    synonymized_datum = {**datum}
+    for synonym in model.__mapper__.synonyms:
+        column_key = synonym._proxied_property.columns[0].key
+        if column_key in synonymized_datum:
+            synonymized_datum[synonym.key] = synonymized_datum[column_key]
+            del synonymized_datum[column_key]
+    return synonymized_datum
+
+
+def datum_without_synonym_columns_from(datum, model):
+    if not datum:
+        return None
+    columnized_datum = {**datum}
+    for synonym in model.__mapper__.synonyms:
+        column_key = synonym._proxied_property.columns[0].key
+        if synonym.key in columnized_datum:
+            columnized_datum[column_key] = columnized_datum[synonym.key]
+            del columnized_datum[synonym.key]
+    return columnized_datum
+
+
+def datum_with_relationships_from(datum, model):
+    if not datum:
+        return None
     relationed_datum = {**datum}
     for (key, relationship) in model.__mapper__.relationships.items():
         activity_identifier_key = '{}ActivityIdentifier'.format(key)
@@ -133,5 +139,5 @@ def merged_datum_from_activities(entity,
         old_data = { **old_data,
                      **activity.changed_data }
         merged_datum = { **merged_datum,
-                         **relationships_in(activity.patch, entity.__class__) }
+                         **datum_with_relationships_from(activity.patch, entity.__class__) }
     return merged_datum
