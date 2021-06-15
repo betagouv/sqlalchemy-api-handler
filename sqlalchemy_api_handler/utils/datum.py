@@ -3,6 +3,7 @@
 from sqlalchemy_api_handler.utils.dehumanize import dehumanize
 from sqlalchemy_api_handler.utils.humanize import humanize
 from sqlalchemy_api_handler.utils.is_id_column import is_id_column
+from sqlalchemy_api_handler.utils.serialize import create_serialize
 
 
 def merge(source, destination):
@@ -114,11 +115,13 @@ def datum_with_relationships_from(datum, model):
     for (key, relationship) in model.__mapper__.relationships.items():
         activity_identifier_key = '{}ActivityIdentifier'.format(key)
         if activity_identifier_key in relationed_datum:
-            model = relationship.mapper.class_
-            instance = model.query.filter_by(activityIdentifier=relationed_datum[activity_identifier_key]) \
-                                  .one()
-            relationed_datum[key] = instance
+            relationed_model = relationship.mapper.class_
+            relationed_instance = relationed_model.query \
+                                       .filter_by(activityIdentifier=relationed_datum[activity_identifier_key]) \
+                                       .one()
+            relationed_datum[key] = relationed_instance
     return relationed_datum
+
 
 
 def saveable_datum_from(datum, model):
@@ -127,6 +130,20 @@ def saveable_datum_from(datum, model):
 
 def serializable_datum_from(datum, model):
     return _datum_with_synonym_columns_from(_datum_with_humanize_ids_from(datum, model), model)
+
+
+def foreigns_in(datum, model):
+    foreign_datum = {**datum}
+    for (key, relationship) in model.__mapper__.relationships.items():
+        activity_identifier_key = '{}ActivityIdentifier'.format(key)
+        if activity_identifier_key in foreign_datum:
+            foreign_model = relationship.mapper.class_
+            print(foreign_datum[activity_identifier_key], relationship)
+            foreign_instance = foreign_model.query \
+                                            .filter_by(activityIdentifier=foreign_datum[activity_identifier_key]) \
+                                            .one()
+            foreign_datum[relationship.foreign_keys[0]] = foreign_instance.id
+    return foreign_datum
 
 
 def old_data_from(entity, activity):
@@ -149,3 +166,13 @@ def merged_datum_from_activities(entity,
         merged_datum = { **merged_datum,
                          **datum_with_relationships_from(activity.patch, entity.__class__) }
     return merged_datum
+
+
+serialize = create_serialize(with_humanize=False)
+
+def serialized_datum_from(entity):
+    serialized_datum = {}
+    for (key, value) in vars(entity).items():
+        if key != '_sa_instance_state':
+            serialized_datum[key] = serialize(value)
+    return serialized_datum
