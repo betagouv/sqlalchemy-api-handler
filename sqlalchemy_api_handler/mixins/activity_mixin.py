@@ -1,23 +1,19 @@
 
 import uuid
-from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, synonym
+from sqlalchemy.orm import synonym
 
 from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.utils.datum import datum_without_synonym_columns_from, \
-                                               datum_with_relationships_from, \
                                                datum_with_synonym_columns_from
 import sqlalchemy_api_handler.utils.date as date_helper
 from sqlalchemy_api_handler.utils.datum import datum_with_dehumanize_ids_from, \
                                                datum_with_humanize_ids_from
-from sqlalchemy_api_handler.utils.humanize import humanize
 
 
-
-class ActivityMixin(object):
+class ActivityMixin():
 
     _entityIdentifier = None
 
@@ -43,13 +39,12 @@ class ActivityMixin(object):
     @hybrid_property
     def entityIdentifier(self):
         if self._entityIdentifier:
-            if isinstance(self._entityIdentifier, str):
-                return uuid.UUID(self._entityIdentifier)
             return self._entityIdentifier
         activity_identifier = self.data.get('activityIdentifier')
         if activity_identifier:
-            self._entityIdentifier = activity_identifier
-            return uuid.UUID(self._entityIdentifier)
+            self._entityIdentifier = uuid.UUID(activity_identifier)
+            return self._entityIdentifier
+        return None
 
     @entityIdentifier.expression
     def entityIdentifier(cls):
@@ -57,6 +52,8 @@ class ActivityMixin(object):
 
     @entityIdentifier.setter
     def entityIdentifier(self, value):
+        if isinstance(value, str):
+            value = uuid.UUID(value)
         self._entityIdentifier = value
 
     @property
