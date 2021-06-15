@@ -5,8 +5,8 @@ from postgresql_audit.flask import versioning_manager
 from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.bases.save import Save
-from sqlalchemy_api_handler.utils.datum import merged_datum_from_activities, \
-                                               relationships_in
+from sqlalchemy_api_handler.utils.datum import datum_with_relationships_from, \
+                                               merged_datum_from_activities
 
 
 class Activate(Save):
@@ -70,7 +70,7 @@ class Activate(Save):
     @staticmethod
     def _activate_insertion(activity):
         model = Save.model_from_table_name(activity.table_name)
-        entity = model(**relationships_in(activity.patch, model))
+        entity = model(**datum_with_relationships_from(activity.patch, model))
         entity.activityIdentifier = activity.entityIdentifier
         entity.dateCreated = activity.dateCreated
         Save.add(entity)

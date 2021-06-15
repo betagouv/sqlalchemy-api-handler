@@ -7,13 +7,14 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, synonym
 
 from sqlalchemy_api_handler.bases.errors import ActivityError
-from sqlalchemy_api_handler.utils.datum import columns_in, \
-                                               relationships_in, \
-                                               synonyms_in
+from sqlalchemy_api_handler.utils.datum import datum_without_synonym_columns_from, \
+                                               datum_with_relationships_from, \
+                                               datum_with_synonym_columns_from
 import sqlalchemy_api_handler.utils.date as date_helper
-from sqlalchemy_api_handler.utils.dehumanize import dehumanize_ids_in
-from sqlalchemy_api_handler.utils.humanize import humanize, \
-                                                  humanize_ids_in
+from sqlalchemy_api_handler.utils.datum import datum_with_dehumanize_ids_from, \
+                                               datum_with_humanize_ids_from
+from sqlalchemy_api_handler.utils.humanize import humanize
+
 
 
 class ActivityMixin(object):
@@ -37,7 +38,7 @@ class ActivityMixin(object):
         if self.data is None:
             return None
         model = self.model
-        return synonyms_in(humanize_ids_in(self.data, self.model), model)
+        return datum_with_synonym_columns_from(datum_with_humanize_ids_from(self.data, self.model), model)
 
     @hybrid_property
     def entityIdentifier(self):
@@ -88,19 +89,19 @@ class ActivityMixin(object):
         if self.old_data is None:
             return None
         model = self.model
-        return synonyms_in(humanize_ids_in(self.old_data, model), model)
+        return datum_with_synonym_columns_from(datum_with_humanize_ids_from(self.old_data, model), model)
 
     @property
     def patch(self):
         if self.changed_data is None:
             return None
         model = self.model
-        return synonyms_in(humanize_ids_in(self.changed_data, model), model)
+        return datum_with_synonym_columns_from(datum_with_humanize_ids_from(self.changed_data, model), model)
 
     @patch.setter
     def patch(self, value):
         model = self.model
-        self.changed_data = columns_in(dehumanize_ids_in(value, model), model)
+        self.changed_data = datum_without_synonym_columns_from(datum_with_dehumanize_ids_from(value, model), model)
 
     def modify(self, datum, **kwargs):
         if 'modelName' in datum and 'tableName' in datum:
