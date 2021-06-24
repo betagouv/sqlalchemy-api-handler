@@ -143,11 +143,6 @@ class Activate(Save):
             existing_activity = potential_existing_activities_dict.get((str(activity.dateCreated), str(activity.entityIdentifier)))
             if not existing_activity:
                 unknown_activities.append(activity)
-            #if existing_activity:
-            #    for key, value in vars(existing_activity).items():
-            #        setattr(activity, key, value)
-            #else:
-            #    unknown_activities.append(activity)
         return unknown_activities
 
     @classmethod

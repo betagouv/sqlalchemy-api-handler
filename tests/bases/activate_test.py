@@ -14,20 +14,20 @@ from api.models.offer import Offer
 from api.models.stock import Stock
 
 
-def _assert_activity_match_offer(patch, activity, offer):
+def _assert_activity_match_model(patch, activity, offer):
     assert activity.entityIdentifier == offer.activityIdentifier
     assert patch.items() <= activity.datum.items()
     assert patch.items() <= activity.patch.items()
 
 
-def assert_insert_activity_match_offer(patch, activity, offer):
-    _assert_activity_match_offer(patch, activity, offer)
+def assert_insert_activity_match_model(patch, activity, offer):
+    _assert_activity_match_model(patch, activity, offer)
     assert activity.verb == 'insert'
     assert activity.patch['id'] == humanize(offer.id)
 
 
-def assert_update_activity_match_offer(patch, activity, offer):
-    _assert_activity_match_offer(patch, activity, offer)
+def assert_update_activity_match_model(patch, activity, offer):
+    _assert_activity_match_model(patch, activity, offer)
     assert activity.verb == 'update'
     assert activity.oldDatum['id'] == humanize(offer.id)
 
@@ -70,7 +70,7 @@ class ActivateTest:
         assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
-        assert_insert_activity_match_offer(patch, offer_activities[0], offer)
+        assert_insert_activity_match_model(patch, offer_activities[0], offer)
 
 
     @with_delete
@@ -100,13 +100,13 @@ class ActivateTest:
         assert offer1 == Offer.query.filter_by(activityIdentifier=offer1_activity_identifier).one()
         offer1_activities = offer1.__activities__
         assert len(offer1_activities) == 1
-        assert_insert_activity_match_offer(patch1, offer1_activities[0], offer1)
+        assert_insert_activity_match_model(patch1, offer1_activities[0], offer1)
 
         offer2 = activity2.entity
         assert offer2 == Offer.query.filter_by(activityIdentifier=offer2_activity_identifier).one()
         offer2_activities = offer2.__activities__
         assert len(offer2_activities) == 1
-        assert_insert_activity_match_offer(patch2, offer2_activities[0], offer2)
+        assert_insert_activity_match_model(patch2, offer2_activities[0], offer2)
 
 
     @with_delete
@@ -141,9 +141,9 @@ class ActivateTest:
         assert len(offer_activities) == 3
         assert offer.name == 'bor'
         assert offer.type == 'fee'
-        assert_insert_activity_match_offer(first_patch, offer_activities[0], offer)
-        assert_update_activity_match_offer(second_patch, offer_activities[1], offer)
-        assert_update_activity_match_offer(third_patch, offer_activities[2], offer)
+        assert_insert_activity_match_model(first_patch, offer_activities[0], offer)
+        assert_update_activity_match_model(second_patch, offer_activities[1], offer)
+        assert_update_activity_match_model(third_patch, offer_activities[2], offer)
 
     @with_delete
     def test_create_activity_stock_binds_relationship_with_offer(self, app):
@@ -295,7 +295,7 @@ class ActivateTest:
         # Then
         offer = activity.entity
         assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
-        assert_insert_activity_match_offer(patch, offer.__activities__[0], offer)
+        assert_insert_activity_match_model(patch, offer.__activities__[0], offer)
 
     @with_delete
     def test_create_delete_activity(self, app):
@@ -333,7 +333,6 @@ class ActivateTest:
                                    entityIdentifier=offer.activityIdentifier,
                                    modelName='Offer',
                                    verb='delete')
-        print('LLL', update_activity.changed_data)
 
         # When
         ApiHandler.activate(update_activity, delete_activity)
