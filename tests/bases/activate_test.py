@@ -14,6 +14,24 @@ from api.models.offer import Offer
 from api.models.stock import Stock
 
 
+def _assert_activity_match_offer(patch, activity, offer):
+    assert activity.entityIdentifier == offer.activityIdentifier
+    assert patch.items() <= activity.datum.items()
+    assert patch.items() <= activity.patch.items()
+
+
+def assert_insert_activity_match_offer(patch, activity, offer):
+    _assert_activity_match_offer(patch, activity, offer)
+    assert activity.verb == 'insert'
+    assert activity.patch['id'] == humanize(offer.id)
+
+
+def assert_update_activity_match_offer(patch, activity, offer):
+    _assert_activity_match_offer(patch, activity, offer)
+    assert activity.verb == 'update'
+    assert activity.oldDatum['id'] == humanize(offer.id)
+
+
 class ActivateTest:
     def test_instance_an_activity(self, app):
         # Given
@@ -47,20 +65,13 @@ class ActivateTest:
 
         # Then
         all_activities = Activity.query.all()
-
         offer = activity.entity
         offer_activities = offer.__activities__
         assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
-        insert_offer_activity = offer_activities[0]
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
-        assert insert_offer_activity.entityInsertedAt == offer.dateCreated
-        assert insert_offer_activity.entityIdentifier == offer.activityIdentifier
-        assert insert_offer_activity.verb == 'insert'
-        assert patch.items() <= insert_offer_activity.datum.items()
-        assert patch.items() <= insert_offer_activity.patch.items()
-        assert insert_offer_activity.datum['id'] == humanize(offer.id)
-        assert insert_offer_activity.patch['id'] == humanize(offer.id)
+        assert_insert_activity_match_offer(patch, offer_activities[0], offer)
+
 
     @with_delete
     def test_create_activity_on_not_existing_offers_saves_two_insert_activities(self, app):
@@ -88,28 +99,15 @@ class ActivateTest:
         offer1 = activity1.entity
         assert offer1 == Offer.query.filter_by(activityIdentifier=offer1_activity_identifier).one()
         offer1_activities = offer1.__activities__
-        insert_offer1_activity = offer1_activities[0]
         assert len(offer1_activities) == 1
-        assert insert_offer1_activity.entityInsertedAt == offer1.dateCreated
-        assert insert_offer1_activity.entityIdentifier == offer1.activityIdentifier
-        assert insert_offer1_activity.verb == 'insert'
-        assert patch1.items() <= insert_offer1_activity.datum.items()
-        assert patch1.items() <= insert_offer1_activity.patch.items()
-        assert insert_offer1_activity.datum['id'] == humanize(offer1.id)
-        assert insert_offer1_activity.patch['id'] == humanize(offer1.id)
+        assert_insert_activity_match_offer(patch1, offer1_activities[0], offer1)
 
         offer2 = activity2.entity
         assert offer2 == Offer.query.filter_by(activityIdentifier=offer2_activity_identifier).one()
         offer2_activities = offer2.__activities__
-        insert_offer2_activity = offer2_activities[0]
         assert len(offer2_activities) == 1
-        assert insert_offer2_activity.entityInsertedAt == offer2.dateCreated
-        assert insert_offer2_activity.entityIdentifier == offer2.activityIdentifier
-        assert insert_offer2_activity.verb == 'insert'
-        assert patch2.items() <= insert_offer2_activity.datum.items()
-        assert patch2.items() <= insert_offer2_activity.patch.items()
-        assert insert_offer2_activity.datum['id'] == humanize(offer2.id)
-        assert insert_offer2_activity.patch['id'] == humanize(offer2.id)
+        assert_insert_activity_match_offer(patch2, offer2_activities[0], offer2)
+
 
     @with_delete
     def test_create_activities_on_existing_offer_saves_update_activities(self, app):
@@ -141,20 +139,11 @@ class ActivateTest:
         offer_activities = offer.__activities__
         assert len(all_activities) == 3
         assert len(offer_activities) == 3
-        assert offer_activities[0].entityInsertedAt == offer.dateCreated
-        assert offer_activities[0].entityIdentifier == offer.activityIdentifier
-        assert offer_activities[0].verb == 'insert'
-        assert offer_activities[0].id == offer_activities[0].id
-        assert offer_activities[1].entityInsertedAt == offer.dateCreated
-        assert offer_activities[1].entityIdentifier == offer.activityIdentifier
-        assert offer_activities[1].verb == 'update'
-        assert offer_activities[1].patch.items() == second_patch.items()
-        assert offer_activities[2].entityInsertedAt == offer.dateCreated
-        assert offer_activities[2].entityIdentifier == offer.activityIdentifier
-        assert offer_activities[2].verb == 'update'
-        assert offer_activities[2].patch.items() == third_patch.items()
         assert offer.name == 'bor'
         assert offer.type == 'fee'
+        assert_insert_activity_match_offer(first_patch, offer_activities[0], offer)
+        assert_update_activity_match_offer(second_patch, offer_activities[1], offer)
+        assert_update_activity_match_offer(third_patch, offer_activities[2], offer)
 
     @with_delete
     def test_create_activity_stock_binds_relationship_with_offer(self, app):
@@ -306,13 +295,7 @@ class ActivateTest:
         # Then
         offer = activity.entity
         assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
-        insert_offer_activity = offer.__activities__[0]
-        assert insert_offer_activity.entityIdentifier == offer.activityIdentifier
-        assert insert_offer_activity.verb == 'insert'
-        assert patch.items() <= insert_offer_activity.datum.items()
-        assert patch.items() <= insert_offer_activity.patch.items()
-        assert insert_offer_activity.datum['id'] == humanize(offer.id)
-        assert insert_offer_activity.patch['id'] == humanize(offer.id)
+        assert_insert_activity_match_offer(patch, offer.__activities__[0], offer)
 
     @with_delete
     def test_create_delete_activity(self, app):
