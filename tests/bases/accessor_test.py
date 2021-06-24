@@ -2,13 +2,29 @@
 # pylint: disable=W0613
 
 import pytest
+from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.bases.errors import GetPathError
 
+from api.models.activity import Activity
 from api.models.offer import Offer
 from api.models.stock import Stock
 
 
 class AccessorTest:
+    def test_models(self, app):
+        # When
+        models = ApiHandler.models()
+
+        # Then
+        assert Activity in models
+
+    def test_model_from_name(self, app):
+        # When
+        GotActivity = ApiHandler.model_from_name('Activity')
+
+        # Then
+        assert GotActivity == Activity
+
     def test_get_with_a_string_path(self, app):
         # Given
         offer = Offer(name='foo', type='bar')
@@ -30,7 +46,6 @@ class AccessorTest:
 
         # Then
         assert stock1.id == stock2.id
-
 
     def test_get_with_an_index_path_at_value(self, app):
         # Given
