@@ -1,3 +1,6 @@
+# pylint: disable=R0201
+# pylint: disable=W0613
+
 import pytest
 from sqlalchemy_api_handler import ApiErrors, ApiHandler
 from sqlalchemy_api_handler.serialization import get_result

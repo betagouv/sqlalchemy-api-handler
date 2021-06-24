@@ -1,7 +1,7 @@
-import pytest
 import uuid
 from datetime import datetime
 from decimal import Decimal
+import pytest
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
                                                 DecimalCastError, \
@@ -11,7 +11,6 @@ from sqlalchemy_api_handler.bases.errors import DateTimeCastError, \
 from sqlalchemy_api_handler.utils import dehumanize, \
                                          humanize, \
                                          NonDehumanizableId
-from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
 from api.models.foo import Foo

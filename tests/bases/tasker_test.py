@@ -1,7 +1,8 @@
+# pylint: disable=R0201
+# pylint: disable=W0613
+
 import pytest
-from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.mixins import TaskState
-from sqlalchemy_api_handler.serialization import as_dict
 
 from tests.conftest import with_delete
 from api.models.task import Task
