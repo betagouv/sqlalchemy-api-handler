@@ -6,11 +6,9 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import synonym
 
 from sqlalchemy_api_handler.bases.errors import ActivityError
-from sqlalchemy_api_handler.utils.datum import datum_without_synonym_columns_from, \
-                                               datum_with_synonym_columns_from
 import sqlalchemy_api_handler.utils.date as date_helper
-from sqlalchemy_api_handler.utils.datum import datum_with_dehumanize_ids_from, \
-                                               datum_with_humanize_ids_from
+from sqlalchemy_api_handler.utils.datum import saveable_datum_from, \
+                                               serializable_datum_from
 
 
 class ActivityMixin():
@@ -34,7 +32,7 @@ class ActivityMixin():
         if self.data is None:
             return None
         model = self.model
-        return datum_with_synonym_columns_from(datum_with_humanize_ids_from(self.data, self.model), model)
+        return serializable_datum_from(self.data, self.model)
 
     @hybrid_property
     def entityIdentifier(self):
@@ -86,19 +84,19 @@ class ActivityMixin():
         if self.old_data is None:
             return None
         model = self.model
-        return datum_with_synonym_columns_from(datum_with_humanize_ids_from(self.old_data, model), model)
+        return serializable_datum_from(self.old_data, model)
 
     @property
     def patch(self):
         if self.changed_data is None:
             return None
         model = self.model
-        return datum_with_synonym_columns_from(datum_with_humanize_ids_from(self.changed_data, model), model)
+        return serializable_datum_from(self.changed_data, model)
 
     @patch.setter
     def patch(self, value):
         model = self.model
-        self.changed_data = datum_without_synonym_columns_from(datum_with_dehumanize_ids_from(value, model), model)
+        self.changed_data = saveable_datum_from(value, model)
 
     def modify(self, datum, **kwargs):
         if 'modelName' in datum and 'tableName' in datum:
