@@ -10,7 +10,6 @@ from sqlalchemy_api_handler.utils.datum import datum_with_relationships_from, \
 
 
 class Activate(Save):
-
     @staticmethod
     def activate(*activities,
                  with_check_not_soft_deleted=True):
@@ -29,23 +28,30 @@ class Activate(Save):
                 errors.add_error('tableName', 'model from {} not found'.format(table_name))
                 raise errors
 
-            if first_activity.verb == 'delete':
-                Activate._activate_deletion(first_activity)
-                continue
-
             entity = model.query.filter_by(activityIdentifier=entity_identifier) \
                                 .first()
             if not entity:
                 Activate._activate_insertion(first_activity)
-                updating_activities = grouped_activities[1:]
-                if updating_activities:
-                    Activate._activate_updates(updating_activities,
-                                               first_activity.entity,
-                                               with_check_not_soft_deleted=with_check_not_soft_deleted)
-            elif grouped_activities:
-                Activate._activate_updates(grouped_activities,
+                remaining_activities = grouped_activities[1:]
+                entity = first_activity.entity
+            else:
+                remaining_activities = grouped_activities
+
+            update_activities = []
+            delete_activity = None
+            for activity in remaining_activities:
+                if activity.verb != 'delete':
+                    update_activities.append(activity)
+                else:
+                    delete_activity = activity
+                    break
+
+            if update_activities:
+                Activate._activate_updates(update_activities,
                                            entity,
                                            with_check_not_soft_deleted=with_check_not_soft_deleted)
+            if delete_activity:
+                Activate._activate_deletion(delete_activity)
 
     @staticmethod
     def _activate_deletion(activity):
@@ -135,11 +141,13 @@ class Activate(Save):
         unknown_activities = []
         for activity in activities:
             existing_activity = potential_existing_activities_dict.get((str(activity.dateCreated), str(activity.entityIdentifier)))
-            if existing_activity:
-                for key, value in vars(existing_activity).items():
-                    setattr(activity, key, value)
-            else:
+            if not existing_activity:
                 unknown_activities.append(activity)
+            #if existing_activity:
+            #    for key, value in vars(existing_activity).items():
+            #        setattr(activity, key, value)
+            #else:
+            #    unknown_activities.append(activity)
         return unknown_activities
 
     @classmethod
