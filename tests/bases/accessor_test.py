@@ -1,9 +1,11 @@
+# pylint: disable=R0201
+# pylint: disable=W0613
+
 import pytest
 from sqlalchemy_api_handler.bases.errors import GetPathError
 
 from api.models.offer import Offer
 from api.models.stock import Stock
-from api.models.user import User
 
 
 class AccessorTest:
@@ -57,4 +59,4 @@ class AccessorTest:
         offer_name = stock.get('offer.name', with_get_path_error=False)
 
         # Then
-        assert offer_name == None
+        assert offer_name is None

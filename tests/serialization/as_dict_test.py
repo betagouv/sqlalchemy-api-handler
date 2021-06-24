@@ -1,3 +1,6 @@
+# pylint: disable=R0201
+# pylint: disable=W0613
+
 from concurrent.futures import ThreadPoolExecutor
 
 from api.models.offer import Offer

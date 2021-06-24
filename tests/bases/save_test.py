@@ -1,9 +1,7 @@
 import pytest
 from sqlalchemy_api_handler import ApiHandler
 from sqlalchemy_api_handler.serialization import as_dict
-from sqlalchemy_api_handler.utils import dehumanize, \
-                                         humanize, \
-                                         NonDehumanizableId
+from sqlalchemy_api_handler.utils import humanize
 
 from tests.conftest import with_delete
 from api.models.offer import Offer
