@@ -319,6 +319,34 @@ class ActivateTest:
         assert activity.entityIdentifier == offer.activityIdentifier
 
     @with_delete
+    def test_create_delete_activity_with_previous_updated_activities(self, app):
+        # Given
+        offer = Offer(name='bar', type='foo')
+        ApiHandler.save(offer)
+
+        update_activity = Activity(dateCreated=datetime.utcnow(),
+                                   entityIdentifier=offer.activityIdentifier,
+                                   modelName='Offer',
+                                   patch={'name': 'bor'})
+
+        delete_activity = Activity(dateCreated=datetime.utcnow(),
+                                   entityIdentifier=offer.activityIdentifier,
+                                   modelName='Offer',
+                                   verb='delete')
+        print('LLL', update_activity.changed_data)
+
+        # When
+        ApiHandler.activate(update_activity, delete_activity)
+
+        # Then
+        query_filter = (Activity.data['id'].astext.cast(Integer) == offer.id) & \
+                       (Activity.verb == 'delete')
+        activity = Activity.query.filter(query_filter).one()
+        offers = Offer.query.all()
+        assert len(offers) == 0
+        assert activity.entityIdentifier == offer.activityIdentifier
+
+    @with_delete
     def test_raise_JustBeforeActivityNotFound_when_update_activity_date_before_insert_activity_date(self, app):
         # Given
         date_created = datetime.utcnow()
