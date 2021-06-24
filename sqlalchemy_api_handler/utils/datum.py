@@ -61,7 +61,7 @@ def nesting_datum_from(flatten_path_datum,
     return {**datum, **nested_data_by_prefix}
 
 
-def datum_with_dehumanize_ids_from(datum, model):
+def _datum_with_dehumanize_ids_from(datum, model):
     if not datum:
         return None
     dehumanized_datum = {**datum}
@@ -72,7 +72,7 @@ def datum_with_dehumanize_ids_from(datum, model):
     return dehumanized_datum
 
 
-def datum_with_humanize_ids_from(datum, model):
+def _datum_with_humanize_ids_from(datum, model):
     if not datum:
         return None
     humanized_datum = {**datum}
@@ -83,7 +83,7 @@ def datum_with_humanize_ids_from(datum, model):
     return humanized_datum
 
 
-def datum_with_synonym_columns_from(datum, model):
+def _datum_with_synonym_columns_from(datum, model):
     if not datum:
         return None
     synonymized_datum = {**datum}
@@ -95,7 +95,7 @@ def datum_with_synonym_columns_from(datum, model):
     return synonymized_datum
 
 
-def datum_without_synonym_columns_from(datum, model):
+def _datum_without_synonym_columns_from(datum, model):
     if not datum:
         return None
     columnized_datum = {**datum}
@@ -119,6 +119,14 @@ def datum_with_relationships_from(datum, model):
                                   .one()
             relationed_datum[key] = instance
     return relationed_datum
+
+
+def saveable_datum_from(datum, model):
+    return _datum_without_synonym_columns_from(_datum_with_dehumanize_ids_from(datum, model), model)
+
+
+def serializable_datum_from(datum, model):
+    return _datum_with_synonym_columns_from(_datum_with_humanize_ids_from(datum, model), model)
 
 
 def old_data_from(entity, activity):
