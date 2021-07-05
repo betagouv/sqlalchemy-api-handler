@@ -19,6 +19,7 @@ class HasActivitiesMixin(object):
     activityIdentifier = Column(UUID(as_uuid=True),
                                      default=uuid4,
                                      index=True,
+                                     nullable=False,
                                      unique=True)
 
     dateCreated = Column(DateTime(),
