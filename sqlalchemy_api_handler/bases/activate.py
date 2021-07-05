@@ -1,4 +1,4 @@
-from itertools import groupby
+from collections import OrderedDict
 import sqlalchemy as sa
 from postgresql_audit.flask import versioning_manager
 
@@ -13,11 +13,18 @@ class Activate(Save):
     @staticmethod
     def activate(*activities,
                  with_check_not_soft_deleted=True):
+        unknown_activities = Activate.unknown_activities_from(activities)
+        sorted_activities = sorted(unknown_activities,
+                                   key=lambda activity: activity.dateCreated)
+        sorted_activities_by_identifier = OrderedDict()
+        for activity in sorted_activities:
+            entity_identifier = activity.entityIdentifier
+            if entity_identifier in sorted_activities_by_identifier:
+                sorted_activities_by_identifier[entity_identifier].append(activity)
+            else:
+                sorted_activities_by_identifier[entity_identifier] = [activity]
 
-        sorted_activities = sorted(activities,
-                                   key=lambda activity: str(activity.dateCreated) + str(activity.entityIdentifier))
-        for (entity_identifier, grouped_activities) in groupby(Activate.remove_existing_activities(sorted_activities),
-                                                               key=lambda activity: activity.entityIdentifier):
+        for (entity_identifier, grouped_activities) in sorted_activities_by_identifier.items():
             grouped_activities = list(grouped_activities)
             first_activity = grouped_activities[0]
             table_name = first_activity.table_name
@@ -130,7 +137,7 @@ class Activate(Save):
         Activate.activity_cls = activity_cls
 
     @staticmethod
-    def remove_existing_activities(activities):
+    def unknown_activities_from(activities):
         if not activities:
             return []
         activity_class = Activate.get_activity()
