@@ -4,9 +4,11 @@
 from datetime import datetime, timedelta
 from uuid import uuid4
 import pytest
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import Integer
 from sqlalchemy_api_handler import ApiHandler, humanize
 from sqlalchemy_api_handler.bases.errors import JustBeforeActivityNotFound
+
 
 from tests.conftest import with_delete
 from api.models.activity import Activity
@@ -49,7 +51,6 @@ class ActivateTest:
         # Then
         assert activity.patch['offerId'] == offer.humanizedId
 
-
     @with_delete
     def test_create_activity_on_not_existing_offer_saves_an_insert_activity(self, app):
         # Given
@@ -71,7 +72,6 @@ class ActivateTest:
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
         assert_insert_activity_match_model(patch, offer_activities[0], offer)
-
 
     @with_delete
     def test_create_activity_on_not_existing_offers_saves_two_insert_activities(self, app):
@@ -107,7 +107,6 @@ class ActivateTest:
         offer2_activities = offer2.__activities__
         assert len(offer2_activities) == 1
         assert_insert_activity_match_model(patch2, offer2_activities[0], offer2)
-
 
     @with_delete
     def test_create_activities_on_existing_offer_saves_update_activities(self, app):
@@ -345,6 +344,33 @@ class ActivateTest:
         assert len(offers) == 0
         assert activity.entityIdentifier == offer.activityIdentifier
 
+    def test_create_two_related_entities_with_good_date_created_order(self, app):
+        # Given
+        offer_activity_identifier = uuid4()
+        offer_patch = { 'name': 'bar', 'type': 'foo' }
+        offer_activity = Activity(dateCreated=datetime.utcnow(),
+                                   entityIdentifier=offer_activity_identifier,
+                                   patch=offer_patch,
+                                   tableName='offer')
+        stock_activity_identifier = uuid4()
+        stock_patch = { 'offerActivityIdentifier': offer_activity_identifier, 'price': 3 }
+        stock_activity = Activity(dateCreated=datetime.utcnow(),
+                                  entityIdentifier=stock_activity_identifier,
+                                  patch=stock_patch,
+                                  tableName='stock')
+
+        # When
+        ApiHandler.activate(stock_activity, offer_activity)
+
+        # Then
+        offer = offer_activity.entity
+        stock = stock_activity.entity
+        assert offer == Offer.query.filter_by(activityIdentifier=offer_activity_identifier).one()
+        assert stock == Stock.query.filter_by(activityIdentifier=stock_activity_identifier).one()
+        assert offer.activityIdentifier == offer_activity.entityIdentifier
+        assert stock.activityIdentifier == stock_activity.entityIdentifier
+        assert stock.offerId == offer.id
+
     @with_delete
     def test_raise_JustBeforeActivityNotFound_when_update_activity_date_before_insert_activity_date(self, app):
         # Given
@@ -367,3 +393,24 @@ class ActivateTest:
         # When + Then
         with pytest.raises(JustBeforeActivityNotFound):
             ApiHandler.activate(second_activity)
+
+    @with_delete
+    def test_raise_JustBeforeActivityNotFound_when_date_created_order_is_wrong_of_related_entities(self, app):
+        # Given
+        offer_activity_identifier = uuid4()
+        offer_patch = { 'name': 'bar', 'type': 'foo' }
+
+        stock_activity_identifier = uuid4()
+        stock_patch = { 'offerActivityIdentifier': offer_activity_identifier, 'price': 3 }
+        stock_activity = Activity(dateCreated=datetime.utcnow(),
+                                  entityIdentifier=stock_activity_identifier,
+                                  patch=stock_patch,
+                                  tableName='stock')
+        offer_activity = Activity(dateCreated=datetime.utcnow(),
+                                   entityIdentifier=offer_activity_identifier,
+                                   patch=offer_patch,
+                                   tableName='offer')
+
+        # When
+        with pytest.raises(NoResultFound):
+            ApiHandler.activate(stock_activity, offer_activity)
