@@ -5,15 +5,15 @@ from sqlalchemy import BigInteger, \
                        DateTime, \
                        desc
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm.collections import InstrumentedList
+
 from sqlalchemy_api_handler.bases.activate import Activate
 from sqlalchemy_api_handler.bases.errors import IdNoneError, \
                                                 JustBeforeActivityNotFound
-from sqlalchemy.orm.collections import InstrumentedList
 
 
 
-
-class HasActivitiesMixin(object):
+class HasActivitiesMixin():
     __versioned__ = {}
 
     activityIdentifier = Column(UUID(as_uuid=True),
@@ -25,6 +25,9 @@ class HasActivitiesMixin(object):
     dateCreated = Column(DateTime(),
                          default=datetime.utcnow,
                          nullable=False)
+
+    dateModified = Column(DateTime(),
+                          onupdate=datetime.utcnow)
 
     def _get_activity_join_by_entity_id_filter(self):
         Activity = Activate.get_activity()

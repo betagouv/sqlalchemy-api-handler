@@ -3,7 +3,7 @@ import secrets
 from sqlalchemy import Column, String
 
 
-class NeedsValidationMixin(object):
+class NeedsValidationMixin():
     validationToken = Column(String(27),
                              unique=True,
                              nullable=True)
