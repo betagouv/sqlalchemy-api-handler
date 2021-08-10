@@ -25,11 +25,12 @@ def to_datetime(date: str, date_format=DATE_ISO_FORMAT):
     if date is None:
         return None
 
-    valid_patterns = [DATE_ISO_FORMAT,
-                      DATE_ISO_FORMAT.replace('.%fZ', ''),
-                      DATE_ISO_FORMAT.replace('.%fZ', 'Z')]
+    valid_patterns = [date_format,
+                      date_format.replace('.%fZ', ''),
+                      date_format.replace('.%fZ', '.%f'),
+                      date_format.replace('.%fZ', 'Z')]
     for pattern in valid_patterns:
         try:
             return datetime.strptime(date, pattern)
-        except ValueError:
+        except ValueError as e:
             continue

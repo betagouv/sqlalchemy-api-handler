@@ -21,7 +21,7 @@ class TaskState(enum.Enum):
     SUCCEED = 'succeed'
 
 
-class TaskMixin(object):
+class TaskMixin():
 
     args = Column(JSON())
 

@@ -4,7 +4,7 @@
 import pytest
 from flask_login import login_user
 from sqlalchemy_api_handler import ApiHandler
-from sqlalchemy_api_handler.utils import humanize
+from sqlalchemy_api_handler.utils import humanize, to_datetime
 from tests.conftest import with_delete
 
 from api.models.activity import Activity
@@ -80,6 +80,7 @@ class SaveTest():
         assert len(all_activities) == 1
         assert len(offer_activities) == 1
         assert insert_offer_activity.transaction.actor.id == user.id
+        assert offer.dateCreated == to_datetime(insert_offer_activity.patch['dateCreated'])
 
     @with_delete
     def test_modify_offer_saves_an_update_activity(self, app):
@@ -102,5 +103,6 @@ class SaveTest():
         assert update_offer_activity.entityIdentifier == offer.activityIdentifier
         assert update_offer_activity.verb == 'update'
         assert {**offer_dict, **modify_dict}.items() <= update_offer_activity.datum.items()
-        assert modify_dict.items() == update_offer_activity.patch.items()
+        assert modify_dict.items() <= update_offer_activity.patch.items()
         assert offer_dict.items() <= update_offer_activity.oldDatum.items()
+        assert offer.dateModified == to_datetime(update_offer_activity.patch['dateModified'])
