@@ -1,9 +1,12 @@
+# pylint: disable=C0103
+# pylint: disable=C0121
+
 import secrets
 
 from sqlalchemy import Column, String
 
 
-class NeedsValidationMixin():
+class NeedsValidationMixin:
     validationToken = Column(String(27),
                              unique=True,
                              nullable=True)

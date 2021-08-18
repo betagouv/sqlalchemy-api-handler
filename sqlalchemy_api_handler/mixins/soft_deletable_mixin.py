@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Boolean
 
 
-class SoftDeletableMixin():
+class SoftDeletableMixin:
     isSoftDeleted = Column(Boolean,
                            default=False,
                            nullable=False)

@@ -15,7 +15,7 @@ NOT_FOUND_KEY_ERROR_CODE = '23503'
 OBLIGATORY_FIELD_ERROR_CODE = '23502'
 
 
-class Errors():
+class Errors:
 
     @staticmethod
     def restize_global_error(e):

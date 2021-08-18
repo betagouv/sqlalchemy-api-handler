@@ -13,7 +13,7 @@ from sqlalchemy_api_handler.bases.errors import IdNoneError, \
 
 
 
-class HasActivitiesMixin():
+class HasActivitiesMixin:
     __versioned__ = {}
 
     activityIdentifier = Column(UUID(as_uuid=True),

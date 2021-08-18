@@ -32,5 +32,7 @@ def to_datetime(date: str, date_format=DATE_ISO_FORMAT):
     for pattern in valid_patterns:
         try:
             return datetime.strptime(date, pattern)
-        except ValueError as e:
+        except ValueError:
             continue
+
+    return None
