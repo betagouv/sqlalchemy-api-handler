@@ -1,4 +1,3 @@
-from datetime import datetime
 import enum
 from sqlalchemy import Column, \
                        Boolean, \
@@ -21,7 +20,7 @@ class TaskState(enum.Enum):
     SUCCEED = 'succeed'
 
 
-class TaskMixin():
+class TaskMixin:
 
     args = Column(JSON())
 

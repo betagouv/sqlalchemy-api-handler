@@ -1,3 +1,4 @@
+# pylint: disable=C0103
 
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,7 +12,7 @@ from sqlalchemy_api_handler.utils.datum import saveable_datum_from, \
                                                serializable_datum_from
 
 
-class ActivityMixin():
+class ActivityMixin:
 
     _entityIdentifier = None
 
@@ -31,7 +32,6 @@ class ActivityMixin():
     def datum(self):
         if self.data is None:
             return None
-        model = self.model
         return serializable_datum_from(self.data, self.model)
 
     @hybrid_property

@@ -4,7 +4,7 @@ from sqlalchemy_api_handler.bases.errors import NotSoftDeletableMixinException, 
                                                 SoftDeletedRecordException
 
 
-class SoftDelete():
+class SoftDelete:
 
     def __init__(self):
         self.isSoftDeleted = False

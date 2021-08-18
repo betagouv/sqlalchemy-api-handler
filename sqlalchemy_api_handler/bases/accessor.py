@@ -3,7 +3,7 @@ import inflect
 from sqlalchemy_api_handler.bases.errors import GetPathError
 
 
-class Accessor():
+class Accessor:
 
     def get(self,
             path,
