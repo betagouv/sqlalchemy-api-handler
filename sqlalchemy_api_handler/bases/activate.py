@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from typing import List, Optional
+
 import sqlalchemy as sa
 from postgresql_audit.flask import versioning_manager
 
@@ -12,10 +14,19 @@ from sqlalchemy_api_handler.utils.datum import datum_with_relationships_from, \
 class Activate(Save):
     @staticmethod
     def activate(*activities,
-                 with_check_not_soft_deleted=True):
+                 with_check_not_soft_deleted=True,
+                 ordered_table: Optional[List] = None):
         unknown_activities = Activate.unknown_activities_from(activities)
-        sorted_activities = sorted(unknown_activities,
-                                   key=lambda activity: activity.dateCreated)
+
+        def sort_activities(record):
+            if ordered_table:
+                return (ordered_table.index(record.table_name) if record.table_name in ordered_table
+                        else len(ordered_table) + 1,
+                        record.dateCreated)
+            return record.dateCreated
+
+        sorted_activities = sorted(unknown_activities, key=lambda act: sort_activities(act))
+
         sorted_activities_by_identifier = OrderedDict()
         for activity in sorted_activities:
             entity_identifier = activity.entityIdentifier
