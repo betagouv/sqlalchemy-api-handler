@@ -38,8 +38,8 @@ class HasActivitiesMixin:
             errors.add_error('_get_activity_join_by_entity_id_filter',
                              f'tried to filter with a None id value for a {self.__class__.__name__} entity')
             raise errors
-        return ((Activity.old_data[id_key].astext.cast(BigInteger) == id_value) | \
-                (Activity.changed_data[id_key].astext.cast(BigInteger) == id_value))
+        return ((Activity.old_data[id_key].cast(BigInteger) == id_value) | \
+                (Activity.changed_data[id_key].cast(BigInteger) == id_value))
 
     def join_self_activities(self):
         Activity = Activate.get_activity()

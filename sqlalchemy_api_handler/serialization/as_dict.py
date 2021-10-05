@@ -3,9 +3,8 @@ from functools import partial, singledispatch
 from typing import Callable, Iterable, Set, List
 
 from sqlalchemy.orm.collections import InstrumentedList
-
 from sqlalchemy_api_handler.api_handler import ApiHandler
-from sqlalchemy_api_handler.serialization.serialize import serialize
+from sqlalchemy_api_handler.utils.serialize import create_serialize
 from sqlalchemy_api_handler.utils.asynchronous import async_map as default_async_map
 
 
@@ -15,6 +14,9 @@ def exclusive_includes_from(entity, includes):
         if column_key not in includes:
             exclusive_includes.append('-{}'.format(column_key))
     return exclusive_includes
+
+
+serialize = create_serialize()
 
 
 @singledispatch

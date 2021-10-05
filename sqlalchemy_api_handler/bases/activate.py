@@ -7,8 +7,9 @@ from postgresql_audit.flask import versioning_manager
 from sqlalchemy_api_handler.bases.accessor import Accessor
 from sqlalchemy_api_handler.bases.errors import ActivityError
 from sqlalchemy_api_handler.bases.save import Save
-from sqlalchemy_api_handler.utils.datum import datum_with_relationships_from, \
-                                               merged_datum_from_activities
+from sqlalchemy_api_handler.utils.datum import foreigns_in, \
+                                               merged_datum_from_activities, \
+                                               serialized_datum_from
 
 
 class Activate(Save):
@@ -81,16 +82,30 @@ class Activate(Save):
             errors.add_error('_activate_deletion',
                              f'entity with the activityIdentifier {activity.entityIdentifier} not found')
             raise errors
-        query.delete()
-        delete_activity = entity.__deleteActivity__
-        delete_activity.dateCreated = activity.dateCreated
-        Save.add(delete_activity)
-        # merge delete_activity into the activity that helped for its creation
-        activity.id = delete_activity.id
-        if delete_activity.transaction:
-            activity.transaction = Activate.get_activity().transaction.mapper.class_()
-            activity.transaction.actor  = delete_activity.transaction.actor
+        with versioning_manager.disable(Activate.get_db().session):
+            query.delete()
+            activity.old_data = serialized_datum_from(entity)
+            Save.add(activity)
 
+
+    @staticmethod
+    def _activate_insertion(activity):
+        model = Save.model_from_table_name(activity.table_name)
+        entity = model(**relationships_in(activity.patch, model))
+        entity.activityIdentifier = activity.entityIdentifier
+        entity.dateCreated = activity.dateCreated
+        with versioning_manager.disable(Activate.get_db().session):
+            Save.add(entity)
+            Activate.get_db().session.flush()
+        print(activity.changed_data, foreigns_in(activity.changed_data, entity.__class__))
+        activity.changed_data = {
+            **foreigns_in(activity.changed_data, entity.__class__),
+            entity.__class__.id.key: entity.id
+        }
+        activity.verb = 'insert'
+        Save.add(activity)
+
+    """
     @staticmethod
     def _activate_insertion(activity):
         model = Save.model_from_table_name(activity.table_name)
@@ -103,11 +118,12 @@ class Activate(Save):
         insert_activity.dateCreated = activity.dateCreated
         Save.add(insert_activity)
         # merge insert_activity into activity that helped for its creation
-        activity.id = insert_activity.id
-        activity.changed_data = {**insert_activity.changed_data}
-        if insert_activity.transaction:
-            activity.transaction = Activate.get_activity().transaction.mapper.class_()
-            activity.transaction.actor  = insert_activity.transaction.actor
+        #activity.id = insert_activity.id
+        #activity.changed_data = {**insert_activity.changed_data}
+        #if insert_activity.transaction:
+        #    activity.transaction = Activate.get_activity().transaction.mapper.class_()
+        #    activity.transaction.actor  = insert_activity.transaction.actor
+    """
 
     @staticmethod
     def _activate_updates(activities,
