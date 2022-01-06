@@ -1,5 +1,5 @@
 argh==0.26.2
-celery==5.0.1
+celery==5.2.2
 compose==1.1.1
 coveralls==1.11.1
 Flask==1.0.2
