@@ -1,4 +1,4 @@
-from sqlalchemy.exc import DataError, IntegrityError, InternalError
+from sqlalchemy.exc import DataError, IntegrityError, InternalError, InvalidRequestError
 
 from sqlalchemy_api_handler.bases.errors import Errors
 from sqlalchemy_api_handler.bases.modify import Modify
@@ -30,6 +30,10 @@ class Save(Modify, Errors):
         except InternalError as ie:
             for entity in entities:
                 api_errors.add_error(*entity.restize_internal_error(ie))
+            db.session.rollback()
+            raise api_errors
+        except InvalidRequestError as ire:
+            api_errors.add_error(*Errors.restize_internal_error(ire))
             db.session.rollback()
             raise api_errors
         except TypeError as te:
