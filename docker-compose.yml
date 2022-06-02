@@ -6,7 +6,7 @@ services:
     command: >
       bash -c "set -x;
               cd /opt/api;
-              python checkhealth.py;
+              PYTHONPATH=. python api/checkhealth.py;
               watchmedo auto-restart --directory=./api \
                                      --directory=./sqlalchemy_api_handler \
                                      --pattern=*.py \
@@ -42,7 +42,7 @@ services:
     command: >
       bash -c "set -x;
                cd /opt/api;
-               PYTHONPATH=. python checkhealth.py;
+               PYTHONPATH=. python api/checkhealth.py;
                pip install -r ./requirements.txt;
                sleep infinity;"
     container_name: ${APP_NAME}-apiweb
@@ -75,7 +75,7 @@ services:
     command: >
       bash -c "set -x;
               cd /opt/api;
-              PYTHONPATH=. python checkhealth.py;
+              PYTHONPATH=. python api/checkhealth.py;
               watchmedo auto-restart --directory=./api \
                                      --directory=./sqlalchemy_api_handler \
                                      --pattern=*.py \
@@ -101,7 +101,7 @@ services:
     command: >
       bash -c "set -x;
               cd /opt/api;
-              PYTHONPATH=. python checkhealth.py;
+              PYTHONPATH=. python api/checkhealth.py;
               watchmedo auto-restart --directory=./api \
                                      --directory=./sqlalchemy_api_handler \
                                      --pattern=*.py \

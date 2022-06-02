@@ -4,12 +4,10 @@ import os
 from time import sleep
 from flask import Flask
 from random import random
-from sqlalchemy_api_handler import ApiHandler
+from sqlalchemy_api_handler import ApiHandler, __version__ as VERSION
 from sqlalchemy_api_handler.utils import logger
 from sqlalchemy.exc import OperationalError
 
-from api.repository.checks import check_from_model
-from api.utils.config import VERSION
 from api.utils.setup import setup
 from api.utils.database import db
 
@@ -19,8 +17,7 @@ SLEEP_TIME = 1
 FLASK_APP = Flask(__name__)
 
 
-setup(FLASK_APP,
-      with_cors=False)
+setup(FLASK_APP)
 
 
 TABLE_NAME = f'check_health_{int(1000*random())}'
