@@ -1,3 +1,4 @@
+import os
 from collections import OrderedDict
 from typing import List, Optional
 
@@ -16,7 +17,6 @@ class Activate(Save):
     def activate(*activities,
                  with_check_not_soft_deleted=True,
                  ordered_table: Optional[List] = None):
-        unknown_activities = Activate.unknown_activities_from(activities)
 
         def sort_activities(record):
             if ordered_table:
@@ -25,7 +25,7 @@ class Activate(Save):
                         record.dateCreated)
             return record.dateCreated
 
-        sorted_activities = sorted(unknown_activities, key=lambda act: sort_activities(act))
+        sorted_activities = sorted(activities, key=lambda act: sort_activities(act))
 
         sorted_activities_by_identifier = OrderedDict()
         for activity in sorted_activities:
@@ -36,8 +36,7 @@ class Activate(Save):
                 sorted_activities_by_identifier[entity_identifier] = [activity]
 
         for (entity_identifier, grouped_activities) in sorted_activities_by_identifier.items():
-            grouped_activities = list(grouped_activities)
-            first_activity = grouped_activities[0]
+            first_activity = list(grouped_activities)[0]
             table_name = first_activity.table_name
 
             model = Save.model_from_table_name(table_name)
@@ -53,7 +52,7 @@ class Activate(Save):
                 remaining_activities = grouped_activities[1:]
                 entity = first_activity.entity
             else:
-                remaining_activities = grouped_activities
+                remaining_activities = Activate.unknown_activities_from(list(grouped_activities))
 
             update_activities = []
             delete_activity = None
@@ -70,6 +69,12 @@ class Activate(Save):
                                            with_check_not_soft_deleted=with_check_not_soft_deleted)
             if delete_activity:
                 Activate._activate_deletion(delete_activity)
+
+            session = Activate.get_db().session
+            if len(session.dirty) > int(os.environ.get('SQLAAH_ACTIVATE_BATCH_INSERTS_BY', 10)):
+                session.commit()
+
+        Activate.get_db().session.commit()
 
     @staticmethod
     def _activate_deletion(activity):
