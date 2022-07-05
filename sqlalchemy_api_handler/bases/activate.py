@@ -52,7 +52,7 @@ class Activate(Save):
                 remaining_activities = grouped_activities[1:]
                 entity = first_activity.entity
             else:
-                remaining_activities = Activate.unknown_activities_from(list(grouped_activities))
+                remaining_activities = list(grouped_activities)
 
             update_activities = []
             delete_activity = None
@@ -125,17 +125,29 @@ class Activate(Save):
         already_activities_since_min_date = activity_class.query \
                                                            .filter(entity.join_self_activities(),
                                                                    activity_class.dateCreated >= min_date,
-                                                                   activity_class.verb == 'update') \
+                                                                   ((activity_class.verb == 'insert') | \
+                                                                    (activity_class.verb == 'update'))) \
                                                            .all()
 
-        all_activities_since_min_date = sorted(already_activities_since_min_date + activities,
+        potential_existing_activities_dict = { (str(a.dateCreated), str(a.entityIdentifier)) : a
+                                               for a in already_activities_since_min_date }
+        unknown_activities = []
+        for activity in activities:
+            if not potential_existing_activities_dict.get((str(activity.dateCreated),
+                                                           str(activity.entityIdentifier))):
+                unknown_activities.append(activity)
+        if len(unknown_activities) == 0:
+            return
+
+        update_activities_since_min_date = [a for a in already_activities_since_min_date if a.verb == 'update']
+        all_activities_since_min_date = sorted(update_activities_since_min_date + unknown_activities,
                                                key=lambda activity: activity.dateCreated)
 
         model = Save.model_from_table_name(entity.__tablename__)
         merged_datum = merged_datum_from_activities(entity, all_activities_since_min_date)
 
         database = Activate.get_db()
-        database.session.add_all(activities)
+        database.session.add_all(unknown_activities)
         if model.id.key in merged_datum:
             del merged_datum[model.id.key]
         with versioning_manager.disable(database.session):
@@ -160,13 +172,6 @@ class Activate(Save):
         potential_existing_activities = activity_class.query.filter(activity_class.entityIdentifier.in_([a.entityIdentifier for a in activities])) \
                                                             .filter(activity_class.dateCreated.in_([a.dateCreated for a in activities])) \
                                                             .all()
-        potential_existing_activities_dict = { (str(a.dateCreated), str(a.entityIdentifier)) : a for a in potential_existing_activities }
-        unknown_activities = []
-        for activity in activities:
-            existing_activity = potential_existing_activities_dict.get((str(activity.dateCreated), str(activity.entityIdentifier)))
-            if not existing_activity:
-                unknown_activities.append(activity)
-        return unknown_activities
 
     @classmethod
     def models(cls):
