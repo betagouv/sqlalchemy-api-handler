@@ -15,7 +15,7 @@ pytest-cov==2.6.1
 pytest-flask==0.14.0
 pytest-mock==1.10.0
 pyyaml==6.0
-redis==3.5.3
+redis==4.4.4
 twine==1.13.0
 watchdog==0.10.3
 werkzeug==0.16.1
